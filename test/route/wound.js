@@ -9,20 +9,22 @@ var chai = require('chai'),
 
 var testPOST = {
     name: r.rHEX(24),
-    maximum: r.rINT(1,40)
+    lethal: r.rBOOL(),
+    popularity: r.rINT(1,40)
 };
 
 var testPUT = {
     name: r.rHEX(24),
-    maximum: r.rINT(1,40)
+    lethal: r.rBOOL(),
+    popularity: r.rINT(1,40)
 };
 
 var insertedID;
 
-describe('Attribute Type', function() {
+describe('Wound', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/attributetype', testPOST)
+        api('/wound', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -36,7 +38,7 @@ describe('Attribute Type', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/attributetype/id/'+insertedID, testPUT, 'put')
+        api('/wound/id/'+insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -49,7 +51,7 @@ describe('Attribute Type', function() {
     });
 
     it('should successfully GET all rows', function(done) {
-        api('/attributetype')
+        api('/wound')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -59,16 +61,17 @@ describe('Attribute Type', function() {
 
                 _.each(data, function(item) {
                     should.exist(item.name);
-                    should.exist(item.maximum);
+                    should.exist(item.lethal);
+                    should.exist(item.popularity);
                     should.exist(item.created);
                 });
 
                 done();
-        });
+            });
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/attributetype/id/'+insertedID)
+        api('/wound/id/'+insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -78,11 +81,12 @@ describe('Attribute Type', function() {
 
                 expect(data.id).to.equal(insertedID);
                 expect(data.name).to.equal(testPUT.name);
-                expect(data.maximum).to.equal(testPUT.maximum);
+                expect(data.lethal).to.equal(testPUT.lethal);
+                expect(data.popularity).to.equal(testPUT.popularity);
                 should.exist(data.created);
 
                 done();
-        });
+            });
     })
 
 });

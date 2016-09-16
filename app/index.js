@@ -1,5 +1,6 @@
 module.exports = function(pool, router) {
     // CUSTOM
+    require('./route/attribute')(pool, router, 'attribute');
     require('./route/nature')(pool, router, 'nature');
     require('./route/identity')(pool, router, 'identity');
     require('./route/focus')(pool, router, 'focus');

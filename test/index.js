@@ -11,9 +11,11 @@ require('./route/protectionquality');
 require('./route/protectiontype');
 require('./route/setting');
 require('./route/species');
-//require('./route/software');
-//require('./route/weaponquality');
-//require('./route/wound');
+require('./route/software');
+require('./route/weaponquality');
+require('./route/wound');
+
+require('./route/attribute');
 
 //require('./route/nature');
 //require('./route/identity');
