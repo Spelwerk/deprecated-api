@@ -1,6 +1,8 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, path, table) {
+module.exports = function(pool, router, table, path) {
+    path = path || '/' + table;
+
     var query = 'SELECT ' +
         'nature.id, ' +
         'nature.name, ' +

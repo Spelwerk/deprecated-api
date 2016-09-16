@@ -1,24 +1,25 @@
 module.exports = function(pool, router) {
     // CUSTOM
-    require('./route/nature')(pool, router, '/nature', 'nature');
-    require('./route/nature')(pool, router, '/identity', 'identity');
+    require('./route/nature')(pool, router, 'nature');
+    require('./route/identity')(pool, router, 'identity');
+    require('./route/focus')(pool, router, 'focus');
 
     // DEFAULT
-    require('./default')(pool, router, '/assetgroup', 'assetgroup');
-    require('./default')(pool, router, '/attributetype', 'attributetype');
-    require('./default')(pool, router, '/augmentationquality', 'augmentationquality');
-    require('./default')(pool, router, '/bionic', 'bionic');
-    require('./default')(pool, router, '/bionicquality', 'bionicquality');
-    require('./default')(pool, router, '/caste', 'caste');
-    require('./default')(pool, router, '/expertisetype', 'expertisetype');
-    require('./default')(pool, router, '/loyalty', 'loyalty');
-    require('./default')(pool, router, '/manifestation', 'manifestation');
-    require('./default')(pool, router, '/protectionquality', 'protectionquality');
-    require('./default')(pool, router, '/protectiontype', 'protectiontype');
-    require('./default')(pool, router, '/setting', 'setting');
-    require('./default')(pool, router, '/species', 'species');
-    require('./default')(pool, router, '/software', 'software');
-    require('./default')(pool, router, '/weaponmod', 'weaponmod');
-    require('./default')(pool, router, '/weaponquality', 'weaponquality');
-    require('./default')(pool, router, '/wound', 'wound');
+    require('./default')(pool, router, 'assetgroup');
+    require('./default')(pool, router, 'attributetype');
+    require('./default')(pool, router, 'augmentationquality');
+    require('./default')(pool, router, 'bionic');
+    require('./default')(pool, router, 'bionicquality');
+    require('./default')(pool, router, 'caste');
+    require('./default')(pool, router, 'expertisetype');
+    require('./default')(pool, router, 'loyalty');
+    require('./default')(pool, router, 'manifestation');
+    require('./default')(pool, router, 'protectionquality');
+    require('./default')(pool, router, 'protectiontype');
+    require('./default')(pool, router, 'setting');
+    require('./default')(pool, router, 'species');
+    require('./default')(pool, router, 'software');
+    require('./default')(pool, router, 'weaponmod');
+    require('./default')(pool, router, 'weaponquality');
+    require('./default')(pool, router, 'wound');
 };
