@@ -1,16 +1,16 @@
 var crypto = require('crypto');
 
-exports.randomHex = function(len) {
-    return crypto.randomBytes(Math.ceil(len/2))
+exports.rHEX = function(length) {
+    return crypto.randomBytes(Math.ceil(length/2))
         .toString('hex')
-        .slice(0,len);
+        .slice(0,length);
 };
 
-exports.randomInt = function(low,high) {
+exports.rINT = function(low, high) {
     return Math.floor(Math.random() * (high - low + 1) + low);
 };
 
-exports.randomDate = function() {
+exports.rDATE = function() {
     var ryear = Math.floor(Math.random() * (2015 - 2005) + 1999);
     var rmonth = Math.floor(Math.random() * (12 - 1) + 1);
     var rday = Math.floor(Math.random() * (28 - 1) + 1);

@@ -66,23 +66,9 @@ exports.QUERY = function(pool, req, res, call, params) {
     });
 };
 
-exports.DELETE = function(pool, req, res, table, identifier) {
-    var call = 'UPDATE ' + table + ' SET deleted = CURRENT_TIMESTAMP WHERE ' + identifier + ' = ' + req.params.id;
-
-    pool.query(call, function(error) {
-        DEBUG(call, error, req.headers.debug, 'DELETE');
-
-        if(error) {
-            res.status(500).send({error: error});
-        } else {
-            res.status(202).send({success: 'deleted'});
-        }
-    });
-};
-
 exports.POST = function(pool, req, res, table, body) {
     var rows = {},
-        into = 'INSERT INTO ' + tableName + '(',
+        into = 'INSERT INTO ' + table + '(',
         vals = ' VALUES (',
         call;
 
@@ -120,7 +106,11 @@ exports.PUT = function(pool, req, res, table, body, identifier) {
         }
     }
 
-    call += ' WHERE ' + identifier + ' = ' + req.params.id;
+    call = call.slice(0, -2);
+
+    call += ' WHERE ' + identifier + ' = \'' + req.params.id + '\'';
+
+    var id = parseInt(req.params.id);
 
     pool.query(call, function(error) {
         DEBUG(call, error, req.headers.debug, 'PUT');
@@ -128,7 +118,7 @@ exports.PUT = function(pool, req, res, table, body, identifier) {
         if(error) {
             res.status(500).send({error: error});
         } else {
-            res.status(201).send({success: rows, id: req.params.id});
+            res.status(200).send({success: rows, id: id});
         }
     });
 };
@@ -161,6 +151,20 @@ exports.INSERT = function(pool, req, res, table, body) {
             res.status(500).send({error: error});
         } else {
             res.status(201).send({success: rows, id: res.insertId});
+        }
+    });
+};
+
+exports.DELETE = function(pool, req, res, table, identifier) {
+    var call = 'UPDATE ' + table + ' SET deleted = CURRENT_TIMESTAMP WHERE ' + identifier + ' = \'' + req.params.id + '\'';
+
+    pool.query(call, function(error) {
+        DEBUG(call, error, req.headers.debug, 'DELETE');
+
+        if(error) {
+            res.status(500).send({error: error});
+        } else {
+            res.status(202).send({success: 'deleted'});
         }
     });
 };

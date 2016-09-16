@@ -3,6 +3,7 @@ module.exports = function(pool, router) {
     require('./route/nature')(pool, router, 'nature');
     require('./route/identity')(pool, router, 'identity');
     require('./route/focus')(pool, router, 'focus');
+    require('./route/protection')(pool, router, 'protection');
 
     // DEFAULT
     require('./default')(pool, router, 'assetgroup');
@@ -19,7 +20,6 @@ module.exports = function(pool, router) {
     require('./default')(pool, router, 'setting');
     require('./default')(pool, router, 'species');
     require('./default')(pool, router, 'software');
-    require('./default')(pool, router, 'weaponmod');
     require('./default')(pool, router, 'weaponquality');
     require('./default')(pool, router, 'wound');
 };

@@ -6,7 +6,7 @@
   "author": "Jonn Nilsson <jonn@spelwerk.se>",
   "scripts": {
     "start": "nodemon ./server.js",
-    "test": "mocha ./test/tests.js"
+    "test": "mocha ./test/index.js"
   },
   "main": "server.js",
   "repository": {
@@ -17,14 +17,14 @@
     "url": "https://github.com/Spelwerk/spelwerk-api/issues"
   },
   "dependencies": {
-    "basic-auth": "~1.0",
-    "body-parser": "~1.15",
-    "chai": "~3.5",
-    "crypto": "~0.0.3",
-    "express": "~4.13",
-    "mysql": "~2.10",
-    "supertest": "~1.2",
-    "underscore": "~1.8"
+    "basic-auth": "^1.0.4",
+    "body-parser": "^1.15.2",
+    "chai": "^3.5.0",
+    "crypto": "0.0.3",
+    "express": "^4.14.0",
+    "mysql": "^2.11.1",
+    "supertest": "^2.0.0",
+    "underscore": "^1.8.3"
   },
   "license": "MIT"
 }
