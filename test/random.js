@@ -1,5 +1,9 @@
 var crypto = require('crypto');
 
+function rINT(low, high) {
+    return Math.floor(Math.random() * (high - low + 1) + low);
+}
+
 exports.rHEX = function(length) {
     return crypto.randomBytes(Math.ceil(length/2))
         .toString('hex')
@@ -7,7 +11,11 @@ exports.rHEX = function(length) {
 };
 
 exports.rINT = function(low, high) {
-    return Math.floor(Math.random() * (high - low + 1) + low);
+    return rINT(low, high);
+};
+
+exports.rBOOL = function() {
+    return rINT(0,1);
 };
 
 exports.rDATE = function() {

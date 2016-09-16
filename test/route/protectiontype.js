@@ -8,27 +8,19 @@ var chai = require('chai'),
     expect = chai.expect;
 
 var testPOST = {
-    name: r.rHEX(24),
-    description: r.rHEX(64),
-    price: r.rINT(1,40),
-    energy: r.rINT(1,40),
-    legal: r.rBOOL()
+    name: r.rHEX(24)
 };
 
 var testPUT = {
-    name: r.rHEX(24),
-    description: r.rHEX(64),
-    price: r.rINT(1,40),
-    energy: r.rINT(1,40),
-    legal: r.rBOOL()
+    name: r.rHEX(24)
 };
 
 var insertedID;
 
-describe('Bionic', function() {
+describe('Protection Type', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/bionic', testPOST)
+        api('/protectiontype', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -42,7 +34,7 @@ describe('Bionic', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/bionic/id/'+insertedID, testPUT, 'put')
+        api('/protectiontype/id/'+insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -55,7 +47,7 @@ describe('Bionic', function() {
     });
 
     it('should successfully GET all rows', function(done) {
-        api('/bionic')
+        api('/protectiontype')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -65,10 +57,6 @@ describe('Bionic', function() {
 
                 _.each(data, function(item) {
                     should.exist(item.name);
-                    should.exist(item.description);
-                    should.exist(item.price);
-                    should.exist(item.energy);
-                    should.exist(item.legal);
                     should.exist(item.created);
                 });
 
@@ -77,7 +65,7 @@ describe('Bionic', function() {
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/bionic/id/'+insertedID)
+        api('/protectiontype/id/'+insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -87,10 +75,6 @@ describe('Bionic', function() {
 
                 expect(data.id).to.equal(insertedID);
                 expect(data.name).to.equal(testPUT.name);
-                expect(data.description).to.equal(testPUT.description);
-                expect(data.price).to.equal(testPUT.price);
-                expect(data.energy).to.equal(testPUT.energy);
-                expect(data.legal).to.equal(testPUT.legal);
                 should.exist(data.created);
 
                 done();
