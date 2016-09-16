@@ -1,0 +1,30 @@
+{
+  "name": "Spelwerk-API",
+  "version": "2.0.0",
+  "private": true,
+  "description": "API server for spelwerk to connect to MYSQL database and deliver all information to frontend via JSON",
+  "author": "Jonn Nilsson <jonn@spelwerk.se>",
+  "scripts": {
+    "start": "nodemon ./server.js",
+    "test": "mocha ./test/tests.js"
+  },
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Spelwerk/spelwerk-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Spelwerk/spelwerk-api/issues"
+  },
+  "dependencies": {
+    "basic-auth": "~1.0",
+    "body-parser": "~1.15",
+    "chai": "~3.5",
+    "crypto": "~0.0.3",
+    "express": "~4.13",
+    "mysql": "~2.10",
+    "supertest": "~1.2",
+    "underscore": "~1.8"
+  },
+  "license": "MIT"
+}
