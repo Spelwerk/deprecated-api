@@ -17,10 +17,10 @@ var testPUT = {
 
 var insertedID;
 
-describe('Attribute Type', function() {
+describe('Asset Group', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/attributetype', testPOST)
+        api('/assetgroup', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -34,7 +34,7 @@ describe('Attribute Type', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/attributetype/id/'+insertedID, testPUT, 'put')
+        api('/assetgroup/id/'+insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -47,7 +47,7 @@ describe('Attribute Type', function() {
     });
 
     it('should successfully GET all rows', function(done) {
-        api('/attributetype')
+        api('/assetgroup')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -61,11 +61,11 @@ describe('Attribute Type', function() {
                 });
 
                 done();
-        });
+            });
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/attributetype/id/'+insertedID)
+        api('/assetgroup/id/'+insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -78,7 +78,7 @@ describe('Attribute Type', function() {
                 should.exist(data.created);
 
                 done();
-        });
+            });
     })
 
 });

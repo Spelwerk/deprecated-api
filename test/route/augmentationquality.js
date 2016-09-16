@@ -8,19 +8,23 @@ var chai = require('chai'),
     expect = chai.expect;
 
 var testPOST = {
-    name: r.rHEX(24)
+    name: r.rHEX(24),
+    price: r.rINT(1,40),
+    energy: r.rINT(1,40)
 };
 
 var testPUT = {
-    name: r.rHEX(24)
+    name: r.rHEX(24),
+    price: r.rINT(1,40),
+    energy: r.rINT(1,40)
 };
 
 var insertedID;
 
-describe('Attribute Type', function() {
+describe('Augmentation Quality', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/attributetype', testPOST)
+        api('/augmentationquality', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -34,7 +38,7 @@ describe('Attribute Type', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/attributetype/id/'+insertedID, testPUT, 'put')
+        api('/augmentationquality/id/'+insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -47,7 +51,7 @@ describe('Attribute Type', function() {
     });
 
     it('should successfully GET all rows', function(done) {
-        api('/attributetype')
+        api('/augmentationquality')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -57,15 +61,17 @@ describe('Attribute Type', function() {
 
                 _.each(data, function(item) {
                     should.exist(item.name);
+                    should.exist(item.price);
+                    should.exist(item.energy);
                     should.exist(item.created);
                 });
 
                 done();
-        });
+            });
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/attributetype/id/'+insertedID)
+        api('/augmentationquality/id/'+insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -75,10 +81,12 @@ describe('Attribute Type', function() {
 
                 expect(data.id).to.equal(insertedID);
                 expect(data.name).to.equal(testPUT.name);
+                expect(data.price).to.equal(testPUT.price);
+                expect(data.energy).to.equal(testPUT.energy);
                 should.exist(data.created);
 
                 done();
-        });
+            });
     })
 
 });
