@@ -14,7 +14,8 @@ require('./route/software');
 require('./route/weaponquality');
 require('./route/wound');
 
-// CUSTOM
+// STANDARD
+require('./route/story');
 require('./route/assettype');
 require('./route/asset');
 require('./route/attribute');
@@ -24,7 +25,6 @@ require('./route/identity');
 require('./route/nature');
 require('./route/protectiontype');
 require('./route/protection');
-require('./route/relationship');
 require('./route/expertise');
 require('./route/milestone');
 require('./route/characteristic');
@@ -33,3 +33,9 @@ require('./route/weapontype');
 require('./route/weapon');
 require('./route/weaponmod');
 require('./route/augmentation');
+
+// CUSTOM
+require('./route/story');
+
+// PERSON
+require('./route/person');

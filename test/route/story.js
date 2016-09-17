@@ -10,32 +10,28 @@ var chai = require('chai'),
 var testPOST = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    occupation: r.rHEX(32),
-    finance: r.rINT(1,40),
-    popularity: r.rINT(1,40),
     setting_id: 1
 };
 
 var testPUT = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    occupation: r.rHEX(32),
-    finance: r.rINT(1,40),
-    popularity: r.rINT(1,40),
     setting_id: 1
 };
 
-var insertedID;
+var insertedID,
+    insertedHASH;
 
-describe('Relationship', function() {
+describe('Story', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/relationship', testPOST)
+        api('/story', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
                 var data = response.body.success;
                 insertedID = response.body.id;
+                insertedHASH = response.body.hash;
 
                 should.exist(data);
 
@@ -44,7 +40,7 @@ describe('Relationship', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/relationship/id/'+insertedID, testPUT, 'put')
+        api('/story/hash/'+insertedHASH, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -57,7 +53,7 @@ describe('Relationship', function() {
     });
 
     it('should successfully GET all rows', function(done) {
-        api('/relationship')
+        api('/story')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -68,11 +64,7 @@ describe('Relationship', function() {
                 _.each(data, function(item) {
                     should.exist(item.name);
                     should.exist(item.description);
-                    should.exist(item.occupation);
-                    should.exist(item.finance);
-                    should.exist(item.popularity);
                     should.exist(item.setting_id);
-                    should.exist(item.setting_name);
                     should.exist(item.created);
                 });
 
@@ -80,8 +72,8 @@ describe('Relationship', function() {
             });
     });
 
-    it('should successfully GET latest row', function(done) {
-        api('/relationship/id/'+insertedID)
+    it('should successfully GET latest row with hash', function(done) {
+        api('/story/hash/'+insertedHASH)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -92,15 +84,11 @@ describe('Relationship', function() {
                 expect(data.id).to.equal(insertedID);
                 expect(data.name).to.equal(testPUT.name);
                 expect(data.description).to.equal(testPUT.description);
-                expect(data.occupation).to.equal(testPUT.occupation);
-                expect(data.finance).to.equal(testPUT.finance);
-                expect(data.popularity).to.equal(testPUT.popularity);
                 expect(data.setting_id).to.equal(testPUT.setting_id);
-                should.exist(data.setting_name);
                 should.exist(data.created);
 
                 done();
             });
-    })
+    });
 
 });

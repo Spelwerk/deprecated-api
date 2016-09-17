@@ -3,11 +3,10 @@ var mysql = require('mysql'),
 
 function DEBUG(call, error, key, restName) {
     if(key == config.keys.debug) {
-        console.log('using method: ' + restName);
-        console.log('call: ' + call);
-
         if(error) {
-            console.log('error: ' + error);
+            console.log('\nmethod: ' + restName);
+            console.log('call:   ' + call);
+            console.log('error:  ' + error);
         }
     }
 }
@@ -90,7 +89,11 @@ exports.POST = function(pool, req, res, table, body) {
         if(error) {
             res.status(500).send({error: 'error'});
         } else {
-            res.status(201).send({success: rows, id: result.insertId});
+            if(req.body.hash) {
+                res.status(201).send({success: rows, id: result.insertId, hash: req.body.hash});
+            } else {
+                res.status(201).send({success: rows, id: result.insertId});
+            }
         }
     });
 };
