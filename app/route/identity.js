@@ -9,10 +9,10 @@ module.exports = function(pool, router, table, path) {
         'identity.description, ' +
         'identity.created, ' +
         'identity.deleted, ' +
-        'attribute.id AS attribute_id, ' +
+        'identity.attribute_id, ' +
         'attribute.name AS attribute_name ' +
         'FROM identity ' +
-        'LEFT JOIN attribute ON attribute.id = identity.give_attribute_id';
+        'LEFT JOIN attribute ON attribute.id = identity.attribute_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

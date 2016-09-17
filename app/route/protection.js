@@ -12,11 +12,12 @@ module.exports = function(pool, router, table, path) {
         'protection.deleted, ' +
         'protection.protectiontype_id, ' +
         'protectiontype.name AS protectiontype_name, ' +
-        'protection.attribute_id, ' +
-        'attribute.name AS attribute_name ' +
+        'protectiontype.attribute_id, ' +
+        'attribute.name AS attribute_name,' +
+        'protection.attribute_value ' +
         'FROM protection ' +
         'LEFT JOIN protectiontype ON protectiontype.id = protection.protectiontype_id ' +
-        'LEFT JOIN attribute ON attribute.id = protection.give_attribute_id';
+        'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

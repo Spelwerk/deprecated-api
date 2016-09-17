@@ -10,13 +10,15 @@ var chai = require('chai'),
 var testPOST = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    finance: r.rINT(1,40)
+    attribute_id: 1,
+    attribute_value: r.rINT(1,40)
 };
 
 var testPUT = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    finance: r.rINT(1,40)
+    attribute_id: 1,
+    attribute_value: r.rINT(1,40)
 };
 
 var insertedID;
@@ -62,7 +64,8 @@ describe('Caste', function() {
                 _.each(data, function(item) {
                     should.exist(item.name);
                     should.exist(item.description);
-                    should.exist(item.finance);
+                    should.exist(item.attribute_id);
+                    should.exist(item.attribute_value);
                     should.exist(item.created);
                 });
 
@@ -82,7 +85,8 @@ describe('Caste', function() {
                 expect(data.id).to.equal(insertedID);
                 expect(data.name).to.equal(testPUT.name);
                 expect(data.description).to.equal(testPUT.description);
-                expect(data.finance).to.equal(testPUT.finance);
+                expect(data.attribute_id).to.equal(testPUT.attribute_id);
+                expect(data.attribute_value).to.equal(testPUT.attribute_value);
                 should.exist(data.created);
 
                 done();

@@ -4,20 +4,21 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'attribute.id, ' +
-        'attribute.name, ' +
-        'attribute.description, ' +
-        'attribute.protected, ' +
-        'attributetype.maximum, ' +
-        'attribute.created, ' +
-        'attribute.deleted, ' +
-        'attribute.attributetype_id, ' +
-        'attributetype.name AS attributetype_name, ' +
-        'attribute.manifestation_id, ' +
-        'manifestation.name AS manifestation_name ' +
-        'FROM attribute ' +
-        'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
-        'LEFT JOIN manifestation ON manifestation.id = attribute.manifestation_id';
+        'weaponmod.id, ' +
+        'weaponmod.name, ' +
+        'weaponmod.description, ' +
+        'weaponmod.short, ' +
+        'weaponmod.price, ' +
+        'weaponmod.damage_d12, ' +
+        'weaponmod.damage_bonus, ' +
+        'weaponmod.critical_d12, ' +
+        'weaponmod.initiative, ' +
+        'weaponmod.hit, ' +
+        'weaponmod.distance, ' +
+        'weaponmod.weapontype_id, ' +
+        'weapontype.name AS weapontype_name ' +
+        'FROM weaponmod ' +
+        'LEFT JOIN weapontype ON weapontype.id = weaponmod.weapontype_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
@@ -28,7 +29,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE attribute.id = ?';
+        var call = query + ' WHERE weaponmod.id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 

@@ -4,20 +4,14 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'attribute.id, ' +
-        'attribute.name, ' +
-        'attribute.description, ' +
-        'attribute.protected, ' +
-        'attributetype.maximum, ' +
-        'attribute.created, ' +
-        'attribute.deleted, ' +
-        'attribute.attributetype_id, ' +
-        'attributetype.name AS attributetype_name, ' +
-        'attribute.manifestation_id, ' +
-        'manifestation.name AS manifestation_name ' +
-        'FROM attribute ' +
-        'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
-        'LEFT JOIN manifestation ON manifestation.id = attribute.manifestation_id';
+        'assettype.id, ' +
+        'assettype.name, ' +
+        'assettype.created, ' +
+        'assettype.deleted, ' +
+        'assettype.assetgroup_id, ' +
+        'assetgroup.name AS assetgroup_name ' +
+        'FROM assettype ' +
+        'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
@@ -28,7 +22,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE attribute.id = ?';
+        var call = query + ' WHERE assettype.id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 

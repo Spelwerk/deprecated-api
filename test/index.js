@@ -1,23 +1,28 @@
+// DEFAULT
 require('./route/assetgroup');
 require('./route/attributetype');
 require('./route/augmentationquality');
 require('./route/bionic');
 require('./route/bionicquality');
-require('./route/caste');
 require('./route/expertisetype');
 require('./route/loyalty');
 require('./route/manifestation');
 require('./route/protectionquality');
-require('./route/protectiontype');
 require('./route/setting');
 require('./route/species');
 require('./route/software');
 require('./route/weaponquality');
 require('./route/wound');
 
+// CUSTOM
+require('./route/assettype');
+require('./route/asset');
 require('./route/attribute');
-
-//require('./route/nature');
-//require('./route/identity');
-//require('./route/focus');
-//require('./route/protection');
+require('./route/caste');
+require('./route/focus');
+require('./route/identity');
+require('./route/nature');
+require('./route/protectiontype');
+require('./route/protection');
+require('./route/relationship');
+//require('./route/weaponmod');

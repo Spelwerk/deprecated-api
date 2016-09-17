@@ -4,20 +4,16 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'attribute.id, ' +
-        'attribute.name, ' +
-        'attribute.description, ' +
-        'attribute.protected, ' +
-        'attributetype.maximum, ' +
-        'attribute.created, ' +
-        'attribute.deleted, ' +
-        'attribute.attributetype_id, ' +
-        'attributetype.name AS attributetype_name, ' +
-        'attribute.manifestation_id, ' +
-        'manifestation.name AS manifestation_name ' +
-        'FROM attribute ' +
-        'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
-        'LEFT JOIN manifestation ON manifestation.id = attribute.manifestation_id';
+        'caste.id, ' +
+        'caste.name, ' +
+        'caste.description, ' +
+        'caste.created, ' +
+        'caste.deleted, ' +
+        'caste.attribute_id, ' +
+        'attribute.name AS attribute_name, ' +
+        'caste.attribute_value AS attribute_value ' +
+        'FROM caste ' +
+        'LEFT JOIN attribute ON attribute.id = caste.attribute_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
@@ -28,7 +24,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE attribute.id = ?';
+        var call = query + ' WHERE caste.id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 

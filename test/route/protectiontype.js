@@ -8,11 +8,13 @@ var chai = require('chai'),
     expect = chai.expect;
 
 var testPOST = {
-    name: r.rHEX(24)
+    name: r.rHEX(24),
+    attribute_id: 1
 };
 
 var testPUT = {
-    name: r.rHEX(24)
+    name: r.rHEX(24),
+    attribute_id: 1
 };
 
 var insertedID;
@@ -57,6 +59,7 @@ describe('Protection Type', function() {
 
                 _.each(data, function(item) {
                     should.exist(item.name);
+                    should.exist(item.attribute_id);
                     should.exist(item.created);
                 });
 
@@ -75,6 +78,7 @@ describe('Protection Type', function() {
 
                 expect(data.id).to.equal(insertedID);
                 expect(data.name).to.equal(testPUT.name);
+                expect(data.attribute_id).to.equal(testPUT.attribute_id);
                 should.exist(data.created);
 
                 done();

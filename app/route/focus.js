@@ -9,10 +9,13 @@ module.exports = function(pool, router, table, path) {
         'focus.description, ' +
         'focus.created, ' +
         'focus.deleted, ' +
-        'attribute.id AS attribute_id, ' +
-        'attribute.name AS attribute_name ' +
+        'focus.attribute_id, ' +
+        'attribute.name AS attribute_name, ' +
+        'focus.manifestation_id, ' +
+        'manifestation.name AS manifestation_name ' +
         'FROM focus ' +
-        'LEFT JOIN attribute ON attribute.id = focus.give_attribute_id';
+        'LEFT JOIN attribute ON attribute.id = focus.attribute_id ' +
+        'LEFT JOIN manifestation ON manifestation.id = focus.manifestation_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

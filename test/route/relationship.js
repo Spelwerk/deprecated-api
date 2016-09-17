@@ -10,25 +10,27 @@ var chai = require('chai'),
 var testPOST = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    protected: r.rBOOL(),
-    attributetype_id: 1,
-    manifestation_id: 1
+    occupation: r.rHEX(32),
+    finance: r.rINT(1,40),
+    popularity: r.rINT(1,40),
+    setting_id: 1
 };
 
 var testPUT = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    protected: r.rBOOL(),
-    attributetype_id: 1,
-    manifestation_id: 1
+    occupation: r.rHEX(32),
+    finance: r.rINT(1,40),
+    popularity: r.rINT(1,40),
+    setting_id: 1
 };
 
 var insertedID;
 
-describe('Attribute', function() {
+describe('Relationship', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/attribute', testPOST)
+        api('/relationship', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -42,7 +44,7 @@ describe('Attribute', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/attribute/id/'+insertedID, testPUT, 'put')
+        api('/relationship/id/'+insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -55,7 +57,7 @@ describe('Attribute', function() {
     });
 
     it('should successfully GET all rows', function(done) {
-        api('/attribute')
+        api('/relationship')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -66,12 +68,11 @@ describe('Attribute', function() {
                 _.each(data, function(item) {
                     should.exist(item.name);
                     should.exist(item.description);
-                    should.exist(item.protected);
-                    should.exist(item.maximum);
-                    should.exist(item.attributetype_id);
-                    should.exist(item.attributetype_name);
-                    should.exist(item.manifestation_id);
-                    should.exist(item.manifestation_name);
+                    should.exist(item.occupation);
+                    should.exist(item.finance);
+                    should.exist(item.popularity);
+                    should.exist(item.setting_id);
+                    should.exist(item.setting_name);
                     should.exist(item.created);
                 });
 
@@ -80,7 +81,7 @@ describe('Attribute', function() {
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/attribute/id/'+insertedID)
+        api('/relationship/id/'+insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -91,12 +92,11 @@ describe('Attribute', function() {
                 expect(data.id).to.equal(insertedID);
                 expect(data.name).to.equal(testPUT.name);
                 expect(data.description).to.equal(testPUT.description);
-                expect(data.protected).to.equal(testPUT.protected);
-                should.exist(data.maximum);
-                expect(data.attributetype_id).to.equal(testPUT.attributetype_id);
-                should.exist(data.attributetype_name);
-                expect(data.manifestation_id).to.equal(testPUT.manifestation_id);
-                should.exist(data.manifestation_name);
+                expect(data.occupation).to.equal(testPUT.occupation);
+                expect(data.finance).to.equal(testPUT.finance);
+                expect(data.popularity).to.equal(testPUT.popularity);
+                expect(data.setting_id).to.equal(testPUT.setting_id);
+                should.exist(data.setting_name);
                 should.exist(data.created);
 
                 done();
