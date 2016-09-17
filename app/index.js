@@ -13,6 +13,7 @@ module.exports = function(pool, router) {
     require('./route/protection')(pool, router, 'protection');
     require('./route/protectiontype')(pool, router, 'protectiontype');
     require('./route/relationship')(pool, router, 'relationship');
+    require('./route/weapongroup')(pool, router, 'weapongroup');
     require('./route/weaponmod')(pool, router, 'weaponmod');
 
     // DEFAULT

@@ -28,4 +28,5 @@ require('./route/relationship');
 require('./route/expertise');
 require('./route/milestone');
 require('./route/characteristic');
+require('./route/weapongroup');
 //require('./route/weaponmod');
