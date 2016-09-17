@@ -7,12 +7,12 @@ module.exports = function(pool, router, table, path) {
         'focus.id, ' +
         'focus.name, ' +
         'focus.description, ' +
-        'focus.created, ' +
-        'focus.deleted, ' +
         'focus.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
         'focus.manifestation_id, ' +
-        'manifestation.name AS manifestation_name ' +
+        'manifestation.name AS manifestation_name, ' +
+        'focus.created, ' +
+        'focus.deleted ' +
         'FROM focus ' +
         'LEFT JOIN attribute ON attribute.id = focus.attribute_id ' +
         'LEFT JOIN manifestation ON manifestation.id = focus.manifestation_id';

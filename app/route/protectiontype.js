@@ -6,10 +6,10 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'protectiontype.id, ' +
         'protectiontype.name, ' +
-        'protectiontype.created, ' +
-        'protectiontype.deleted, ' +
         'protectiontype.attribute_id, ' +
-        'attribute.name AS attribute_name ' +
+        'attribute.name AS attribute_name, ' +
+        'protectiontype.created, ' +
+        'protectiontype.deleted ' +
         'FROM protectiontype ' +
         'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id';
 

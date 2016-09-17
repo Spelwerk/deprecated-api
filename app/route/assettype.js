@@ -6,10 +6,10 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'assettype.id, ' +
         'assettype.name, ' +
-        'assettype.created, ' +
-        'assettype.deleted, ' +
         'assettype.assetgroup_id, ' +
-        'assetgroup.name AS assetgroup_name ' +
+        'assetgroup.name AS assetgroup_name, ' +
+        'assettype.created, ' +
+        'assettype.deleted ' +
         'FROM assettype ' +
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id';
 

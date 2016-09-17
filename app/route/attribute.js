@@ -9,12 +9,12 @@ module.exports = function(pool, router, table, path) {
         'attribute.description, ' +
         'attribute.protected, ' +
         'attributetype.maximum, ' +
-        'attribute.created, ' +
-        'attribute.deleted, ' +
         'attribute.attributetype_id, ' +
         'attributetype.name AS attributetype_name, ' +
         'attribute.manifestation_id, ' +
-        'manifestation.name AS manifestation_name ' +
+        'manifestation.name AS manifestation_name, ' +
+        'attribute.created, ' +
+        'attribute.deleted ' +
         'FROM attribute ' +
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
         'LEFT JOIN manifestation ON manifestation.id = attribute.manifestation_id';

@@ -7,10 +7,10 @@ module.exports = function(pool, router, table, path) {
         'identity.id, ' +
         'identity.name, ' +
         'identity.description, ' +
-        'identity.created, ' +
-        'identity.deleted, ' +
         'identity.attribute_id, ' +
-        'attribute.name AS attribute_name ' +
+        'attribute.name AS attribute_name, ' +
+        'identity.created, ' +
+        'identity.deleted ' +
         'FROM identity ' +
         'LEFT JOIN attribute ON attribute.id = identity.attribute_id';
 

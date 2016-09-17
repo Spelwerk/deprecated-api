@@ -25,4 +25,7 @@ require('./route/nature');
 require('./route/protectiontype');
 require('./route/protection');
 require('./route/relationship');
+require('./route/expertise');
+require('./route/milestone');
+require('./route/characteristic');
 //require('./route/weaponmod');

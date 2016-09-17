@@ -10,10 +10,10 @@ module.exports = function(pool, router, table, path) {
         'relationship.occupation, ' +
         'relationship.finance, ' +
         'relationship.popularity, ' +
-        'relationship.created, ' +
-        'relationship.deleted, ' +
         'relationship.setting_id, ' +
-        'setting.name AS setting_name ' +
+        'setting.name AS setting_name, ' +
+        'relationship.created, ' +
+        'relationship.deleted ' +
         'FROM relationship ' +
         'LEFT JOIN setting ON setting.id = relationship.setting_id';
 

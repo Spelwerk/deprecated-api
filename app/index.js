@@ -4,8 +4,11 @@ module.exports = function(pool, router) {
     require('./route/assettype')(pool, router, 'assettype');
     require('./route/attribute')(pool, router, 'attribute');
     require('./route/caste')(pool, router, 'caste');
+    require('./route/characteristic')(pool, router, 'characteristic');
+    require('./route/expertise')(pool, router, 'expertise');
     require('./route/focus')(pool, router, 'focus');
     require('./route/identity')(pool, router, 'identity');
+    require('./route/milestone')(pool, router, 'milestone');
     require('./route/nature')(pool, router, 'nature');
     require('./route/protection')(pool, router, 'protection');
     require('./route/protectiontype')(pool, router, 'protectiontype');

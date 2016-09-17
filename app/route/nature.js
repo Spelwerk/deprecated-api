@@ -7,10 +7,10 @@ module.exports = function(pool, router, table, path) {
         'nature.id, ' +
         'nature.name, ' +
         'nature.description, ' +
-        'nature.created, ' +
-        'nature.deleted, ' +
         'nature.attribute_id, ' +
-        'attribute.name AS attribute_name ' +
+        'attribute.name AS attribute_name, ' +
+        'nature.created, ' +
+        'nature.deleted ' +
         'FROM nature ' +
         'LEFT JOIN attribute ON attribute.id = nature.attribute_id';
 
