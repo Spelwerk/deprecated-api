@@ -29,4 +29,5 @@ require('./route/expertise');
 require('./route/milestone');
 require('./route/characteristic');
 require('./route/weapongroup');
+require('./route/weapontype');
 //require('./route/weaponmod');

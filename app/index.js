@@ -15,6 +15,7 @@ module.exports = function(pool, router) {
     require('./route/relationship')(pool, router, 'relationship');
     require('./route/weapongroup')(pool, router, 'weapongroup');
     require('./route/weaponmod')(pool, router, 'weaponmod');
+    require('./route/weapontype')(pool, router, 'weapontype');
 
     // DEFAULT
     require('./default')(pool, router, 'assetgroup');
