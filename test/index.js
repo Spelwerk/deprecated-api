@@ -31,4 +31,5 @@ require('./route/characteristic');
 require('./route/weapongroup');
 require('./route/weapontype');
 require('./route/weapon');
-//require('./standard/weaponmod');
+require('./route/weaponmod');
+require('./route/augmentation');

@@ -3,6 +3,7 @@ module.exports = function(pool, router) {
     require('./standard/asset')(pool, router, 'asset');
     require('./standard/assettype')(pool, router, 'assettype');
     require('./standard/attribute')(pool, router, 'attribute');
+    require('./standard/augmentation')(pool, router, 'augmentation');
     require('./standard/caste')(pool, router, 'caste');
     require('./standard/characteristic')(pool, router, 'characteristic');
     require('./standard/expertise')(pool, router, 'expertise');
