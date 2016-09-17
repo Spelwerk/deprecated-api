@@ -30,4 +30,5 @@ require('./route/milestone');
 require('./route/characteristic');
 require('./route/weapongroup');
 require('./route/weapontype');
-//require('./route/weaponmod');
+require('./route/weapon');
+//require('./standard/weaponmod');

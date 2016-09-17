@@ -1,21 +1,22 @@
 module.exports = function(pool, router) {
     // CUSTOM
-    require('./route/asset')(pool, router, 'asset');
-    require('./route/assettype')(pool, router, 'assettype');
-    require('./route/attribute')(pool, router, 'attribute');
-    require('./route/caste')(pool, router, 'caste');
-    require('./route/characteristic')(pool, router, 'characteristic');
-    require('./route/expertise')(pool, router, 'expertise');
-    require('./route/focus')(pool, router, 'focus');
-    require('./route/identity')(pool, router, 'identity');
-    require('./route/milestone')(pool, router, 'milestone');
-    require('./route/nature')(pool, router, 'nature');
-    require('./route/protection')(pool, router, 'protection');
-    require('./route/protectiontype')(pool, router, 'protectiontype');
-    require('./route/relationship')(pool, router, 'relationship');
-    require('./route/weapongroup')(pool, router, 'weapongroup');
-    require('./route/weaponmod')(pool, router, 'weaponmod');
-    require('./route/weapontype')(pool, router, 'weapontype');
+    require('./standard/asset')(pool, router, 'asset');
+    require('./standard/assettype')(pool, router, 'assettype');
+    require('./standard/attribute')(pool, router, 'attribute');
+    require('./standard/caste')(pool, router, 'caste');
+    require('./standard/characteristic')(pool, router, 'characteristic');
+    require('./standard/expertise')(pool, router, 'expertise');
+    require('./standard/focus')(pool, router, 'focus');
+    require('./standard/identity')(pool, router, 'identity');
+    require('./standard/milestone')(pool, router, 'milestone');
+    require('./standard/nature')(pool, router, 'nature');
+    require('./standard/protection')(pool, router, 'protection');
+    require('./standard/protectiontype')(pool, router, 'protectiontype');
+    require('./standard/relationship')(pool, router, 'relationship');
+    require('./standard/weapon')(pool, router, 'weapon');
+    require('./standard/weapongroup')(pool, router, 'weapongroup');
+    require('./standard/weaponmod')(pool, router, 'weaponmod');
+    require('./standard/weapontype')(pool, router, 'weapontype');
 
     // DEFAULT
     require('./default')(pool, router, 'assetgroup');
