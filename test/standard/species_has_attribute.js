@@ -19,19 +19,19 @@ var testPUT = {
     value: r.rINT(1,10)
 };
 
+var verifyData = function(data) {
+    should.exist(data);
+
+    _.each(data, function(item) {
+        should.exist(item.species_id);
+        should.exist(item.species_name);
+        should.exist(item.attribute_id);
+        should.exist(item.attribute_name);
+        should.exist(item.value);
+    });
+};
+
 describe('Species has Attribute', function() {
-
-    var verifyData = function(data) {
-        should.exist(data);
-
-        _.each(data, function(item) {
-            should.exist(item.species_id);
-            should.exist(item.species_name);
-            should.exist(item.attribute_id);
-            should.exist(item.attribute_name);
-            should.exist(item.value);
-        });
-    };
 
     it('should successfully POST new row', function(done) {
         api('/species-attribute', testPOST)

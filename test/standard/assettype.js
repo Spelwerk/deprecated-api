@@ -19,30 +19,39 @@ var testPUT = {
 
 var insertedID;
 
-describe('Asset Type', function() {
+var verifyData = function(data) {
+    should.exist(data);
+
+    _.each(data, function(item) {
+        should.exist(item.id);
+        should.exist(item.name);
+        should.exist(item.assetgroup_id);
+        should.exist(item.assetgroup_name);
+        should.exist(item.created);
+    });
+};
+
+describe('Asset', function() {
 
     it('should successfully POST new row', function(done) {
         api('/assettype', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-                insertedID = response.body.id;
+                should.exist(response.body.success);
 
-                should.exist(data);
+                insertedID = response.body.id;
 
                 done();
             });
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/assettype/id/'+insertedID, testPUT, 'put')
+        api('/assettype/id/' + insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
+                should.exist(response.body.success);
 
                 done();
             });
@@ -53,38 +62,21 @@ describe('Asset Type', function() {
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
-
-                _.each(data, function(item) {
-                    should.exist(item.name);
-                    should.exist(item.assetgroup_id);
-                    should.exist(item.assetgroup_name);
-                    should.exist(item.created);
-                });
+                verifyData(response.body.success);
 
                 done();
             });
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/assettype/id/'+insertedID)
+        api('/assettype/id/' + insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success[0];
-
-                should.exist(data);
-
-                expect(data.id).to.equal(insertedID);
-                expect(data.name).to.equal(testPUT.name);
-                expect(data.assetgroup_id).to.equal(testPUT.assetgroup_id);
-                should.exist(data.assetgroup_name);
-                should.exist(data.created);
+                verifyData(response.body.success);
 
                 done();
             });
-    })
+    });
 
 });

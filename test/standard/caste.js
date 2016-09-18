@@ -27,12 +27,12 @@ var verifyData = function(data) {
     should.exist(data);
 
     _.each(data, function(item) {
+        should.exist(item.id);
         should.exist(item.name);
         should.exist(item.description);
         should.exist(item.attribute_id);
         should.exist(item.attribute_value);
         should.exist(item.created);
-        expect(item.deleted).to.be.a('null');
     });
 };
 
@@ -82,6 +82,6 @@ describe('Caste', function() {
 
                 done();
             });
-    })
+    });
 
 });

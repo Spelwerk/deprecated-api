@@ -27,6 +27,21 @@ var testPUT = {
 
 var insertedID;
 
+var verifyData = function(data) {
+    should.exist(data);
+
+    _.each(data, function(item) {
+        should.exist(item.id);
+        should.exist(item.name);
+        should.exist(item.description);
+        should.exist(item.price);
+        should.exist(item.hacking);
+        should.exist(item.hacking_bonus);
+        should.exist(item.legal);
+        should.exist(item.created);
+    });
+};
+
 describe('Software', function() {
 
     it('should successfully POST new row', function(done) {
@@ -34,23 +49,20 @@ describe('Software', function() {
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-                insertedID = response.body.id;
+                should.exist(response.body.success);
 
-                should.exist(data);
+                insertedID = response.body.id;
 
                 done();
             });
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/software/id/'+insertedID, testPUT, 'put')
+        api('/software/id/' + insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
+                should.exist(response.body.success);
 
                 done();
             });
@@ -61,44 +73,21 @@ describe('Software', function() {
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
-
-                _.each(data, function(item) {
-                    should.exist(item.name);
-                    should.exist(item.description);
-                    should.exist(item.price);
-                    should.exist(item.hacking);
-                    should.exist(item.hacking_bonus);
-                    should.exist(item.legal);
-                    should.exist(item.created);
-                });
+                verifyData(response.body.success);
 
                 done();
             });
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/software/id/'+insertedID)
+        api('/software/id/' + insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success[0];
-
-                should.exist(data);
-
-                expect(data.id).to.equal(insertedID);
-                expect(data.name).to.equal(testPUT.name);
-                expect(data.description).to.equal(testPUT.description);
-                expect(data.price).to.equal(testPUT.price);
-                expect(data.hacking).to.equal(testPUT.hacking);
-                expect(data.hacking_bonus).to.equal(testPUT.hacking_bonus);
-                expect(data.legal).to.equal(testPUT.legal);
-                should.exist(data.created);
+                verifyData(response.body.success);
 
                 done();
             });
-    })
+    });
 
 });

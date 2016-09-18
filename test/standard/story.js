@@ -22,31 +22,40 @@ var testPUT = {
 var insertedID,
     insertedHASH;
 
-describe('Story', function() {
+var verifyData = function(data) {
+    should.exist(data);
+
+    _.each(data, function(item) {
+        should.exist(item.id);
+        should.exist(item.name);
+        should.exist(item.description);
+        should.exist(item.setting_id);
+        should.exist(item.created);
+    });
+};
+
+describe('Asset', function() {
 
     it('should successfully POST new row', function(done) {
         api('/story', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
+                should.exist(response.body.success);
+
                 insertedID = response.body.id;
                 insertedHASH = response.body.hash;
-
-                should.exist(data);
 
                 done();
             });
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/story/hash/'+insertedHASH, testPUT, 'put')
+        api('/story/hash/' + insertedHASH, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
+                should.exist(response.body.success);
 
                 done();
             });
@@ -57,35 +66,18 @@ describe('Story', function() {
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
-
-                _.each(data, function(item) {
-                    should.exist(item.name);
-                    should.exist(item.description);
-                    should.exist(item.setting_id);
-                    should.exist(item.created);
-                });
+                verifyData(response.body.success);
 
                 done();
             });
     });
 
     it('should successfully GET latest row with hash', function(done) {
-        api('/story/hash/'+insertedHASH)
+        api('/story/hash/' + insertedHASH)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success[0];
-
-                should.exist(data);
-
-                expect(data.id).to.equal(insertedID);
-                expect(data.name).to.equal(testPUT.name);
-                expect(data.description).to.equal(testPUT.description);
-                expect(data.setting_id).to.equal(testPUT.setting_id);
-                should.exist(data.created);
+                verifyData(response.body.success);
 
                 done();
             });

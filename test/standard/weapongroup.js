@@ -25,6 +25,23 @@ var testPUT = {
 
 var insertedID;
 
+var verifyData = function(data) {
+    should.exist(data);
+
+    _.each(data, function(item) {
+        should.exist(item.id);
+        should.exist(item.name);
+        should.exist(item.description);
+        should.exist(item.skill_attribute_id);
+        should.exist(item.skill_attribute_name);
+        should.exist(item.damage_attribute_id);
+        should.exist(item.damage_attribute_name);
+        should.exist(item.expertise_id);
+        should.exist(item.expertise_name);
+        should.exist(item.created);
+    });
+};
+
 describe('Weapon Group', function() {
 
     it('should successfully POST new row', function(done) {
@@ -32,23 +49,20 @@ describe('Weapon Group', function() {
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-                insertedID = response.body.id;
+                should.exist(response.body.success);
 
-                should.exist(data);
+                insertedID = response.body.id;
 
                 done();
             });
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/weapongroup/id/'+insertedID, testPUT, 'put')
+        api('/weapongroup/id/' + insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
+                should.exist(response.body.success);
 
                 done();
             });
@@ -59,48 +73,21 @@ describe('Weapon Group', function() {
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
-
-                _.each(data, function(item) {
-                    should.exist(item.name);
-                    should.exist(item.description);
-                    should.exist(item.skill_attribute_id);
-                    should.exist(item.skill_attribute_name);
-                    should.exist(item.damage_attribute_id);
-                    should.exist(item.damage_attribute_name);
-                    should.exist(item.expertise_id);
-                    should.exist(item.expertise_name);
-                    should.exist(item.created);
-                });
+                verifyData(response.body.success);
 
                 done();
             });
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/weapongroup/id/'+insertedID)
+        api('/weapongroup/id/' + insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success[0];
-
-                should.exist(data);
-
-                expect(data.id).to.equal(insertedID);
-                expect(data.name).to.equal(testPUT.name);
-                expect(data.description).to.equal(testPUT.description);
-                expect(data.skill_attribute_id).to.equal(testPUT.skill_attribute_id);
-                should.exist(data.skill_attribute_name);
-                expect(data.damage_attribute_id).to.equal(testPUT.damage_attribute_id);
-                should.exist(data.damage_attribute_name);
-                expect(data.expertise_id).to.equal(testPUT.expertise_id);
-                should.exist(data.expertise_name);
-                should.exist(data.created);
+                verifyData(response.body.success);
 
                 done();
             });
-    })
+    });
 
 });

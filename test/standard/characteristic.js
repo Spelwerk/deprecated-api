@@ -10,7 +10,7 @@ var chai = require('chai'),
 var testPOST = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    gift: r.rBOOL(),
+    gift: 1,
     species_id: 1,
     manifestation_id: 1,
     attribute_id: 1,
@@ -29,6 +29,25 @@ var testPUT = {
 
 var insertedID;
 
+var verifyData = function(data) {
+    should.exist(data);
+
+    _.each(data, function(item) {
+        should.exist(item.id);
+        should.exist(item.name);
+        should.exist(item.description);
+        should.exist(item.gift);
+        should.exist(item.species_id);
+        should.exist(item.species_name);
+        should.exist(item.manifestation_id);
+        should.exist(item.manifestation_name);
+        should.exist(item.attribute_id);
+        should.exist(item.attribute_name);
+        should.exist(item.attribute_value);
+        should.exist(item.created);
+    });
+};
+
 describe('Characteristic', function() {
 
     it('should successfully POST new row', function(done) {
@@ -36,23 +55,20 @@ describe('Characteristic', function() {
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-                insertedID = response.body.id;
+                should.exist(response.body.success);
 
-                should.exist(data);
+                insertedID = response.body.id;
 
                 done();
             });
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/characteristic/id/'+insertedID, testPUT, 'put')
+        api('/characteristic/id/' + insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
+                should.exist(response.body.success);
 
                 done();
             });
@@ -63,48 +79,18 @@ describe('Characteristic', function() {
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
-
-                _.each(data, function(item) {
-                    should.exist(item.name);
-                    should.exist(item.description);
-                    should.exist(item.gift);
-                    should.exist(item.species_id);
-                    should.exist(item.species_name);
-                    should.exist(item.manifestation_id);
-                    should.exist(item.manifestation_name);
-                    should.exist(item.attribute_id);
-                    should.exist(item.attribute_name);
-                    should.exist(item.attribute_value);
-                });
+                verifyData(response.body.success);
 
                 done();
             });
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/characteristic/id/'+insertedID)
+        api('/characteristic/id/' + insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success[0];
-
-                should.exist(data);
-
-                expect(data.id).to.equal(insertedID);
-                expect(data.name).to.equal(testPUT.name);
-                expect(data.description).to.equal(testPUT.description);
-                expect(data.gift).to.equal(testPUT.gift);
-                expect(data.species_id).to.equal(testPUT.species_id);
-                should.exist(data.species_name);
-                expect(data.manifestation_id).to.equal(testPUT.manifestation_id);
-                should.exist(data.manifestation_name);
-                expect(data.attribute_id).to.equal(testPUT.attribute_id);
-                should.exist(data.attribute_name);
-                expect(data.attribute_value).to.equal(testPUT.attribute_value);
-                should.exist(data.created);
+                verifyData(response.body.success);
 
                 done();
             });

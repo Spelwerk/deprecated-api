@@ -9,7 +9,6 @@ var chai = require('chai'),
 
 var testPOST = {
     name: r.rHEX(24),
-    description: r.rHEX(64),
     price: r.rINT(1,40),
     damage_d12: r.rINT(1,40),
     damage_bonus: r.rINT(1,40),
@@ -21,7 +20,6 @@ var testPOST = {
 
 var testPUT = {
     name: r.rHEX(24),
-    description: r.rHEX(64),
     price: r.rINT(1,40),
     damage_d12: r.rINT(1,40),
     damage_bonus: r.rINT(1,40),
@@ -33,6 +31,23 @@ var testPUT = {
 
 var insertedID;
 
+var verifyData = function(data) {
+    should.exist(data);
+
+    _.each(data, function(item) {
+        should.exist(item.id);
+        should.exist(item.name);
+        should.exist(item.price);
+        should.exist(item.damage_d12);
+        should.exist(item.damage_bonus);
+        should.exist(item.critical_d12);
+        should.exist(item.initiative);
+        should.exist(item.hit);
+        should.exist(item.distance);
+        should.exist(item.created);
+    });
+};
+
 describe('Weapon Quality', function() {
 
     it('should successfully POST new row', function(done) {
@@ -40,23 +55,20 @@ describe('Weapon Quality', function() {
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-                insertedID = response.body.id;
+                should.exist(response.body.success);
 
-                should.exist(data);
+                insertedID = response.body.id;
 
                 done();
             });
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/weaponquality/id/'+insertedID, testPUT, 'put')
+        api('/weaponquality/id/' + insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
+                should.exist(response.body.success);
 
                 done();
             });
@@ -67,50 +79,21 @@ describe('Weapon Quality', function() {
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success;
-
-                should.exist(data);
-
-                _.each(data, function(item) {
-                    should.exist(item.name);
-                    should.exist(item.description);
-                    should.exist(item.price);
-                    should.exist(item.damage_d12);
-                    should.exist(item.damage_bonus);
-                    should.exist(item.critical_d12);
-                    should.exist(item.initiative);
-                    should.exist(item.hit);
-                    should.exist(item.distance);
-                    should.exist(item.created);
-                });
+                verifyData(response.body.success);
 
                 done();
             });
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/weaponquality/id/'+insertedID)
+        api('/weaponquality/id/' + insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
-                var data = response.body.success[0];
-
-                should.exist(data);
-
-                expect(data.id).to.equal(insertedID);
-                expect(data.name).to.equal(testPUT.name);
-                expect(data.description).to.equal(testPUT.description);
-                expect(data.price).to.equal(testPUT.price);
-                expect(data.damage_d12).to.equal(testPUT.damage_d12);
-                expect(data.damage_bonus).to.equal(testPUT.damage_bonus);
-                expect(data.critical_d12).to.equal(testPUT.critical_d12);
-                expect(data.initiative).to.equal(testPUT.initiative);
-                expect(data.hit).to.equal(testPUT.hit);
-                expect(data.distance).to.equal(testPUT.distance);
-                should.exist(data.created);
+                verifyData(response.body.success);
 
                 done();
             });
-    })
+    });
 
 });
