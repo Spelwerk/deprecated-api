@@ -12,11 +12,6 @@ var testPOST = {
     attribute_id: 1
 };
 
-var testPUT = {
-    setting_id: 1,
-    attribute_id: 1
-};
-
 var verifyData = function(data) {
     should.exist(data);
 
@@ -48,19 +43,8 @@ describe('Setting has Attribute', function() {
             });
     });
 
-    it('should successfully PUT new row', function(done) {
-        api('/setting-attribute', testPUT, 'put')
-            .expect(201)
-            .end(function(error, response) {
-                assert.ifError(error);
-                should.exist(response.body.success);
-
-                done();
-            });
-    });
-
     it('should successfully GET all rows for setting', function(done) {
-        api('/setting-attribute/id/'+testPUT.setting_id)
+        api('/setting-attribute/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -71,7 +55,7 @@ describe('Setting has Attribute', function() {
     });
 
     it('should successfully GET all rows for setting, type, and manifestation', function(done) {
-        api('/setting-attribute/id/' + testPUT.setting_id + '/type/1/manifestation/1')
+        api('/setting-attribute/id/' + testPOST.setting_id + '/type/1/manifestation/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

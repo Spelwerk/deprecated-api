@@ -12,11 +12,6 @@ var testPOST = {
     augmentation_id: 1
 };
 
-var testPUT = {
-    setting_id: 1,
-    augmentation_id: 1
-};
-
 var verifyData = function(data) {
     should.exist(data);
 
@@ -53,19 +48,8 @@ describe('Setting has Augmentation', function() {
             });
     });
 
-    it('should successfully PUT new row', function(done) {
-        api('/setting-augmentation', testPUT, 'put')
-            .expect(201)
-            .end(function(error, response) {
-                assert.ifError(error);
-                should.exist(response.body.success);
-
-                done();
-            });
-    });
-
     it('should successfully GET all rows for setting', function(done) {
-        api('/setting-augmentation/id/'+testPUT.setting_id)
+        api('/setting-augmentation/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -76,7 +60,7 @@ describe('Setting has Augmentation', function() {
     });
 
     it('should successfully GET all rows for setting and bionic', function(done) {
-        api('/setting-augmentation/id/' + testPUT.setting_id + '/bionic/1')
+        api('/setting-augmentation/id/' + testPOST.setting_id + '/bionic/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

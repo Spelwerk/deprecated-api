@@ -46,10 +46,6 @@ module.exports = function(pool, router, table, path) {
         rest.INSERT(pool, req, res, table, req.body);
     });
 
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table, req.body);
-    });
-
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
             "setting_id": req.params.id1,

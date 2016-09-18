@@ -46,7 +46,7 @@ describe('Manifestation', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/manifestation/id/'+insertedID, testPUT, 'put')
+        api('/manifestation/id/' + insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -68,7 +68,7 @@ describe('Manifestation', function() {
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/manifestation/id/'+insertedID)
+        api('/manifestation/id/' + insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

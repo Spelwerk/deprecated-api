@@ -12,11 +12,6 @@ var testPOST = {
     bionic_id: 1
 };
 
-var testPUT = {
-    setting_id: 1,
-    bionic_id: 1
-};
-
 var verifyData = function(data) {
     should.exist(data);
 
@@ -34,7 +29,7 @@ var verifyData = function(data) {
     });
 };
 
-describe('Setting has Augmentation', function() {
+describe('Setting has Bionic', function() {
 
     it('should successfully POST new row', function(done) {
         api('/setting-bionic', testPOST)
@@ -47,19 +42,8 @@ describe('Setting has Augmentation', function() {
             });
     });
 
-    it('should successfully PUT new row', function(done) {
-        api('/setting-bionic', testPUT, 'put')
-            .expect(201)
-            .end(function(error, response) {
-                assert.ifError(error);
-                should.exist(response.body.success);
-
-                done();
-            });
-    });
-
     it('should successfully GET all rows for setting', function(done) {
-        api('/setting-bionic/id/'+testPUT.setting_id)
+        api('/setting-bionic/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
