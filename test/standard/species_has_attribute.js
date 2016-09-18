@@ -34,7 +34,7 @@ describe('Species has Attribute', function() {
     };
 
     it('should successfully POST new row', function(done) {
-        api('/specieshas/attribute', testPOST)
+        api('/species-attribute', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -45,7 +45,7 @@ describe('Species has Attribute', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/specieshas/attribute', testPUT, 'put')
+        api('/species-attribute', testPUT, 'put')
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -55,19 +55,8 @@ describe('Species has Attribute', function() {
             });
     });
 
-    it('should successfully GET all rows', function(done) {
-        api('/specieshas/attribute')
-            .expect(200)
-            .end(function(error, response) {
-                assert.ifError(error);
-                verifyData(response.body.success);
-
-                done();
-            });
-    });
-
-    it('should successfully GET latest row', function(done) {
-        api('/specieshas/attribute/id/'+testPUT.species_id)
+    it('should successfully GET all rows for species', function(done) {
+        api('/species-attribute/id/'+testPUT.species_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

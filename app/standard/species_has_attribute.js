@@ -17,11 +17,6 @@ module.exports = function(pool, router, table, path) {
         rest.HELP(pool, req, res, table);
     });
 
-    router.get(path, function(req, res) {
-        var call = query + ' WHERE attribute.deleted is null';
-        rest.QUERY(pool, req, res, call, null);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE species_has_attribute.species_id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);

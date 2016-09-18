@@ -13,10 +13,10 @@ module.exports = function(pool, router, table, path) {
         'assettype.name AS assettype_name, ' +
         'assettype.assetgroup_id, ' +
         'assetgroup.name AS assetgroup_name, ' +
-        'setting.id AS setting_id, ' +
-        'setting.name AS setting_name, ' +
         'asset.created, ' +
-        'asset.deleted ' +
+        'asset.deleted, ' +
+        'setting.id AS setting_id, ' +
+        'setting.name AS setting_name ' +
         'FROM setting_has_asset ' +
         'LEFT JOIN setting ON setting.id = setting_has_asset.setting_id ' +
         'LEFT JOIN asset ON asset.id = setting_has_asset.asset_id ' +
@@ -27,24 +27,21 @@ module.exports = function(pool, router, table, path) {
         rest.HELP(pool, req, res, table);
     });
 
-    router.get(path, function(req, res) {
-        var call = query + ' WHERE asset.deleted is null';
-        rest.QUERY(pool, req, res, call, null);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE setting_has_asset.asset_id = ? AND asset.deleted is null';
+        var call = query + ' WHERE ' +
+            'setting_has_asset.setting_id = ? AND ' +
+            'asset.deleted is null';
+
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.get(path + '/type/:id', function(req, res) {
-        var call = query + ' WHERE asset.assettype_id = ? AND asset.deleted is null';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
+    router.get(path + '/id/:id1/type/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'setting_has_asset.setting_id = ? AND ' +
+            'asset.assettype_id = ? AND ' +
+            'asset.deleted is null';
 
-    router.get(path + '/group/:id', function(req, res) {
-        var call = query + ' WHERE assettype.assetgroup_id = ? AND asset.deleted is null';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 
     router.post(path, function(req, res) {
@@ -60,6 +57,7 @@ module.exports = function(pool, router, table, path) {
             "setting_id": req.params.id1,
             "asset_id": req.params.id2
         };
+
         rest.REMOVE(pool, req, res, table, call);
     });
 };

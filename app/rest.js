@@ -5,8 +5,9 @@ function DEBUG(call, error, key, restName) {
     if(key == config.keys.debug) {
         if(error) {
             console.log('\nmethod: ' + restName);
-            console.log('call:   ' + call);
-            console.log('error:  ' + error);
+            console.log('\ncall:   ' + call);
+            console.log('\nerror:  ' + error);
+            console.log('\n------\n');
         }
     }
 }
@@ -46,6 +47,7 @@ exports.GET = function(pool, req, res, table) {
 };
 
 exports.QUERY = function(pool, req, res, call, params) {
+    params = params || null;
     if(params) {
         call = mysql.format(call, params);
     }

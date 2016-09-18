@@ -40,6 +40,7 @@ require('./standard/story');
 
 // SETTING
 require('./setting/setting_has_asset');
+require('./setting/setting_has_attribute');
 
 // PERSON
 require('./person/person');
