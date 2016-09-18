@@ -3,8 +3,8 @@ module.exports = function(pool, router) {
     require('./default')(pool, router, 'assetgroup');
     require('./default')(pool, router, 'attributetype');
     require('./default')(pool, router, 'augmentationquality');
-    require('./default')(pool, router, 'bionic');
     require('./default')(pool, router, 'bionicquality');
+    require('./default')(pool, router, 'bodypart');
     require('./default')(pool, router, 'expertisetype');
     require('./default')(pool, router, 'loyalty');
     require('./default')(pool, router, 'manifestation');
@@ -19,6 +19,7 @@ module.exports = function(pool, router) {
     require('./standard/assettype')(pool, router, 'assettype');
     require('./standard/attribute')(pool, router, 'attribute');
     require('./standard/augmentation')(pool, router, 'augmentation');
+    require('./standard/bionic')(pool, router, 'bionic');
     require('./standard/caste')(pool, router, 'caste');
     require('./standard/characteristic')(pool, router, 'characteristic');
     require('./standard/expertise')(pool, router, 'expertise');

@@ -17,25 +17,25 @@ var testPUT = {
     attribute_id: 1
 };
 
+var verifyData = function(data) {
+    should.exist(data);
+
+    _.each(data, function(item) {
+        should.exist(item.id);
+        should.exist(item.name);
+        should.exist(item.description);
+        should.exist(item.protected);
+        should.exist(item.maximum);
+        should.exist(item.attributetype_id);
+        should.exist(item.attributetype_name);
+        should.exist(item.manifestation_id);
+        should.exist(item.manifestation_name);
+        should.exist(item.created);
+        expect(item.deleted).to.be.a('null');
+    });
+};
+
 describe('Setting has Attribute', function() {
-
-    var verifyData = function(data) {
-        should.exist(data);
-
-        _.each(data, function(item) {
-            should.exist(item.id);
-            should.exist(item.name);
-            should.exist(item.description);
-            should.exist(item.protected);
-            should.exist(item.maximum);
-            should.exist(item.attributetype_id);
-            should.exist(item.attributetype_name);
-            should.exist(item.manifestation_id);
-            should.exist(item.manifestation_name);
-            should.exist(item.created);
-            expect(item.deleted).to.be.a('null');
-        });
-    };
 
     it('should successfully POST new row', function(done) {
         api('/setting-attribute', testPOST)

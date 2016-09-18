@@ -9,12 +9,12 @@ var chai = require('chai'),
 
 var testPOST = {
     setting_id: 1,
-    augmentation_id: 1
+    bionic_id: 1
 };
 
 var testPUT = {
     setting_id: 1,
-    augmentation_id: 1
+    bionic_id: 1
 };
 
 var verifyData = function(data) {
@@ -27,14 +27,8 @@ var verifyData = function(data) {
         should.exist(item.price);
         should.exist(item.energy);
         should.exist(item.legal);
-        should.exist(item.bionic_id);
-        should.exist(item.bionic_name);
-        should.exist(item.attribute_id);
-        should.exist(item.attribute_name);
-        should.exist(item.attribute_description);
-        should.exist(item.attribute_value);
-        should.exist(item.weapon_id);
-        should.exist(item.weapon_name);
+        should.exist(item.bodypart_id);
+        should.exist(item.bodypart_name);
         should.exist(item.created);
         expect(item.deleted).to.be.a('null');
     });
@@ -43,7 +37,7 @@ var verifyData = function(data) {
 describe('Setting has Augmentation', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-augmentation', testPOST)
+        api('/setting-bionic', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -54,7 +48,7 @@ describe('Setting has Augmentation', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/setting-augmentation', testPUT, 'put')
+        api('/setting-bionic', testPUT, 'put')
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -65,18 +59,7 @@ describe('Setting has Augmentation', function() {
     });
 
     it('should successfully GET all rows for setting', function(done) {
-        api('/setting-augmentation/id/'+testPUT.setting_id)
-            .expect(200)
-            .end(function(error, response) {
-                assert.ifError(error);
-                verifyData(response.body.success);
-
-                done();
-            });
-    });
-
-    it('should successfully GET all rows for setting and bionic', function(done) {
-        api('/setting-augmentation/id/' + testPUT.setting_id + '/bionic/1')
+        api('/setting-bionic/id/'+testPUT.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

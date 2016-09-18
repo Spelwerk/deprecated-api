@@ -1,27 +1,21 @@
-//todo add bodypart link!
 var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'protection.id, ' +
-        'protection.name, ' +
-        'protection.description, ' +
-        'protection.price, ' +
-        'protection.protectiontype_id, ' +
-        'protectiontype.name AS protectiontype_name, ' +
-        'protectiontype.attribute_id, ' +
-        'attribute.name AS attribute_name,' +
-        'protection.attribute_value, ' +
-        'protection.bodypart_id, ' +
+        'bionic.id, ' +
+        'bionic.name, ' +
+        'bionic.description, ' +
+        'bionic.price, ' +
+        'bionic.energy, ' +
+        'bionic.legal, ' +
+        'bionic.bodypart_id, ' +
         'bodypart.name AS bodypart_name, ' +
-        'protection.created, ' +
-        'protection.deleted ' +
-        'FROM protection ' +
-        'LEFT JOIN protectiontype ON protectiontype.id = protection.protectiontype_id ' +
-        'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id ' +
-        'LEFT JOIN bodypart ON bodypart.id = protection.bodypart_id ';
+        'bionic.created, ' +
+        'bionic.deleted ' +
+        'FROM bionic ' +
+        'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
@@ -32,7 +26,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE protection.id = ?';
+        var call = query + ' WHERE bionic.id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 

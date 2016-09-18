@@ -8,14 +8,16 @@ var chai = require('chai'),
     expect = chai.expect;
 
 var testPOST = {
-    setting_id: 1,
-    augmentation_id: 1
+    name: r.rHEX(24),
+    description: r.rHEX(64)
 };
 
 var testPUT = {
-    setting_id: 1,
-    augmentation_id: 1
+    name: r.rHEX(24),
+    description: r.rHEX(64)
 };
+
+var insertedID;
 
 var verifyData = function(data) {
     should.exist(data);
@@ -24,38 +26,28 @@ var verifyData = function(data) {
         should.exist(item.id);
         should.exist(item.name);
         should.exist(item.description);
-        should.exist(item.price);
-        should.exist(item.energy);
-        should.exist(item.legal);
-        should.exist(item.bionic_id);
-        should.exist(item.bionic_name);
-        should.exist(item.attribute_id);
-        should.exist(item.attribute_name);
-        should.exist(item.attribute_description);
-        should.exist(item.attribute_value);
-        should.exist(item.weapon_id);
-        should.exist(item.weapon_name);
         should.exist(item.created);
-        expect(item.deleted).to.be.a('null');
     });
 };
 
-describe('Setting has Augmentation', function() {
+describe('Body Part', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-augmentation', testPOST)
+        api('/bodypart', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
                 should.exist(response.body.success);
+
+                insertedID = response.body.id;
 
                 done();
             });
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/setting-augmentation', testPUT, 'put')
-            .expect(201)
+        api('/bodypart/id/'+insertedID, testPUT, 'put')
+            .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
                 should.exist(response.body.success);
@@ -64,8 +56,8 @@ describe('Setting has Augmentation', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-augmentation/id/'+testPUT.setting_id)
+    it('should successfully GET all rows', function(done) {
+        api('/bodypart')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -75,8 +67,8 @@ describe('Setting has Augmentation', function() {
             });
     });
 
-    it('should successfully GET all rows for setting and bionic', function(done) {
-        api('/setting-augmentation/id/' + testPUT.setting_id + '/bionic/1')
+    it('should successfully GET latest row', function(done) {
+        api('/bodypart/id/'+insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -84,6 +76,6 @@ describe('Setting has Augmentation', function() {
 
                 done();
             });
-    });
+    })
 
 });

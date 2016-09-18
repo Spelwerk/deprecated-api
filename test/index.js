@@ -2,8 +2,8 @@
 require('./standard/assetgroup');
 require('./standard/attributetype');
 require('./standard/augmentationquality');
-require('./standard/bionic');
 require('./standard/bionicquality');
+require('./standard/bodypart');
 require('./standard/expertisetype');
 require('./standard/loyalty');
 require('./standard/manifestation');
@@ -15,6 +15,7 @@ require('./standard/weaponquality');
 require('./standard/wound');
 
 // STANDARD
+require('./standard/bionic');
 require('./standard/story');
 require('./standard/assettype');
 require('./standard/asset');
@@ -42,6 +43,7 @@ require('./standard/story');
 require('./setting/setting_has_asset');
 require('./setting/setting_has_attribute');
 require('./setting/setting_has_augmentation');
+require('./setting/setting_has_bionic');
 
 // PERSON
 require('./person/person');
