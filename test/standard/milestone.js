@@ -10,7 +10,7 @@ var chai = require('chai'),
 var testPOST = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    upbringing: r.rBOOL(),
+    upbringing: 1,
     caste_id: 1,
     manifestation_id: 1,
     attribute_id: 1,
@@ -21,7 +21,7 @@ var testPOST = {
 var testPUT = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    upbringing: r.rBOOL(),
+    upbringing: 1,
     caste_id: 1,
     manifestation_id: 1,
     attribute_id: 1,

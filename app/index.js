@@ -67,6 +67,7 @@ module.exports = function(pool, router) {
     require('./setting/setting_has_milestone')(pool, router, 'setting_has_milestone', '/setting-milestone');
     require('./setting/setting_has_nature')(pool, router, 'setting_has_nature', '/setting-nature');
     require('./setting/setting_has_protection')(pool, router, 'setting_has_protection', '/setting-protection');
+    require('./setting/setting_has_software')(pool, router, 'setting_has_software', '/setting-software');
     require('./setting/setting_has_species')(pool, router, 'setting_has_species', '/setting-species');
     require('./setting/setting_has_weapon')(pool, router, 'setting_has_weapon', '/setting-weapon');
     require('./setting/setting_has_weaponmod')(pool, router, 'setting_has_weaponmod', '/setting-weaponmod');

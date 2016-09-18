@@ -20,7 +20,7 @@ var testPOST = {
 var testPUT = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    gift: r.rBOOL(),
+    gift: 1,
     species_id: 1,
     manifestation_id: 1,
     attribute_id: 1,

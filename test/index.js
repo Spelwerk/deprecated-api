@@ -51,6 +51,7 @@ require('./setting/setting_has_manifestation');
 require('./setting/setting_has_milestone');
 require('./setting/setting_has_nature');
 require('./setting/setting_has_protection');
+require('./setting/setting_has_software');
 require('./setting/setting_has_species');
 require('./setting/setting_has_weapon');
 require('./setting/setting_has_weaponmod');

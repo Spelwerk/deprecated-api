@@ -9,7 +9,7 @@ var chai = require('chai'),
 
 var testPOST = {
     setting_id: 1,
-    characteristic_id: 1
+    software_id: 1
 };
 
 var verifyData = function(data) {
@@ -19,23 +19,19 @@ var verifyData = function(data) {
         should.exist(item.id);
         should.exist(item.name);
         should.exist(item.description);
-        should.exist(item.gift);
-        should.exist(item.species_id);
-        should.exist(item.species_name);
-        should.exist(item.manifestation_id);
-        should.exist(item.manifestation_name);
-        should.exist(item.attribute_id);
-        should.exist(item.attribute_name);
-        should.exist(item.attribute_value);
+        should.exist(item.price);
+        should.exist(item.hacking);
+        should.exist(item.hacking_bonus);
+        should.exist(item.legal);
         should.exist(item.created);
         expect(item.deleted).to.be.a('null');
     });
 };
 
-describe('Setting has Characteristic', function() {
+describe('Setting has Software', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-characteristic', testPOST)
+        api('/setting-software', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -46,18 +42,7 @@ describe('Setting has Characteristic', function() {
     });
 
     it('should successfully GET all rows for setting', function(done) {
-        api('/setting-characteristic/id/' + testPOST.setting_id)
-            .expect(200)
-            .end(function(error, response) {
-                assert.ifError(error);
-                verifyData(response.body.success);
-
-                done();
-            });
-    });
-
-    it('should successfully GET all rows for setting, gift, species, and manifestation', function(done) {
-        api('/setting-characteristic/id/' + testPOST.setting_id + '/gift/1/species/1/manifestation/1')
+        api('/setting-software/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
