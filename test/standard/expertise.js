@@ -10,7 +10,7 @@ var chai = require('chai'),
 var testPOST = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    hidden: r.rBOOL(),
+    hidden: 0,
     expertisetype_id: 1,
     species_id: 1,
     manifestation_id: 1,
@@ -21,7 +21,7 @@ var testPOST = {
 var testPUT = {
     name: r.rHEX(24),
     description: r.rHEX(64),
-    hidden: r.rBOOL(),
+    hidden: 0,
     expertisetype_id: 1,
     species_id: 1,
     manifestation_id: 1,
