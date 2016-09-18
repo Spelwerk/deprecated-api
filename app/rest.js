@@ -3,9 +3,9 @@ var mysql = require('mysql'),
 
 function DEBUG(call, error, key, restName) {
     if(key == config.keys.debug) {
+        console.log('\nmethod: ' + restName);
+        console.log('\ncall:   ' + call);
         if(error) {
-            console.log('\nmethod: ' + restName);
-            console.log('\ncall:   ' + call);
             console.log('\nerror:  ' + error);
             console.log('\n------\n');
         }

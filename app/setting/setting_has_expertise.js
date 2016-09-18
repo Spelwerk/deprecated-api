@@ -36,8 +36,7 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'setting_has_expertise.setting_id = ? AND ' +
-            'expertise.deleted is null AND ' +
-            'expertise.hidden = \'0\'';
+            'expertise.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

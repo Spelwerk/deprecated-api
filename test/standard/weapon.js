@@ -11,7 +11,7 @@ var testPOST = {
     name: r.rHEX(24),
     description: r.rHEX(64),
     price: r.rINT(1,40),
-    hidden: r.rBOOL(),
+    hidden: 0,
     legal: r.rBOOL(),
     weapontype_id: 1
 };
@@ -20,7 +20,7 @@ var testPUT = {
     name: r.rHEX(24),
     description: r.rHEX(64),
     price: r.rINT(1,40),
-    hidden: r.rBOOL(),
+    hidden: 0,
     legal: r.rBOOL(),
     weapontype_id: 1
 };
