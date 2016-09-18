@@ -28,6 +28,7 @@ module.exports = function(pool, router) {
     require('./standard/nature')(pool, router, 'nature');
     require('./standard/protection')(pool, router, 'protection');
     require('./standard/protectiontype')(pool, router, 'protectiontype');
+    require('./standard/species_has_attribute')(pool, router, 'species_has_attribute', '/species-attribute');
     require('./standard/story')(pool, router, 'story');
     require('./standard/weapon')(pool, router, 'weapon');
     require('./standard/weapongroup')(pool, router, 'weapongroup');
@@ -36,7 +37,41 @@ module.exports = function(pool, router) {
 
     // PERSON
     require('./person/person')(pool, router, 'person');
+    require('./person/person_has_asset')(pool, router, 'person_has_asset', '/person-asset');
+    require('./person/person_has_attribute')(pool, router, 'person_has_attribute', '/person-attribute');
+    require('./person/person_has_augmentation')(pool, router, 'person_has_augmentation', '/person-augmentation');
+    require('./person/person_has_bionic')(pool, router, 'person_has_bionic', '/person-bionic');
+    require('./person/person_has_characteristic')(pool, router, 'person_has_characteristic', '/person-characteristic');
+    require('./person/person_has_expertise')(pool, router, 'person_has_expertise', '/person-expertise');
+    require('./person/person_has_milestone')(pool, router, 'person_has_milestone', '/person-milestone');
+    require('./person/person_has_person')(pool, router, 'person_has_person', '/person-person');
+    require('./person/person_has_protection')(pool, router, 'person_has_protection', '/person-protection');
+    require('./person/person_has_software')(pool, router, 'person_has_software', '/person-software');
+    require('./person/person_has_weapon')(pool, router, 'person_has_weapon', '/person-weapon');
+    require('./person/person_has_weaponmod')(pool, router, 'person_has_weaponmod', '/person-weaponmod');
+    require('./person/person_has_wound')(pool, router, 'person_has_wound', '/person-wound');
 
     // SETTING
     require('./default')(pool, router, 'setting');
+    require('./setting/setting_has_asset')(pool, router, 'setting_has_asset', '/setting-asset');
+    require('./setting/setting_has_attribute')(pool, router, 'setting_has_attribute', '/setting-attribute');
+    require('./setting/setting_has_augmentation')(pool, router, 'setting_has_augmentation', '/setting-augmentation');
+    require('./setting/setting_has_bionic')(pool, router, 'setting_has_bionic', '/setting-bionic');
+    require('./setting/setting_has_caste')(pool, router, 'setting_has_caste', '/setting-caste');
+    require('./setting/setting_has_characteristic')(pool, router, 'setting_has_characteristic', '/setting-characteristic');
+    require('./setting/setting_has_expertise')(pool, router, 'setting_has_expertise', '/setting-expertise');
+    require('./setting/setting_has_focus')(pool, router, 'setting_has_focus', '/setting-focus');
+    require('./setting/setting_has_identity')(pool, router, 'setting_has_identity', '/setting-identity');
+    require('./setting/setting_has_manifestation')(pool, router, 'setting_has_manifestation', '/setting-manifestation');
+    require('./setting/setting_has_milestone')(pool, router, 'setting_has_milestone', '/setting-milestone');
+    require('./setting/setting_has_nature')(pool, router, 'setting_has_nature', '/setting-nature');
+    require('./setting/setting_has_protection')(pool, router, 'setting_has_protection', '/setting-protection');
+    require('./setting/setting_has_species')(pool, router, 'setting_has_species', '/setting-species');
+    require('./setting/setting_has_weapon')(pool, router, 'setting_has_weapon', '/setting-weapon');
+    require('./setting/setting_has_weaponmod')(pool, router, 'setting_has_weaponmod', '/setting-weaponmod');
+
+    // USER
+    require('./user/user')(pool, router, 'user');
+    require('./user/user')(pool, router, 'user_has_person', '/user-person');
+    require('./user/user')(pool, router, 'user_has_story', '/user-story');
 };

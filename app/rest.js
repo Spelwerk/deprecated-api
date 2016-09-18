@@ -171,3 +171,23 @@ exports.DELETE = function(pool, req, res, table, identifier) {
         }
     });
 };
+
+exports.REMOVE = function(pool, req, res, table, jsonObject) {
+    var call = 'DELETE from ' + table + ' WHERE ';
+
+    for (var key in jsonObject) {
+        call += key + ' = \'' + jsonObject[key] + '\' AND '
+    }
+
+    call = call.slice(0, -5);
+
+    pool.query(call, function(error) {
+        DEBUG(call, error, req.headers.debug, 'REMOVE');
+
+        if(error) {
+            res.status(500).send({error: error});
+        } else {
+            res.status(202).send({success: 'removed'});
+        }
+    });
+};

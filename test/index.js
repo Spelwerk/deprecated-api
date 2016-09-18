@@ -1,41 +1,45 @@
 // DEFAULT
-require('./route/assetgroup');
-require('./route/attributetype');
-require('./route/augmentationquality');
-require('./route/bionic');
-require('./route/bionicquality');
-require('./route/expertisetype');
-require('./route/loyalty');
-require('./route/manifestation');
-require('./route/protectionquality');
-require('./route/setting');
-require('./route/species');
-require('./route/software');
-require('./route/weaponquality');
-require('./route/wound');
+require('./standard/assetgroup');
+require('./standard/attributetype');
+require('./standard/augmentationquality');
+require('./standard/bionic');
+require('./standard/bionicquality');
+require('./standard/expertisetype');
+require('./standard/loyalty');
+require('./standard/manifestation');
+require('./standard/protectionquality');
+require('./standard/setting');
+require('./standard/species');
+require('./standard/software');
+require('./standard/weaponquality');
+require('./standard/wound');
 
 // STANDARD
-require('./route/story');
-require('./route/assettype');
-require('./route/asset');
-require('./route/attribute');
-require('./route/caste');
-require('./route/focus');
-require('./route/identity');
-require('./route/nature');
-require('./route/protectiontype');
-require('./route/protection');
-require('./route/expertise');
-require('./route/milestone');
-require('./route/characteristic');
-require('./route/weapongroup');
-require('./route/weapontype');
-require('./route/weapon');
-require('./route/weaponmod');
-require('./route/augmentation');
+require('./standard/story');
+require('./standard/assettype');
+require('./standard/asset');
+require('./standard/attribute');
+require('./standard/species_has_attribute');
+require('./standard/caste');
+require('./standard/focus');
+require('./standard/identity');
+require('./standard/nature');
+require('./standard/protectiontype');
+require('./standard/protection');
+require('./standard/expertise');
+require('./standard/milestone');
+require('./standard/characteristic');
+require('./standard/weapongroup');
+require('./standard/weapontype');
+require('./standard/weapon');
+require('./standard/weaponmod');
+require('./standard/augmentation');
 
 // CUSTOM
-require('./route/story');
+require('./standard/story');
+
+// SETTING
+require('./setting/setting_has_asset');
 
 // PERSON
-require('./route/person');
+require('./person/person');
