@@ -14,11 +14,8 @@ module.exports = function(pool, router, table, path) {
         'attribute.manifestation_id, ' +
         'manifestation.name AS manifestation_name, ' +
         'attribute.created, ' +
-        'attribute.deleted, ' +
-        'setting.id AS setting_id, ' +
-        'setting.name AS setting_name ' +
+        'attribute.deleted ' +
         'FROM setting_has_attribute ' +
-        'LEFT JOIN setting ON setting.id = setting_has_attribute.setting_id ' +
         'LEFT JOIN attribute ON attribute.id = setting_has_attribute.attribute_id ' +
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
         'LEFT JOIN manifestation ON manifestation.id = attribute.manifestation_id';

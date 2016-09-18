@@ -14,11 +14,8 @@ module.exports = function(pool, router, table, path) {
         'assettype.assetgroup_id, ' +
         'assetgroup.name AS assetgroup_name, ' +
         'asset.created, ' +
-        'asset.deleted, ' +
-        'setting.id AS setting_id, ' +
-        'setting.name AS setting_name ' +
+        'asset.deleted ' +
         'FROM setting_has_asset ' +
-        'LEFT JOIN setting ON setting.id = setting_has_asset.setting_id ' +
         'LEFT JOIN asset ON asset.id = setting_has_asset.asset_id ' +
         'LEFT JOIN assettype ON assettype.id = asset.assettype_id ' +
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id';

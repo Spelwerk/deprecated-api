@@ -32,8 +32,6 @@ describe('Setting has Asset', function() {
             should.exist(item.assettype_name);
             should.exist(item.assetgroup_id);
             should.exist(item.assetgroup_name);
-            should.exist(item.setting_id);
-            should.exist(item.setting_name);
             should.exist(item.created);
             expect(item.deleted).to.be.a('null');
         });
