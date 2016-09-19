@@ -38,7 +38,7 @@ exports.GET = function(pool, req, res, table) {
             res.status(500).send({error: error});
         } else {
             if(!rows || !rows[0]) {
-                res.status(404).send({error: 'not found'});
+                res.status(204).send({error: 'no content'});
             } else {
                 res.status(200).send({success: rows});
             }
@@ -59,7 +59,7 @@ exports.QUERY = function(pool, req, res, call, params) {
             res.status(500).send({error: error});
         } else {
             if(!rows || !rows[0]) {
-                res.status(404).send({error: 'not found'});
+                res.status(204).send({error: 'no content'});
             } else {
                 res.status(200).send({success: rows});
             }
@@ -170,6 +170,20 @@ exports.DELETE = function(pool, req, res, table, identifier) {
             res.status(500).send({error: error});
         } else {
             res.status(202).send({success: 'deleted'});
+        }
+    });
+};
+
+exports.REVIVE = function(pool, req, res, table, identifier) {
+    var call = 'UPDATE ' + table + ' SET deleted = \'null\' WHERE ' + identifier + ' = \'' + req.params.id + '\'';
+
+    pool.query(call, function(error) {
+        DEBUG(call, error, req.headers.debug, 'REVIVE');
+
+        if(error) {
+            res.status(500).send({error: error});
+        } else {
+            res.status(205).send({success: 'revived'});
         }
     });
 };

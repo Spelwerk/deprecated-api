@@ -1,6 +1,6 @@
 var express = require('express'),
     bodyParser = require('body-parser'),
-    auth = require('basic-auth'),
+    webtokens = require('./app/webtokens'),
     mysql = require('mysql'),
     config = require('./app/config');
 
@@ -11,20 +11,12 @@ var app = express(),
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-router.use(function (req, res, next) {
-    var credentials = auth(req);
-
-    if (!credentials) {
-        res.setHeader('WWW-Authenticate', 'Basic realm="spelwerk"');
-        res.status(403).send({message: 'Access denied! Basic Auth missing.'});
+router.use(function(req, res, next) {
+    if(req.headers.apikey != config.keys.api) {
+        res.status(403).send({error: 'faulty apikey'});
+    } else {
+        next();
     }
-
-    if (credentials.name !== config.keys.user|| credentials.pass !== config.keys.pass) {
-        res.setHeader('WWW-Authenticate', 'Basic realm="spelwerk"');
-        res.status(403).send({message: 'Access denied! Incorrect credentials.'});
-    }
-
-    next();
 });
 
 require('./app/index')(pool, router);
