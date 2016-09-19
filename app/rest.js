@@ -1,5 +1,9 @@
 var mysql = require('mysql'),
-    config = require('./config');
+    bcrypt = require('bcrypt'),
+    config = require('./config'),
+    webtokens = require('./webtokens');
+
+const saltRounds = 16;
 
 function DEBUG(call, error, key, restName) {
     if(key == config.keys.debug) {
@@ -206,4 +210,96 @@ exports.REMOVE = function(pool, req, res, table, jsonObject) {
             res.status(202).send({success: 'removed'});
         }
     });
+};
+
+exports.USERADD = function(pool, req, res) {
+    var user = req.body.username,
+        pass = req.body.password,
+        email = req.body.email,
+        admin = req.body.admin,
+        permissions = req.body.permissions;
+
+    bcrypt.hash(pass, saltRounds, function(error, hash) {
+        if(error) {
+            DEBUG(null, error, req.headers.debug, 'USERAUTH');
+            res.status(500).send({error: error});
+        } else {
+            var call = 'INSERT INTO user (username,password,email,admin,permissions) VALUES (\'' + user + '\',\'' + hash + '\',\'' + email + '\',\'' + admin + '\',\'' + permissions + '\')';
+
+            pool.query(call, function(error, result) {
+                if(error) {
+                    DEBUG(call, error, req.headers.debug, 'USERAUTH');
+                    res.status(500).send({error: error});
+                } else {
+                    var token = webtokens.generate({
+                        id: result.insertId,
+                        sub: result.username,
+                        agent: req.headers['user-agent'],
+                        permissions: '',
+                        admin: false
+                    });
+                    res.status(201).send({success: token});
+                }
+            });
+        }
+    });
+};
+
+exports.USERAUTH = function(pool, req, res) {
+    var reqUser = req.body.username,
+        reqPass = req.body.password;
+
+    var call = 'SELECT user.id, user.name, user.admin, user.permissions FROM user WHERE user.username = \'' + reqUser + '\'';
+
+    pool.query(call, function(error, rows) {
+        if(error) {
+            DEBUG(call, error, req.headers.debug, 'USERAUTH');
+            res.status(500).send({error: error});
+        } else {
+            if(!rows) {
+                res.status(404).send({error: 'user not found'});
+            } else {
+                var row = rows[0],
+                    rowID = row.id,
+                    rowUser = row.username,
+                    rowPass = row.password,
+                    rowAdmin = row.admin,
+                    rowPermissions = row.permissions;
+
+                bcrypt.compare(reqPass, rowPass, function(error, response) {
+                    if(error) {
+                        DEBUG(call, error, req.headers.debug, 'USERAUTH');
+                        res.status(500).send({error: error});
+                    } else {
+                        if(!response) {
+                            res.status(403).send({forbidden: 'wrong password'});
+                        } else {
+                            var token = webtokens.generate({
+                                id: rowID,
+                                sub: rowUser,
+                                agent: req.headers['user-agent'],
+                                admin: rowAdmin,
+                                permissions: rowPermissions
+                            });
+                            res.status(202).send({success: token});
+                        }
+                    }
+                });
+            }
+        }
+    });
+};
+
+exports.USERINFO = function(req, res) {
+    var token = webtokens.validate(req);
+
+    if(!token) {
+        res.status(404).send({error: 'missing token'});
+    } else {
+        if(!token.id) {
+            res.status(400).send({error: 'invalid token'});
+        } else {
+            res.status(200).send({id: token.id, username: token.sub, admin: token.admin, permissions: token.permissions});
+        }
+    }
 };
