@@ -22,9 +22,24 @@ module.exports = function(path, data, type) {
                 .send(data);
         }
 
+        if(type == 'token') {
+            request = request
+                .get(path);
+        }
+
     } else {
         request = request
             .get(path);
+    }
+
+    if(type == 'token') {
+        request
+            .set({
+                'Accept' : 'application/x-www-form-urlencoded',
+                'debug' : testdata.keys.debug,
+                'apikey' : testdata.keys.api,
+                'Authorization' : data
+            });
     }
 
     request

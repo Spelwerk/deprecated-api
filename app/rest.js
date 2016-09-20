@@ -4,7 +4,7 @@ var mysql = require('mysql'),
     config = require('./config'),
     webtokens = require('./webtokens');
 
-const saltRounds = 12;
+const saltRounds = 13; // 13 gives ~600ms. 14 gives ~1200ms.
 
 function DEBUG(call, error, key, restName) {
     if(key == config.keys.debug) {
@@ -216,16 +216,14 @@ exports.REMOVE = function(pool, req, res, table, jsonObject) {
 exports.USERADD = function(pool, req, res) {
     var user = req.body.username,
         pass = req.body.password,
-        email = req.body.email,
-        admin = req.body.admin,
-        permissions = req.body.permissions;
+        email = req.body.email;
 
     bcrypt.hash(pass, saltRounds, function(error, hash) {
         if(error) {
             console.log(error);
             res.status(500).send({error: error});
         } else {
-            var call = 'INSERT INTO user (username,password,email,admin,permissions) VALUES (\'' + user + '\',\'' + hash + '\',\'' + email + '\',\'' + admin + '\',\'' + permissions + '\')';
+            var call = 'INSERT INTO user (username,password,email,admin) VALUES (\'' + user + '\',\'' + hash + '\',\'' + email + '\',\'0\')';
 
             pool.query(call, function(error, result) {
                 if(error) {
@@ -235,8 +233,8 @@ exports.USERADD = function(pool, req, res) {
                     var token = webtokens.generate(req,{
                         id: result.insertId,
                         username: user,
-                        admin: admin,
-                        permissions: permissions
+                        admin: 0,
+                        permissions: null
                     });
                     res.status(201).send({success: token});
                 }

@@ -18,7 +18,6 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN setting ON setting.id = story.setting_id';
 
     router.get(path, function(req, res) {
-        console.log(1);
         var token = webtokens.validate(req),
             call = query + ' WHERE ' +
             'user_has_story.user_id = ? AND ' +
