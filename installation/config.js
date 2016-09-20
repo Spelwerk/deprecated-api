@@ -1,10 +1,10 @@
 exports.keys = {
-    user: '',
-    pass: '',
-    debug: ''
+    api: '',
+    debug: '',
+    secret: ''
 };
 
-exports.database = {
+exports.pool = {
     connectionLimit: 100,
     waitForConnections: true,
     queueLimit: 0,
@@ -17,4 +17,4 @@ exports.database = {
     connect_timeout: 10
 };
 
-exports.pool = 3000;
+exports.port = 3000;

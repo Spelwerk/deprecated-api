@@ -5,7 +5,6 @@ module.exports.server = {
 };
 
 module.exports.keys = {
-    user: config.keys.user,
-    pass: config.keys.pass,
-    debug: ''
+    api: config.keys.api,
+    debug: config.keys.debug
 };

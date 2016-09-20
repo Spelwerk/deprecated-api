@@ -74,6 +74,6 @@ module.exports = function(pool, router) {
 
     // USER
     require('./user/user')(pool, router, 'user');
-    require('./user/user')(pool, router, 'user_has_person', '/user-person');
-    require('./user/user')(pool, router, 'user_has_story', '/user-story');
+    require('./user/user_has_person')(pool, router, 'user_has_person', '/user-person');
+    require('./user/user_has_story')(pool, router, 'user_has_story', '/user-story');
 };

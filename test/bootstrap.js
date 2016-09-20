@@ -23,19 +23,16 @@ module.exports = function(path, data, type) {
         }
 
     } else {
-
         request = request
             .get(path);
-
     }
 
     request
         .set({
             'Accept' : 'application/x-www-form-urlencoded',
-            'debug' : testdata.keys.debug
-        })
-        .auth(testdata.keys.user,testdata.keys.pass);
+            'debug' : testdata.keys.debug,
+            'apikey' : testdata.keys.api
+        });
 
     return request;
-
 };

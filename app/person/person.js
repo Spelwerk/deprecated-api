@@ -1,5 +1,5 @@
 var rest = require('./../rest'),
-    hasher = require('./../hasher').hash;
+    hasher = require('./../hasher');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;

@@ -1,4 +1,5 @@
-var rest = require('./../rest');
+var rest = require('./../rest'),
+    webtokens = require('./../webtokens');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -16,15 +17,18 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN person ON person.id = user_has_person.person_id';
 
     router.get(path, function(req, res) {
-        var token = webtokens.validate(req);
-        var call = query + ' WHERE ' +
+        var token = webtokens.validate(req),
+            call = query + ' WHERE ' +
             'user_has_person.user_id = ? AND ' +
             'person.deleted is null';
 
-        rest.QUERY(pool, req, res, call, [token.id]);
+        rest.QUERY(pool, req, res, call, [token.sub.id]);
     });
 
     router.post(path, function(req, res) {
+        var token = webtokens.validate(req);
+        req.body.user_id = token.sub.id;
+
         rest.INSERT(pool, req, res, table, req.body);
     });
 

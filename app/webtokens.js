@@ -1,15 +1,24 @@
-var jwt = require('jwt-simple');
-var secret = require('./config').keys.secret;
+var jwt = require('jwt-simple'),
+    secret = require('./config').keys.secret;
 
-function generate(request) {
+function generate(req, jsonData) {
+    var moment = require('moment'),
+        hasher = require('./hasher'),
+        start = moment.utc(),
+        end = moment.utc().add(30, 'days');
+
     var payload = {
-        id: request.id,
-        sub: request.sub,
-        agent: request.agent,
+        iat: start,
+        exp: end,
+        jti: hasher(16),
         iss: 'http://spelwerk.se/',
-        permissions: request.permissions,
-        admin: request.admin,
-        exp: Math.floor(new Date().getTime()/1000) + 7*24*60*60
+        sub: {
+            id: jsonData.id,
+            username: jsonData.username,
+            admin: jsonData.admin,
+            permissions: jsonData.permissions
+        },
+        agent: req.headers['user-agent']
     };
 
     return jwt.encode(payload, secret);
