@@ -8,10 +8,6 @@ module.exports = function(pool, router, table, path) {
         'milestone.name, ' +
         'milestone.description, ' +
         'milestone.upbringing, ' +
-        'milestone.caste_id, ' +
-        'caste.name AS caste_name, ' +
-        'milestone.manifestation_id, ' +
-        'manifestation.name AS manifestation_name, ' +
         'milestone.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
         'milestone.attribute_value, ' +

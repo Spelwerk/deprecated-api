@@ -8,7 +8,6 @@ require('./standard/expertisetype');
 require('./standard/loyalty');
 require('./standard/manifestation');
 require('./standard/protectionquality');
-require('./standard/setting');
 require('./standard/species');
 require('./standard/software');
 require('./standard/weaponquality');
@@ -38,6 +37,7 @@ require('./standard/augmentation');
 require('./standard/story');
 
 // SETTING
+require('./setting/setting');
 require('./setting/setting_has_asset');
 require('./setting/setting_has_attribute');
 require('./setting/setting_has_augmentation');

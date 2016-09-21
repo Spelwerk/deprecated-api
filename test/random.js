@@ -15,7 +15,12 @@ exports.rINT = function(low, high) {
 };
 
 exports.rBOOL = function() {
-    return rINT(0,1);
+    var r = rINT(1,100),
+        v = 0;
+
+    if(r > 50) { v = 1; }
+
+    return v;
 };
 
 exports.rDATE = function() {

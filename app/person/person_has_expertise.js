@@ -12,10 +12,6 @@ module.exports = function(pool, router, table, path) {
         'expertisetype.maximum, ' +
         'expertise.expertisetype_id, ' +
         'expertisetype.name AS expertisetype_name, ' +
-        'expertise.species_id, ' +
-        'species.name AS species_name, ' +
-        'expertise.manifestation_id, ' +
-        'manifestation.name AS manifestation_name, ' +
         'expertise.skill_attribute_id, ' +
         'a1.name AS skill_attribute_name, ' +
         'expertise.give_attribute_id, ' +
@@ -32,7 +28,7 @@ module.exports = function(pool, router, table, path) {
         rest.HELP(pool, req, res, table);
     });
 
-    router.get(path + '/id/:id1/type/id2', function(req, res) {
+    router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_expertise.person_id = ? AND ' +
             'expertise.expertisetype_id = ?';
@@ -41,6 +37,10 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path, function(req, res) {
+        rest.INSERT(pool, req, res, table, req.body);
+    });
+
+    router.put(path, function(req, res) {
         rest.INSERT(pool, req, res, table, req.body);
     });
 

@@ -22,7 +22,7 @@ module.exports = function(pool, router, table, path) {
         rest.HELP(pool, req, res, table);
     });
 
-    router.get(path + '/id/:id1/id2', function(req, res) {
+    router.get(path + '/id/:id1/weapon/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_weaponmod.person_id = ? AND ' +
             'person_has_weaponmod.weapon_id = ?';

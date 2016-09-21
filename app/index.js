@@ -8,6 +8,7 @@ module.exports = function(pool, router) {
     require('./default')(pool, router, 'expertisetype');
     require('./default')(pool, router, 'loyalty');
     require('./default')(pool, router, 'manifestation');
+    require('./default')(pool, router, 'permissions');
     require('./default')(pool, router, 'protectionquality');
     require('./default')(pool, router, 'species');
     require('./default')(pool, router, 'software');

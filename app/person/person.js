@@ -10,6 +10,8 @@ module.exports = function(pool, router, table, path) {
         'person.name_first, ' +
         'person.name_last, ' +
         'person.age, ' +
+        'person.cheated, ' +
+        'person.afflicted, ' +
         'person.occupation, ' +
         'person.gender, ' +
         'person.description, ' +
@@ -56,7 +58,8 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null);
+        var call = query + ' WHERE person.cheated = \'0\' AND person.deleted is null';
+        rest.QUERY(pool, req, res, call, null);
     });
 
     router.get(path + '/id/:id', function(req, res) {

@@ -11,14 +11,18 @@ var testPOST = {
     name: r.rHEX(24),
     description: r.rHEX(64),
     template: r.rBOOL(),
-    popularity: r.rINT(1,40)
+    popularity: r.rINT(1,40),
+    affliction: r.rBOOL(),
+    augmentation: r.rBOOL()
 };
 
 var testPUT = {
     name: r.rHEX(24),
     description: r.rHEX(64),
     template: r.rBOOL(),
-    popularity: r.rINT(1,40)
+    popularity: r.rINT(1,40),
+    affliction: r.rBOOL(),
+    augmentation: r.rBOOL()
 };
 
 var insertedID;
@@ -32,6 +36,8 @@ var verifyData = function(data) {
         should.exist(item.description);
         should.exist(item.template);
         should.exist(item.popularity);
+        should.exist(item.affliction);
+        should.exist(item.augmentation);
         should.exist(item.created);
     });
 };

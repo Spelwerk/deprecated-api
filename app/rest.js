@@ -8,9 +8,9 @@ const saltRounds = 13; // 13 gives ~600ms. 14 gives ~1200ms.
 
 function DEBUG(call, error, key, restName) {
     if(key == config.keys.debug) {
-        console.log('\nmethod: ' + restName);
-        console.log('\ncall:   ' + call);
         if(error) {
+            console.log('\nmethod: ' + restName);
+            console.log('\ncall:   ' + call);
             console.log('\nerror:  ' + error);
             console.log('\n------\n');
         }

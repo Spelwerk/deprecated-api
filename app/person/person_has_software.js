@@ -10,9 +10,7 @@ module.exports = function(pool, router, table, path) {
         'software.price, ' +
         'software.hacking, ' +
         'software.hacking_bonus, ' +
-        'software.legal, ' +
-        'software.created, ' +
-        'software.deleted ' +
+        'software.legal ' +
         'FROM person_has_software ' +
         'LEFT JOIN software ON software.id = person_has_software.software_id';
 
