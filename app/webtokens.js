@@ -7,11 +7,17 @@ function generate(req, jsonData) {
         start = moment.utc(),
         end = moment.utc().add(30, 'days');
 
+        var ip = req.headers['x-forwarded-for'] ||
+                 req.connection.remoteAddress ||
+                 req.socket.remoteAddress ||
+                 req.connection.socket.remoteAddress;
+
     var payload = {
         iat: start,
         exp: end,
         jti: hasher(16),
         iss: 'http://spelwerk.se/',
+        oip: ip,
         sub: {
             id: jsonData.id,
             username: jsonData.username,

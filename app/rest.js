@@ -292,22 +292,28 @@ exports.USERINFO = function(req, res) {
         res.status(404).send({error: 'missing token'});
     } else {
         var now = moment.utc(),
-            exp = moment.utc(token.exp),
-            invalid = false;
+            exp = moment.utc(token.exp);
 
-        if (now > exp) {
-            invalid = true;
+        var valid_token = false,
+            valid_ip = false;
+
+        var ip = req.headers['x-forwarded-for'] ||
+                 req.connection.remoteAddress ||
+                 req.socket.remoteAddress ||
+                 req.connection.socket.remoteAddress;
+
+        if (!token.sub.id || now > exp) {
+            valid_token = true;
         }
 
-        if(!token.sub.id || invalid) {
+        if(token.oip == ip) {
+            valid_ip = true;
+        }
+
+        if(valid_token) {
             res.status(400).send({error: 'invalid token'});
         } else {
-            res.status(200).send({success: {
-                id: token.sub.id,
-                username: token.sub.username,
-                admin: token.sub.admin,
-                permissions: token.sub.permissions
-            }});
+            res.status(200).send({success: token.sub, validity: valid_ip});
         }
     }
 };
