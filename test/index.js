@@ -13,6 +13,9 @@ require('./standard/software');
 require('./standard/weaponquality');
 require('./standard/wound');
 
+// SETTING
+require('./setting/setting');
+
 // STANDARD
 require('./standard/bionic');
 require('./standard/story');
@@ -34,10 +37,8 @@ require('./standard/weapontype');
 require('./standard/weapon');
 require('./standard/weaponmod');
 require('./standard/augmentation');
-require('./standard/story');
 
 // SETTING
-require('./setting/setting');
 require('./setting/setting_has_asset');
 require('./setting/setting_has_attribute');
 require('./setting/setting_has_augmentation');
@@ -65,12 +66,18 @@ require('./person/person_has_bionic');
 require('./person/person_has_characteristic');
 require('./person/person_has_expertise');
 require('./person/person_has_milestone');
-require('./person/person_has_person');
 require('./person/person_has_protection');
 require('./person/person_has_software');
 require('./person/person_has_weapon');
 require('./person/person_has_weaponmod');
 require('./person/person_has_wound');
+
+// PERSON
+require('./person/person_has_person');
+
+// STORY
+require('./standard/story');
+require('./standard/story_has_person');
 
 // USER
 require('./user/user');

@@ -8,9 +8,9 @@ module.exports = function(pool, router, table, path) {
         'user_has_person.user_id, ' +
         'user_has_person.person_id, ' +
         'user_has_person.hash AS person_hash, ' +
-        'person.name_nick AS person_name_nick, ' +
-        'person.name_first AS person_name_first, ' +
-        'person.name_last AS person_name_last, ' +
+        'person.nickname AS person_nickname, ' +
+        'person.firstname AS person_firstname, ' +
+        'person.surname AS person_surname, ' +
         'person.created, ' +
         'person.deleted ' +
         'FROM user_has_person ' +

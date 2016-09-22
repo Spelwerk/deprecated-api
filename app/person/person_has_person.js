@@ -1,5 +1,4 @@
-var rest = require('./../rest'),
-    hasher = require('./../hasher');
+var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -7,9 +6,9 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'person.id, ' +
         'person_has_person.hash, ' +
-        'person.name_nick, ' +
-        'person.name_first, ' +
-        'person.name_last, ' +
+        'person.nickname, ' +
+        'person.firstname, ' +
+        'person.surname, ' +
         'person.occupation, ' +
         'person.description, ' +
         'person_has_person.loyalty_id, ' +

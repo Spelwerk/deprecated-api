@@ -15,7 +15,7 @@ module.exports = function(pool, router) {
     require('./default')(pool, router, 'weaponquality');
     require('./default')(pool, router, 'wound');
 
-    // CUSTOM
+    // STANDARD
     require('./standard/asset')(pool, router, 'asset');
     require('./standard/assettype')(pool, router, 'assettype');
     require('./standard/attribute')(pool, router, 'attribute');
@@ -32,6 +32,7 @@ module.exports = function(pool, router) {
     require('./standard/protectiontype')(pool, router, 'protectiontype');
     require('./standard/species_has_attribute')(pool, router, 'species_has_attribute', '/species-attribute');
     require('./standard/story')(pool, router, 'story');
+    require('./standard/story_has_person')(pool, router, 'story_has_person', '/story-person');
     require('./standard/weapon')(pool, router, 'weapon');
     require('./standard/weapongroup')(pool, router, 'weapongroup');
     require('./standard/weaponmod')(pool, router, 'weaponmod');
@@ -77,4 +78,10 @@ module.exports = function(pool, router) {
     require('./user/user')(pool, router, 'user');
     require('./user/user_has_person')(pool, router, 'user_has_person', '/user-person');
     require('./user/user_has_story')(pool, router, 'user_has_story', '/user-story');
+
+    // PAGE
+    require('./site/news')(pool, router, 'news');
+    require('./site/page')(pool, router, 'page');
+    require('./site/pagetype')(pool, router, 'pagetype');
+    require('./site/promotional')(pool, router, 'promotional');
 };

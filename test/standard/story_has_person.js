@@ -8,51 +8,46 @@ var chai = require('chai'),
     expect = chai.expect;
 
 var testPOST = {
-    name: r.rHEX(24),
-    description: r.rHEX(64),
-    setting_id: 1
+    story_id: 1,
+    person_id: 1,
+    person_hash: r.rHEX(20)
 };
 
 var testPUT = {
-    name: r.rHEX(24),
-    description: r.rHEX(64),
-    setting_id: 1
+    story_id: 1,
+    person_id: 1,
+    person_hash: r.rHEX(20)
 };
-
-var insertedID,
-    insertedHASH;
 
 var verifyData = function(data) {
     should.exist(data);
 
     _.each(data, function(item) {
         should.exist(item.id);
-        should.exist(item.name);
+        should.exist(item.hash);
+        should.exist(item.nickname);
+        should.exist(item.surname);
+        should.exist(item.occupation);
         should.exist(item.description);
-        should.exist(item.setting_id);
-        should.exist(item.created);
     });
 };
 
-describe('Story', function() {
+describe('Story has Person', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/story', testPOST)
+        api('/story-person', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
                 should.exist(response.body.success);
-
-                insertedID = response.body.id;
-                insertedHASH = response.body.hash;
 
                 done();
             });
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/story/hash/' + insertedHASH, testPUT, 'put')
-            .expect(200)
+        api('/story-person', testPUT, 'put')
+            .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
                 should.exist(response.body.success);
@@ -61,19 +56,8 @@ describe('Story', function() {
             });
     });
 
-    it('should successfully GET all rows', function(done) {
-        api('/story')
-            .expect(200)
-            .end(function(error, response) {
-                assert.ifError(error);
-                verifyData(response.body.success);
-
-                done();
-            });
-    });
-
-    it('should successfully GET latest row with hash', function(done) {
-        api('/story/hash/' + insertedHASH)
+    it('should successfully GET all rows for story', function(done) {
+        api('/story-person/id/'+testPUT.story_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

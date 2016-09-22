@@ -216,6 +216,8 @@ exports.REMOVE = function(pool, req, res, table, jsonObject) {
 exports.USERADD = function(pool, req, res) {
     var user = req.body.username,
         pass = req.body.password,
+        firstname = req.body.firstname,
+        surname = req.body.surname,
         email = req.body.email;
 
     bcrypt.hash(pass, saltRounds, function(error, hash) {
@@ -223,16 +225,19 @@ exports.USERADD = function(pool, req, res) {
             console.log(error);
             res.status(500).send({error: error});
         } else {
-            var call = 'INSERT INTO user (username,password,email,admin) VALUES (\'' + user + '\',\'' + hash + '\',\'' + email + '\',\'0\')';
+            var call = 'INSERT INTO user (username,password,firstname,surname,email,admin) VALUES (\'' + user + '\',\'' + hash + '\',\'' + firstname + '\',\'' + surname + '\',\'' + email + '\',\'0\')';
 
             pool.query(call, function(error, result) {
                 if(error) {
-                    console.log(error);
+                    DEBUG(call, error, req.headers.debug, 'USERADD');
+
                     res.status(500).send({error: error});
                 } else {
                     var token = webtokens.generate(req,{
                         id: result.insertId,
                         username: user,
+                        firstname: firstname,
+                        surname: surname,
                         admin: 0,
                         permissions: null
                     });
@@ -244,26 +249,20 @@ exports.USERADD = function(pool, req, res) {
 };
 
 exports.USERAUTH = function(pool, req, res) {
-    var reqUser = req.body.username,
-        reqPass = req.body.password;
-
-    var call = 'SELECT * FROM user WHERE user.username = \'' + reqUser + '\'';
+    var call = 'SELECT * FROM user WHERE user.username = \'' + req.body.username + '\'';
 
     pool.query(call, function(error, rows) {
         if(error) {
+            DEBUG(call, error, req.headers.debug, 'USERAUTH');
+
             res.status(500).send({error: error});
         } else {
             if(!rows) {
                 res.status(404).send({error: 'user not found'});
             } else {
-                var row = rows[0],
-                    rowID = row.id,
-                    rowUser = row.username,
-                    rowPass = row.password,
-                    rowAdmin = row.admin,
-                    rowPermissions = row.permissions;
+                var row = rows[0];
 
-                bcrypt.compare(reqPass, rowPass, function(error, response) {
+                bcrypt.compare(req.body.password, row.password, function(error, response) {
                     if(error) {
                         res.status(500).send({error: error});
                     } else {
@@ -271,11 +270,14 @@ exports.USERAUTH = function(pool, req, res) {
                             res.status(403).send({forbidden: 'wrong password'});
                         } else {
                             var token = webtokens.generate(req,{
-                                id: rowID,
-                                username: rowUser,
-                                admin: rowAdmin,
-                                permissions: rowPermissions
+                                id: row.id,
+                                username: row.username,
+                                firstname: row.firstname,
+                                surname: row.surname,
+                                admin: row.admin,
+                                permissions: row.permissions
                             });
+
                             res.status(202).send({success: token});
                         }
                     }

@@ -27,9 +27,9 @@ var verifyData = function(data) {
     _.each(data, function(item) {
         should.exist(item.id);
         should.exist(item.hash);
-        should.exist(item.name_nick);
-        should.exist(item.name_first);
-        should.exist(item.name_last);
+        should.exist(item.nickname);
+        should.exist(item.firstname);
+        should.exist(item.surname);
         should.exist(item.occupation);
         should.exist(item.description);
         should.exist(item.loyalty_id);

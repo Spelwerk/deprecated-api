@@ -6,9 +6,9 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'person.id, ' +
-        'person.name_nick, ' +
-        'person.name_first, ' +
-        'person.name_last, ' +
+        'person.nickname, ' +
+        'person.firstname, ' +
+        'person.surname, ' +
         'person.age, ' +
         'person.cheated, ' +
         'person.afflicted, ' +
