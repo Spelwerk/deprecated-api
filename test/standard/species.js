@@ -9,12 +9,14 @@ var chai = require('chai'),
 
 var testPOST = {
     name: r.rHEX(24),
-    description: r.rHEX(64)
+    description: r.rHEX(64),
+    max_age: r.rINT(90,200)
 };
 
 var testPUT = {
     name: r.rHEX(24),
-    description: r.rHEX(64)
+    description: r.rHEX(64),
+    max_age: r.rINT(90,200)
 };
 
 var insertedID;
@@ -26,6 +28,7 @@ var verifyData = function(data) {
         should.exist(item.id);
         should.exist(item.name);
         should.exist(item.description);
+        should.exist(item.max_age);
         should.exist(item.created);
     });
 };

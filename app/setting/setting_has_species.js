@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'species.id, ' +
         'species.name, ' +
         'species.description, ' +
+        'species.max_age, ' +
         'species.created, ' +
         'species.deleted ' +
         'FROM setting_has_species ' +

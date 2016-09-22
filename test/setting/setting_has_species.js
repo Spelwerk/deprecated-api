@@ -19,6 +19,7 @@ var verifyData = function(data) {
         should.exist(item.id);
         should.exist(item.name);
         should.exist(item.description);
+        should.exist(item.max_age);
         should.exist(item.created);
         expect(item.deleted).to.be.a('null');
     });
