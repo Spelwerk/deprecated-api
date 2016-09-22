@@ -20,6 +20,7 @@ var verifyData = function(data) {
         should.exist(item.name);
         should.exist(item.description);
         should.exist(item.protected);
+        should.exist(item.roll);
         should.exist(item.maximum);
         should.exist(item.attributetype_id);
         should.exist(item.attributetype_name);
