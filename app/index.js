@@ -80,8 +80,9 @@ module.exports = function(pool, router) {
     require('./user/user_has_story')(pool, router, 'user_has_story', '/user-story');
 
     // PAGE
-    require('./site/news')(pool, router, 'news');
-    require('./site/page')(pool, router, 'page');
-    require('./site/pagetype')(pool, router, 'pagetype');
+    require('./default')(pool, router, 'comment');
+    require('./site/article')(pool, router, 'news');
+    require('./site/article_has_comment')(pool, router, 'news_has_comment', 'news-comment');
+    require('./site/articletype')(pool, router, 'pagetype');
     require('./site/promotional')(pool, router, 'promotional');
 };

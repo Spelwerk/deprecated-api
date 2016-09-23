@@ -4,30 +4,26 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'promotional.id, ' +
-        'promotional.title, ' +
-        'promotional.content, ' +
-        'promotional.start, ' +
-        'promotional.end, ' +
-        'promotional.user_id, ' +
+        'articletype.id, ' +
+        'articletype.name, ' +
+        'articletype.description, ' +
+        'articletype.user_id, ' +
         'user.username AS user_username, ' +
-        'promotional.created ' +
-        'FROM promotional ' +
-        'LEFT JOIN user ON user.id = promotional.user_id';
+        'articletype.created ' +
+        'FROM articletype ' +
+        'LEFT JOIN user ON user.id = articletype.user_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
     });
 
     router.get(path, function(req, res) {
-        var call = query + ' WHERE promotional.deleted is null';
-
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, query);
     });
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'promotional.id = ?';
+            'articletype.id = ?';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
