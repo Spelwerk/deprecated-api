@@ -10,6 +10,7 @@ module.exports = function(pool, router, table, path) {
         'user.username AS user_username, ' +
         'comment.created ' +
         'FROM article_has_comment ' +
+        'LEFT JOIN comment ON comment.id = article_has_comment.comment_id ' +
         'LEFT JOIN user ON user.id = comment.user_id';
 
     router.get(path + '/help', function(req, res) {
@@ -18,16 +19,12 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'article_has_comment.article_id = ?';
+            'article_has_comment.article_id = ? AND comment.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
     router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table, req.body);
-    });
-
-    router.put(path, function(req, res) {
         rest.INSERT(pool, req, res, table, req.body);
     });
 

@@ -71,8 +71,6 @@ require('./person/person_has_software');
 require('./person/person_has_weapon');
 require('./person/person_has_weaponmod');
 require('./person/person_has_wound');
-
-// PERSON
 require('./person/person_has_person');
 
 // STORY
@@ -83,3 +81,10 @@ require('./standard/story_has_person');
 require('./user/user');
 require('./user/user_has_person');
 require('./user/user_has_story');
+
+// SITE
+require('./site/comment');
+require('./site/promotional');
+require('./site/articletype');
+require('./site/article');
+require('./site/article_has_comment');

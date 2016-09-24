@@ -8,6 +8,7 @@ module.exports = function(pool, router, table, path) {
         'article.title, ' +
         'article.abstract, ' +
         'article.content, ' +
+        'article.published, ' +
         'article.articletype_id, ' +
         'articletype.name AS articletype_name, ' +
         'article.user_id, ' +
@@ -34,12 +35,13 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.get(path + '/type/:id', function(req, res) {
+    router.get(path + '/type/:id1/published/:id2', function(req, res) {
         var call = query + ' WHERE ' +
-            'article.articletype_id = ? ' +
+            'article.articletype_id = ? AND ' +
+            'article.published = ?' +
             'AND article.deleted is null';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
 
     router.post(path, function(req, res) {

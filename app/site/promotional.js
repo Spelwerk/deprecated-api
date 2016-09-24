@@ -26,8 +26,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE ' +
-            'promotional.id = ?';
+        var call = query + ' WHERE promotional.id = ?';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

@@ -7,11 +7,8 @@ module.exports = function(pool, router, table, path) {
         'articletype.id, ' +
         'articletype.name, ' +
         'articletype.description, ' +
-        'articletype.user_id, ' +
-        'user.username AS user_username, ' +
         'articletype.created ' +
-        'FROM articletype ' +
-        'LEFT JOIN user ON user.id = articletype.user_id';
+        'FROM articletype';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

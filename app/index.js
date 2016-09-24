@@ -81,8 +81,8 @@ module.exports = function(pool, router) {
 
     // PAGE
     require('./default')(pool, router, 'comment');
-    require('./site/article')(pool, router, 'news');
-    require('./site/article_has_comment')(pool, router, 'news_has_comment', 'news-comment');
-    require('./site/articletype')(pool, router, 'pagetype');
+    require('./site/article')(pool, router, 'article');
+    require('./site/article_has_comment')(pool, router, 'article_has_comment', '/article-comment');
+    require('./site/articletype')(pool, router, 'articletype');
     require('./site/promotional')(pool, router, 'promotional');
 };
