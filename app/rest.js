@@ -2,9 +2,10 @@ var mysql = require('mysql'),
     bcrypt = require('bcrypt'),
     moment = require('moment'),
     config = require('./config'),
-    webtokens = require('./webtokens');
+    tokens = require('./tokens'),
+    onion = require('./onion');
 
-const saltRounds = 13; // 13 gives ~600ms. 14 gives ~1200ms.
+const saltRounds = config.salt;
 
 function DEBUG(call, error, key, restName) {
     if(key == config.keys.debug) {
@@ -16,6 +17,8 @@ function DEBUG(call, error, key, restName) {
         }
     }
 }
+
+// DEFAULT
 
 exports.HELP = function(pool, req, res, table) {
     var call = 'SHOW FULL COLUMNS FROM ' + table;
@@ -213,19 +216,20 @@ exports.REMOVE = function(pool, req, res, table, jsonObject) {
     });
 };
 
+// USER SPECIFIC
+
 exports.USERADD = function(pool, req, res) {
     var user = req.body.username,
-        pass = req.body.password,
         firstname = req.body.firstname,
         surname = req.body.surname,
         email = req.body.email;
 
-    bcrypt.hash(pass, saltRounds, function(error, hash) {
+    bcrypt.hash(onion.hash(req.body.password), saltRounds, function(error, hash) {
         if(error) {
             console.log(error);
             res.status(500).send({error: error});
         } else {
-            var call = 'INSERT INTO user (username,password,firstname,surname,email,admin) VALUES (\'' + user + '\',\'' + hash + '\',\'' + firstname + '\',\'' + surname + '\',\'' + email + '\',\'0\')';
+            var call = 'INSERT INTO user (username,password,firstname,surname,email,admin) VALUES (\'' + user + '\',\'' + onion.encrypt(hash) + '\',\'' + firstname + '\',\'' + surname + '\',\'' + email + '\',\'0\')';
 
             pool.query(call, function(error, result) {
                 if(error) {
@@ -233,7 +237,7 @@ exports.USERADD = function(pool, req, res) {
 
                     res.status(500).send({error: error});
                 } else {
-                    var token = webtokens.generate(req,{
+                    var token = tokens.generate(req,{
                         id: result.insertId,
                         username: user,
                         firstname: firstname,
@@ -262,14 +266,14 @@ exports.USERAUTH = function(pool, req, res) {
             } else {
                 var row = rows[0];
 
-                bcrypt.compare(req.body.password, row.password, function(error, response) {
+                bcrypt.compare(onion.hash(req.body.password), onion.decrypt(row.password), function(error, response) {
                     if(error) {
                         res.status(500).send({error: error});
                     } else {
                         if(!response) {
                             res.status(403).send({forbidden: 'wrong password'});
                         } else {
-                            var token = webtokens.generate(req,{
+                            var token = tokens.generate(req,{
                                 id: row.id,
                                 username: row.username,
                                 firstname: row.firstname,
@@ -288,7 +292,7 @@ exports.USERAUTH = function(pool, req, res) {
 };
 
 exports.USERINFO = function(req, res) {
-    var token = webtokens.validate(req);
+    var token = tokens.validate(req);
 
     if(!token) {
         res.status(404).send({error: 'missing token'});

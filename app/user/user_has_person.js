@@ -1,5 +1,5 @@
 var rest = require('./../rest'),
-    webtokens = require('./../webtokens');
+    webtokens = require('./../tokens');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;

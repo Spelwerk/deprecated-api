@@ -1,5 +1,5 @@
 var jwt = require('jwt-simple'),
-    secret = require('./config').keys.secret;
+    secret = require('./config').secrets.jwt;
 
 function generate(req, jsonData) {
     var moment = require('moment'),

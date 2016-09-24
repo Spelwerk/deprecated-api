@@ -1,6 +1,6 @@
 var express = require('express'),
     bodyParser = require('body-parser'),
-    webtokens = require('./app/webtokens'),
+    webtokens = require('./app/tokens'),
     mysql = require('mysql'),
     config = require('./app/config');
 

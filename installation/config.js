@@ -1,7 +1,12 @@
 exports.keys = {
-    api: '',
-    debug: '',
-    secret: ''
+    api:    '',
+    debug:  ''
+};
+
+exports.secrets = {
+    jwt: '',
+    aes: '',
+    sha: ''
 };
 
 exports.pool = {
@@ -18,3 +23,5 @@ exports.pool = {
 };
 
 exports.port = 3000;
+
+exports.salt = 10;
