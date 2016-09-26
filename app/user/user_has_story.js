@@ -30,7 +30,7 @@ module.exports = function(pool, router, table, path) {
         var token = webtokens.validate(req);
         req.body.user_id = token.sub.id;
 
-        rest.INSERT(pool, req, res, table, req.body);
+        rest.INSERT(pool, req, res, table);
     });
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {

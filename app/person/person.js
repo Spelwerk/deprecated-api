@@ -74,7 +74,7 @@ module.exports = function(pool, router, table, path) {
 
     router.post(path, function(req, res) {
         req.body.hash = hasher(20);
-        rest.POST(pool, req, res, table, req.body);
+        rest.POST(pool, req, res, table);
     });
 
     router.put(path + '/hash/:id', function(req, res) {
@@ -86,6 +86,6 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/hash/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table, 'hash');
+        rest.DELETE(pool, req, res, table, {hash: req.params.id});
     });
 };

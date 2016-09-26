@@ -75,8 +75,9 @@ exports.QUERY = function(pool, req, res, call, params) {
     });
 };
 
-exports.POST = function(pool, req, res, table, body) {
-    var rows = {},
+exports.POST = function(pool, req, res, table) {
+    var body = req.body,
+        rows = {},
         into = 'INSERT INTO ' + table + '(',
         vals = ' VALUES (',
         call;
@@ -108,8 +109,9 @@ exports.POST = function(pool, req, res, table, body) {
     });
 };
 
-exports.PUT = function(pool, req, res, table, body, identifier) {
-    var rows = {},
+exports.PUT = function(pool, req, res, table, jsonObject) {
+    var body = req.body,
+        rows = {},
         call = 'UPDATE ' + table + ' SET ';
 
     for (var key in body) {
@@ -120,10 +122,15 @@ exports.PUT = function(pool, req, res, table, body, identifier) {
     }
 
     call = call.slice(0, -2);
+    call += ' WHERE ';
 
-    call += ' WHERE ' + identifier + ' = \'' + req.params.id + '\'';
+    jsonObject = jsonObject || {id: req.params.id};
+    for (var key in jsonObject) {
+        call += key + ' = \'' + jsonObject[key] + '\' AND ';
+    }
+    call = call.slice(0, -5);
 
-    var id = parseInt(req.params.id);
+    var id = parseInt(req.params.id) || 0;
 
     pool.query(call, function(error) {
         DEBUG(call, error, req.headers.debug, 'PUT');
@@ -136,8 +143,9 @@ exports.PUT = function(pool, req, res, table, body, identifier) {
     });
 };
 
-exports.INSERT = function(pool, req, res, table, body) {
-    var rows = {},
+exports.INSERT = function(pool, req, res, table) {
+    var body = req.body,
+        rows = {},
         into = 'INSERT INTO ' + table + '(',
         vals = ' VALUES (',
         updt = '',
@@ -168,8 +176,16 @@ exports.INSERT = function(pool, req, res, table, body) {
     });
 };
 
-exports.DELETE = function(pool, req, res, table, identifier) {
-    var call = 'UPDATE ' + table + ' SET deleted = CURRENT_TIMESTAMP WHERE ' + identifier + ' = \'' + req.params.id + '\'';
+exports.DELETE = function(pool, req, res, table, jsonObject) {
+    var call = 'UPDATE ' + table + ' SET deleted = CURRENT_TIMESTAMP WHERE ';
+
+    jsonObject = jsonObject || {id: req.params.id};
+
+    for (var key in jsonObject) {
+        call += key + ' = \'' + jsonObject[key] + '\' AND ';
+    }
+
+    call = call.slice(0, -5);
 
     pool.query(call, function(error) {
         DEBUG(call, error, req.headers.debug, 'DELETE');
@@ -182,8 +198,16 @@ exports.DELETE = function(pool, req, res, table, identifier) {
     });
 };
 
-exports.REVIVE = function(pool, req, res, table, identifier) {
-    var call = 'UPDATE ' + table + ' SET deleted = \'null\' WHERE ' + identifier + ' = \'' + req.params.id + '\'';
+exports.REVIVE = function(pool, req, res, table, jsonObject) {
+    var call = 'UPDATE ' + table + ' SET deleted = \'null\' WHERE ';
+
+    jsonObject = jsonObject || {id: req.params.id};
+
+    for (var key in jsonObject) {
+        call += key + ' = \'' + jsonObject[key] + '\' AND ';
+    }
+
+    call = call.slice(0, -5);
 
     pool.query(call, function(error) {
         DEBUG(call, error, req.headers.debug, 'REVIVE');
@@ -191,7 +215,7 @@ exports.REVIVE = function(pool, req, res, table, identifier) {
         if(error) {
             res.status(500).send({error: error});
         } else {
-            res.status(205).send({success: 'revived'});
+            res.status(200).send({success: 'revived'});
         }
     });
 };
@@ -199,8 +223,10 @@ exports.REVIVE = function(pool, req, res, table, identifier) {
 exports.REMOVE = function(pool, req, res, table, jsonObject) {
     var call = 'DELETE from ' + table + ' WHERE ';
 
+    jsonObject = jsonObject || {id: req.params.id};
+
     for (var key in jsonObject) {
-        call += key + ' = \'' + jsonObject[key] + '\' AND '
+        call += key + ' = \'' + jsonObject[key] + '\' AND ';
     }
 
     call = call.slice(0, -5);

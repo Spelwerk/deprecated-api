@@ -45,14 +45,14 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path, function(req, res) {
-        rest.POST(pool, req, res, table, req.body);
+        rest.POST(pool, req, res, table);
     });
 
     router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table, req.body, 'id');
+        rest.PUT(pool, req, res, table);
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table, 'id');
+        rest.DELETE(pool, req, res, table);
     });
 };

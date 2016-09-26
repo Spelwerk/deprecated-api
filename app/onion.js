@@ -1,6 +1,6 @@
 var aes = require('nodejs-aes256'),
     crypto = require('crypto'),
-    secrets = config = require('./config').secrets;
+    secrets = require('./config').secrets;
 
 function hash(password) {
     var passHash = crypto.createHmac('sha256', secrets.sha);
