@@ -12,7 +12,8 @@ var testPOST = {
     description: r.rHEX(64),
     template: r.rBOOL(),
     popularity: r.rINT(1,40),
-    affliction: r.rBOOL(),
+    supernatural: r.rBOOL(),
+    supernatural_name: r.rHEX(24),
     augmentation: r.rBOOL()
 };
 
@@ -21,7 +22,8 @@ var testPUT = {
     description: r.rHEX(64),
     template: r.rBOOL(),
     popularity: r.rINT(1,40),
-    affliction: r.rBOOL(),
+    supernatural: r.rBOOL(),
+    supernatural_name: r.rHEX(24),
     augmentation: r.rBOOL()
 };
 
@@ -36,7 +38,8 @@ var verifyData = function(data) {
         should.exist(item.description);
         should.exist(item.template);
         should.exist(item.popularity);
-        should.exist(item.affliction);
+        should.exist(item.supernatural);
+        should.exist(item.supernatural_name);
         should.exist(item.augmentation);
         should.exist(item.created);
     });

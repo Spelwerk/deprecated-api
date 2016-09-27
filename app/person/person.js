@@ -11,7 +11,7 @@ module.exports = function(pool, router, table, path) {
         'person.surname, ' +
         'person.age, ' +
         'person.cheated, ' +
-        'person.afflicted, ' +
+        'person.supernatural, ' +
         'person.occupation, ' +
         'person.gender, ' +
         'person.description, ' +

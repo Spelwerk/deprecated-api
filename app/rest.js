@@ -1,20 +1,18 @@
 var mysql = require('mysql'),
     bcrypt = require('bcrypt'),
     moment = require('moment'),
+    logger = require('./logger'),
     config = require('./config'),
     tokens = require('./tokens'),
     onion = require('./onion');
 
 const saltRounds = config.salt;
 
-function DEBUG(call, error, key, restName) {
-    if(key == config.keys.debug) {
-        if(error) {
-            console.log('\nmethod: ' + restName);
-            console.log('\ncall:   ' + call);
-            console.log('\nerror:  ' + error);
-            console.log('\n------\n');
-        }
+function LOGIT(jsonObject) {
+    if(jsonObject.error != null) {
+        logger.error('rest.js error: ' + jsonObject.error + '. method: ' + jsonObject.name + '. call: ' + jsonObject.call);
+    } else {
+        logger.debug('rest.js method: ' + jsonObject.name + '. call: ' + jsonObject.call);
     }
 }
 
@@ -24,7 +22,7 @@ exports.HELP = function(pool, req, res, table) {
     var call = 'SHOW FULL COLUMNS FROM ' + table;
 
     pool.query(call, function(error, rows) {
-        DEBUG(call, error, req.headers.debug, 'HELP');
+        LOGIT({call: call, error: error, name: 'HELP'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -40,7 +38,7 @@ exports.GET = function(pool, req, res, table) {
     if(req.params.id) { call += ' WHERE id = ' + req.params.id; }
 
     pool.query(call, function(error, rows) {
-        DEBUG(call, error, req.headers.debug, 'GET');
+        LOGIT({call: call, error: error, name: 'GET'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -61,7 +59,7 @@ exports.QUERY = function(pool, req, res, call, params) {
     }
 
     pool.query(call, function(error, rows) {
-        DEBUG(call, error, req.headers.debug, 'QUERY');
+        LOGIT({call: call, error: error, name: 'QUERY'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -95,7 +93,7 @@ exports.POST = function(pool, req, res, table) {
     call = into + vals;
 
     pool.query(call, function(error, result) {
-        DEBUG(call, error, req.headers.debug, 'POST');
+        LOGIT({call: call, error: error, name: 'POST'});
 
         if(error) {
             res.status(500).send({error: 'error'});
@@ -133,7 +131,7 @@ exports.PUT = function(pool, req, res, table, jsonObject) {
     var id = parseInt(req.params.id) || 0;
 
     pool.query(call, function(error) {
-        DEBUG(call, error, req.headers.debug, 'PUT');
+        LOGIT({call: call, error: error, name: 'PUT'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -166,7 +164,7 @@ exports.INSERT = function(pool, req, res, table) {
     call = into + vals + ' ON DUPLICATE KEY UPDATE ' + updt;
 
     pool.query(call, function(error) {
-        DEBUG(call, error, req.headers.debug, 'INSERT');
+        LOGIT({call: call, error: error, name: 'INSERT'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -188,7 +186,7 @@ exports.DELETE = function(pool, req, res, table, jsonObject) {
     call = call.slice(0, -5);
 
     pool.query(call, function(error) {
-        DEBUG(call, error, req.headers.debug, 'DELETE');
+        LOGIT({call: call, error: error, name: 'DELETE'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -210,7 +208,7 @@ exports.REVIVE = function(pool, req, res, table, jsonObject) {
     call = call.slice(0, -5);
 
     pool.query(call, function(error) {
-        DEBUG(call, error, req.headers.debug, 'REVIVE');
+        LOGIT({call: call, error: error, name: 'REVIVE'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -232,7 +230,7 @@ exports.REMOVE = function(pool, req, res, table, jsonObject) {
     call = call.slice(0, -5);
 
     pool.query(call, function(error) {
-        DEBUG(call, error, req.headers.debug, 'REMOVE');
+        LOGIT({call: call, error: error, name: 'REMOVE'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -252,14 +250,14 @@ exports.USERADD = function(pool, req, res) {
 
     bcrypt.hash(onion.hash(req.body.password), saltRounds, function(error, hash) {
         if(error) {
-            console.log(error);
+            LOGIT({call: 'REDACTED', error: error, name: 'BCRYPT HASH'});
             res.status(500).send({error: error});
         } else {
             var call = 'INSERT INTO user (username,password,firstname,surname,email,admin) VALUES (\'' + user + '\',\'' + onion.encrypt(hash) + '\',\'' + firstname + '\',\'' + surname + '\',\'' + email + '\',\'0\')';
 
             pool.query(call, function(error, result) {
                 if(error) {
-                    DEBUG(call, error, req.headers.debug, 'USERADD');
+                    LOGIT({call: 'REDACTED', error: error, name: 'USERADD'});
 
                     res.status(500).send({error: error});
                 } else {
@@ -283,7 +281,7 @@ exports.USERAUTH = function(pool, req, res) {
 
     pool.query(call, function(error, rows) {
         if(error) {
-            DEBUG(call, error, req.headers.debug, 'USERAUTH');
+            LOGIT({call: 'REDACTED', error: error, name: 'USERAUTH'});
 
             res.status(500).send({error: error});
         } else {
@@ -294,6 +292,7 @@ exports.USERAUTH = function(pool, req, res) {
 
                 bcrypt.compare(onion.hash(req.body.password), onion.decrypt(row.password), function(error, response) {
                     if(error) {
+                        LOGIT({call: 'REDACTED', error: error, name: 'BCRYPT COMPARE'});
                         res.status(500).send({error: error});
                     } else {
                         if(!response) {
