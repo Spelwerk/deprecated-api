@@ -8,12 +8,72 @@ var mysql = require('mysql'),
 
 const saltRounds = config.salt;
 
-function LOGIT(jsonObject) {
+function logIt(jsonObject) {
     if(jsonObject.error != null) {
         logger.error('rest.js error: ' + jsonObject.error + '. method: ' + jsonObject.name + '. call: ' + jsonObject.call);
     } else {
         logger.debug('rest.js method: ' + jsonObject.name + '. call: ' + jsonObject.call);
     }
+}
+
+function adminifyUser(pool, req, res, int) {
+    var token = tokens.validate(req);
+
+    if(!token) {
+        res.status(404).send({error: 'missing token'});
+    } else {
+        var ip = req.headers['x-forwarded-for'] ||
+            req.connection.remoteAddress ||
+            req.socket.remoteAddress ||
+            req.connection.socket.remoteAddress;
+
+        var validity = validateToken({id: token.sub.id, expiry: token.exp, tokenip: token.oip, reqip: ip});
+
+        if(!validity) {
+            res.status(400).send({forbidden: 'invalid token'});
+        } else {
+            console.log(token.sub.admin);
+            if(!token.sub.admin) {
+                res.status(403).send({forbidden: 'user is not admin'});
+            } else {
+                var call = 'UPDATE user SET admin \'' + int + '\' WHERE user.id = ' + req.params.id;
+
+                pool.query(call, function(error, result) {
+                    if(error) {
+                        logIt({call: call, error: error, name: 'adminifyUser'});
+
+                        res.status(500).send({error: error});
+                    } else {
+                        res.status(202).send({success: result});
+                    }
+                });
+            }
+        }
+    }
+}
+
+function validateToken(jsonObject) {
+    var validity = true;
+
+    var now = moment.utc(),
+        exp = moment.utc(jsonObject.expiry);
+
+    var token_ip = jsonObject.tokenip,
+        req_ip = jsonObject.reqip;
+
+    if(!jsonObject.id) {
+        validity = false;
+    }
+
+    if(now > exp) {
+        validity = false;
+    }
+
+    if(!token_ip == req_ip) {
+        validity = false;
+    }
+
+    return validity;
 }
 
 // DEFAULT
@@ -22,7 +82,7 @@ exports.HELP = function(pool, req, res, table) {
     var call = 'SHOW FULL COLUMNS FROM ' + table;
 
     pool.query(call, function(error, rows) {
-        LOGIT({call: call, error: error, name: 'HELP'});
+        logIt({call: call, error: error, name: 'HELP'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -38,7 +98,7 @@ exports.GET = function(pool, req, res, table) {
     if(req.params.id) { call += ' WHERE id = ' + req.params.id; }
 
     pool.query(call, function(error, rows) {
-        LOGIT({call: call, error: error, name: 'GET'});
+        logIt({call: call, error: error, name: 'GET'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -59,7 +119,7 @@ exports.QUERY = function(pool, req, res, call, params) {
     }
 
     pool.query(call, function(error, rows) {
-        LOGIT({call: call, error: error, name: 'QUERY'});
+        logIt({call: call, error: error, name: 'QUERY'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -93,7 +153,7 @@ exports.POST = function(pool, req, res, table) {
     call = into + vals;
 
     pool.query(call, function(error, result) {
-        LOGIT({call: call, error: error, name: 'POST'});
+        logIt({call: call, error: error, name: 'POST'});
 
         if(error) {
             res.status(500).send({error: 'error'});
@@ -131,7 +191,7 @@ exports.PUT = function(pool, req, res, table, jsonObject) {
     var id = parseInt(req.params.id) || 0;
 
     pool.query(call, function(error) {
-        LOGIT({call: call, error: error, name: 'PUT'});
+        logIt({call: call, error: error, name: 'PUT'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -164,7 +224,7 @@ exports.INSERT = function(pool, req, res, table) {
     call = into + vals + ' ON DUPLICATE KEY UPDATE ' + updt;
 
     pool.query(call, function(error) {
-        LOGIT({call: call, error: error, name: 'INSERT'});
+        logIt({call: call, error: error, name: 'INSERT'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -186,7 +246,7 @@ exports.DELETE = function(pool, req, res, table, jsonObject) {
     call = call.slice(0, -5);
 
     pool.query(call, function(error) {
-        LOGIT({call: call, error: error, name: 'DELETE'});
+        logIt({call: call, error: error, name: 'DELETE'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -208,7 +268,7 @@ exports.REVIVE = function(pool, req, res, table, jsonObject) {
     call = call.slice(0, -5);
 
     pool.query(call, function(error) {
-        LOGIT({call: call, error: error, name: 'REVIVE'});
+        logIt({call: call, error: error, name: 'REVIVE'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -230,7 +290,7 @@ exports.REMOVE = function(pool, req, res, table, jsonObject) {
     call = call.slice(0, -5);
 
     pool.query(call, function(error) {
-        LOGIT({call: call, error: error, name: 'REMOVE'});
+        logIt({call: call, error: error, name: 'REMOVE'});
 
         if(error) {
             res.status(500).send({error: error});
@@ -250,14 +310,14 @@ exports.USERADD = function(pool, req, res) {
 
     bcrypt.hash(onion.hash(req.body.password), saltRounds, function(error, hash) {
         if(error) {
-            LOGIT({call: 'REDACTED', error: error, name: 'BCRYPT HASH'});
+            logIt({call: 'REDACTED', error: error, name: 'BCRYPT HASH'});
             res.status(500).send({error: error});
         } else {
             var call = 'INSERT INTO user (username,password,firstname,surname,email,admin) VALUES (\'' + user + '\',\'' + onion.encrypt(hash) + '\',\'' + firstname + '\',\'' + surname + '\',\'' + email + '\',\'0\')';
 
             pool.query(call, function(error, result) {
                 if(error) {
-                    LOGIT({call: 'REDACTED', error: error, name: 'USERADD'});
+                    logIt({call: 'INSERT INTO user (username,password,firstname,surname,email,admin) VALUES (\'' + user + '\',\'PASSWORD_REDACTED\',\'' + firstname + '\',\'' + surname + '\',\'' + email + '\',\'0\')', error: error, name: 'USERADD'});
 
                     res.status(500).send({error: error});
                 } else {
@@ -277,11 +337,11 @@ exports.USERADD = function(pool, req, res) {
 };
 
 exports.USERAUTH = function(pool, req, res) {
-    var call = 'SELECT * FROM user WHERE user.username = \'' + req.body.username + '\'';
+    var call = 'SELECT * FROM user WHERE user.username = \'' + req.body.username + '\' AND user.deleted is null';
 
     pool.query(call, function(error, rows) {
         if(error) {
-            LOGIT({call: 'REDACTED', error: error, name: 'USERAUTH'});
+            logIt({call: 'REDACTED', error: error, name: 'USERAUTH'});
 
             res.status(500).send({error: error});
         } else {
@@ -292,7 +352,7 @@ exports.USERAUTH = function(pool, req, res) {
 
                 bcrypt.compare(onion.hash(req.body.password), onion.decrypt(row.password), function(error, response) {
                     if(error) {
-                        LOGIT({call: 'REDACTED', error: error, name: 'BCRYPT COMPARE'});
+                        logIt({call: call, error: error, name: 'BCRYPT COMPARE'});
                         res.status(500).send({error: error});
                     } else {
                         if(!response) {
@@ -320,31 +380,66 @@ exports.USERINFO = function(req, res) {
     var token = tokens.validate(req);
 
     if(!token) {
-        res.status(404).send({error: 'missing token'});
+        res.status(404).send({forbidden: 'missing token'});
     } else {
-        var now = moment.utc(),
-            exp = moment.utc(token.exp);
-
-        var valid_token = false,
-            valid_ip = false;
-
         var ip = req.headers['x-forwarded-for'] ||
-                 req.connection.remoteAddress ||
-                 req.socket.remoteAddress ||
-                 req.connection.socket.remoteAddress;
+            req.connection.remoteAddress ||
+            req.socket.remoteAddress ||
+            req.connection.socket.remoteAddress;
 
-        if (!token.sub.id || now > exp) {
-            valid_token = true;
-        }
+        var validity = validateToken({id: token.sub.id, expiry: token.exp, tokenip: token.oip, reqip: ip});
 
-        if(token.oip == ip) {
-            valid_ip = true;
-        }
-
-        if(valid_token) {
-            res.status(400).send({error: 'invalid token'});
+        if(!validity) {
+            res.status(400).send({forbidden: 'invalid token'});
         } else {
-            res.status(200).send({success: token.sub, validity: valid_ip});
+            res.status(200).send({success: token.sub});
         }
     }
+};
+
+exports.USERPASS = function(pool, req, res) {
+    var token = tokens.validate(req);
+
+    if(!token) {
+        res.status(404).send({error: 'missing token'});
+    } else {
+        var ip = req.headers['x-forwarded-for'] ||
+            req.connection.remoteAddress ||
+            req.socket.remoteAddress ||
+            req.connection.socket.remoteAddress;
+
+        var validity = validateToken({id: token.sub.id, expiry: token.exp, tokenip: token.oip, reqip: ip});
+
+        if(!validity) {
+            res.status(400).send({forbidden: 'invalid token'});
+        } else {
+            bcrypt.hash(onion.hash(req.body.password), saltRounds, function(error, hash) {
+                if(error) {
+                    logIt({call: 'REDACTED', error: error, name: 'BCRYPT HASH'});
+
+                    res.status(500).send({error: error});
+                } else {
+                    var call = 'UPDATE user SET password = \'' + onion.encrypt(hash) + '\' WHERE user.id = ' + token.sub.id;
+
+                    pool.query(call, function(error, result) {
+                        if(error) {
+                            logIt({call: 'UPDATE user SET password = \'PASSWORD_REDACTED\' WHERE user.id = ' + token.sub.id, error: error, name: 'USERPASS'});
+
+                            res.status(500).send({error: error});
+                        } else {
+                            res.status(202).send({success: 'success'});
+                        }
+                    });
+                }
+            });
+        }
+    }
+};
+
+exports.USERPROMOTE = function(pool, req, res) {
+    adminifyUser(pool, req, res, 1);
+};
+
+exports.USERDEMOTE = function(pool, req, res) {
+    adminifyUser(pool, req, res, 0);
 };

@@ -36,7 +36,6 @@ module.exports = function(path, data, type) {
         request
             .set({
                 'Accept' : 'application/x-www-form-urlencoded',
-                'debug' : testdata.keys.debug,
                 'apikey' : testdata.keys.api,
                 'Authorization' : data
             });
@@ -45,7 +44,6 @@ module.exports = function(path, data, type) {
     request
         .set({
             'Accept' : 'application/x-www-form-urlencoded',
-            'debug' : testdata.keys.debug,
             'apikey' : testdata.keys.api
         });
 

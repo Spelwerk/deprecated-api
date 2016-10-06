@@ -31,4 +31,16 @@ module.exports = function(pool, router, table, path) {
     router.post(path + '/auth', function(req, res) {
         rest.USERAUTH(pool, req, res);
     });
+
+    router.post(path + '/promote/:id', function(req, res) {
+        rest.USERPROMOTE(pool, req, res);
+    });
+
+    router.post(path + '/demote/:id', function(req, res) {
+        rest.USERDEMOTE(pool, req, res);
+    });
+
+    router.delete(path + '/id/:id', function(req, res) {
+        rest.DELETE(pool, req, res, table);
+    });
 };

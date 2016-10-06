@@ -4,22 +4,19 @@ var express = require('express'),
     logger = require('./app/logger'),
     config = require('./app/config');
 
-logger.debug('server.js started');
-
 var app = express(),
     router = express.Router(),
     pool = mysql.createPool(config.pool);
 
-logger.debug('server.js configured');
-
 app.use(require('morgan')('combined', {'stream':logger.stream}));
-
-logger.debug('server.js using morgan');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-logger.debug('server.js using apikey authentication');
+if(!config.keys.api) console.log('api: ' + hasher(40));
+if(!config.secrets.jwt) console.log('jwt: ' + hasher(40));
+if(!config.secrets.aes) console.log('aes: ' + hasher(40));
+if(!config.secrets.sha) console.log('sha: ' + hasher(40));
 
 router.use(function(req, res, next) {
     if(req.headers.apikey != config.keys.api) {
@@ -36,11 +33,7 @@ router.use(function(req, res, next) {
     }
 });
 
-logger.debug('server.js using routes');
-
 require('./app/index')(pool, router);
-
-logger.debug('server.js using router');
 
 app.use('/api/', router);
 

@@ -5,6 +5,5 @@ module.exports.server = {
 };
 
 module.exports.keys = {
-    api: config.keys.api,
-    debug: config.keys.debug
+    api: config.keys.api
 };

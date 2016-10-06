@@ -1,17 +1,17 @@
 // DEFAULT
-require('./standard/assetgroup');
-require('./standard/attributetype');
-require('./standard/augmentationquality');
-require('./standard/bionicquality');
-require('./standard/bodypart');
-require('./standard/expertisetype');
-require('./standard/loyalty');
-require('./standard/manifestation');
-require('./standard/protectionquality');
-require('./standard/species');
+require('./default/assetgroup');
+require('./default/attributetype');
+require('./default/augmentationquality');
+require('./default/bionicquality');
+require('./default/bodypart');
+require('./default/expertisetype');
+require('./default/loyalty');
+require('./default/manifestation');
+require('./default/protectionquality');
+require('./default/species');
 require('./standard/software');
-require('./standard/weaponquality');
-require('./standard/wound');
+require('./default/weaponquality');
+require('./default/wound');
 
 // SETTING
 require('./setting/setting');

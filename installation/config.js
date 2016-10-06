@@ -1,6 +1,5 @@
 exports.keys = {
-    api:    '',
-    debug:  ''
+    api:    ''
 };
 
 exports.secrets = {
