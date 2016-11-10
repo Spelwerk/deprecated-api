@@ -1,95 +1,47 @@
 var mysql = require('mysql'),
-    bcrypt = require('bcrypt'),
-    moment = require('moment'),
     logger = require('./logger'),
-    config = require('./config'),
-    tokens = require('./tokens'),
-    onion = require('./onion');
+    config = require('./config');
 
-const saltRounds = config.salt;
+var file = 'rest.js';
 
-function logIt(jsonObject) {
-    if(jsonObject.error != null) {
-        logger.error('rest.js error: ' + jsonObject.error + '. method: ' + jsonObject.name + '. call: ' + jsonObject.call);
-    } else {
-        logger.debug('rest.js method: ' + jsonObject.name + '. call: ' + jsonObject.call);
-    }
-}
+function queryDefault(pool, res, call) {
+    pool.query(call, function(error, result) {
+        logger.logCall(file, call, error);
 
-function adminifyUser(pool, req, res, int) {
-    var token = tokens.validate(req);
-
-    if(!token) {
-        res.status(404).send({error: 'missing token'});
-    } else {
-        var ip = req.headers['x-forwarded-for'] ||
-            req.connection.remoteAddress ||
-            req.socket.remoteAddress ||
-            req.connection.socket.remoteAddress;
-
-        var validity = validateToken({id: token.sub.id, expiry: token.exp, tokenip: token.oip, reqip: ip});
-
-        if(!validity) {
-            res.status(400).send({forbidden: 'invalid token'});
+        if(error) {
+            res.status(500).send({header: 'Internal SQL Error', message: error});
         } else {
-            console.log(token.sub.admin);
-            if(!token.sub.admin) {
-                res.status(403).send({forbidden: 'user is not admin'});
+            if(!result[0] || !result) {
+                res.status(204).send({header: 'No Content', message: error});
             } else {
-                var call = 'UPDATE user SET admin \'' + int + '\' WHERE user.id = ' + req.params.id;
-
-                pool.query(call, function(error, result) {
-                    if(error) {
-                        logIt({call: call, error: error, name: 'adminifyUser'});
-
-                        res.status(500).send({error: error});
-                    } else {
-                        res.status(202).send({success: result});
-                    }
-                });
+                res.status(200).send({data: result});
             }
         }
-    }
+    });
 }
 
-function validateToken(jsonObject) {
-    var validity = true;
+function queryMessage(pool, res, call, status, message) {
+    status = status || 200;
+    message = message || 'success';
 
-    var now = moment.utc(),
-        exp = moment.utc(jsonObject.expiry);
+    pool.query(call, function(error, result) {
+        logger.logCall(file, call, error);
 
-    var token_ip = jsonObject.tokenip,
-        req_ip = jsonObject.reqip;
-
-    if(!jsonObject.id) {
-        validity = false;
-    }
-
-    if(now > exp) {
-        validity = false;
-    }
-
-    if(!token_ip == req_ip) {
-        validity = false;
-    }
-
-    return validity;
+        if(error) {
+            res.status(500).send({header: 'Internal SQL Error', message: error});
+        } else {
+            res.status(status).send({data: result, message: message});
+        }
+    });
 }
+
+module.exports.queryDefault = queryDefault;
+module.exports.queryMessage = queryMessage;
 
 // DEFAULT
 
 exports.HELP = function(pool, req, res, table) {
-    var call = 'SHOW FULL COLUMNS FROM ' + table;
-
-    pool.query(call, function(error, rows) {
-        logIt({call: call, error: error, name: 'HELP'});
-
-        if(error) {
-            res.status(500).send({error: error});
-        } else {
-            res.status(200).send(rows);
-        }
-    });
+    queryDefault(pool, res, 'SHOW FULL COLUMNS FROM ' + table)
 };
 
 exports.GET = function(pool, req, res, table) {
@@ -97,40 +49,17 @@ exports.GET = function(pool, req, res, table) {
 
     if(req.params.id) { call += ' WHERE id = ' + req.params.id; }
 
-    pool.query(call, function(error, rows) {
-        logIt({call: call, error: error, name: 'GET'});
-
-        if(error) {
-            res.status(500).send({error: error});
-        } else {
-            if(!rows || !rows[0]) {
-                res.status(204).send({error: 'no content'});
-            } else {
-                res.status(200).send({success: rows});
-            }
-        }
-    });
+    queryDefault(pool, res, call);
 };
 
 exports.QUERY = function(pool, req, res, call, params) {
     params = params || null;
+
     if(params) {
         call = mysql.format(call, params);
     }
 
-    pool.query(call, function(error, rows) {
-        logIt({call: call, error: error, name: 'QUERY'});
-
-        if(error) {
-            res.status(500).send({error: error});
-        } else {
-            if(!rows || !rows[0]) {
-                res.status(204).send({error: 'no content'});
-            } else {
-                res.status(200).send({success: rows});
-            }
-        }
-    });
+    queryDefault(pool, res, call);
 };
 
 exports.POST = function(pool, req, res, table) {
@@ -153,15 +82,15 @@ exports.POST = function(pool, req, res, table) {
     call = into + vals;
 
     pool.query(call, function(error, result) {
-        logIt({call: call, error: error, name: 'POST'});
+        logger.logCall(file, call, error);
 
         if(error) {
-            res.status(500).send({error: 'error'});
+            res.status(500).send({header: 'Internal SQL Error', message: error});
         } else {
             if(req.body.hash) {
-                res.status(201).send({success: rows, id: result.insertId, hash: req.body.hash});
+                res.status(201).send({data: result, id: result.insertId, hash: req.body.hash});
             } else {
-                res.status(201).send({success: rows, id: result.insertId});
+                res.status(201).send({data: result, id: result.insertId});
             }
         }
     });
@@ -184,19 +113,19 @@ exports.PUT = function(pool, req, res, table, jsonObject) {
 
     jsonObject = jsonObject || {id: req.params.id};
     for (var key in jsonObject) {
-        call += key + ' = \'' + jsonObject[key] + '\' AND ';
+        call += table + '.' + key + ' = \'' + jsonObject[key] + '\' AND ';
     }
     call = call.slice(0, -5);
 
     var id = parseInt(req.params.id) || 0;
 
-    pool.query(call, function(error) {
-        logIt({call: call, error: error, name: 'PUT'});
+    pool.query(call, function(error, result) {
+        logger.logCall(file, call, error);
 
         if(error) {
-            res.status(500).send({error: error});
+            res.status(500).send({header: 'Internal SQL Error', message: error});
         } else {
-            res.status(200).send({success: rows, id: id});
+            res.status(200).send({data: result, id: id});
         }
     });
 };
@@ -223,13 +152,13 @@ exports.INSERT = function(pool, req, res, table) {
     updt = updt.slice(0, -2);
     call = into + vals + ' ON DUPLICATE KEY UPDATE ' + updt;
 
-    pool.query(call, function(error) {
-        logIt({call: call, error: error, name: 'INSERT'});
+    pool.query(call, function(error, result) {
+        logger.logCall(file, call, error);
 
         if(error) {
-            res.status(500).send({error: error});
+            res.status(500).send({header: 'Internal SQL Error', message: error});
         } else {
-            res.status(201).send({success: rows, id: res.insertId});
+            res.status(201).send({data: result, id: result.insertId});
         }
     });
 };
@@ -245,15 +174,7 @@ exports.DELETE = function(pool, req, res, table, jsonObject) {
 
     call = call.slice(0, -5);
 
-    pool.query(call, function(error) {
-        logIt({call: call, error: error, name: 'DELETE'});
-
-        if(error) {
-            res.status(500).send({error: error});
-        } else {
-            res.status(202).send({success: 'deleted'});
-        }
-    });
+    queryMessage(pool, res, call, 202, 'deleted');
 };
 
 exports.REVIVE = function(pool, req, res, table, jsonObject) {
@@ -267,15 +188,7 @@ exports.REVIVE = function(pool, req, res, table, jsonObject) {
 
     call = call.slice(0, -5);
 
-    pool.query(call, function(error) {
-        logIt({call: call, error: error, name: 'REVIVE'});
-
-        if(error) {
-            res.status(500).send({error: error});
-        } else {
-            res.status(200).send({success: 'revived'});
-        }
-    });
+    queryMessage(pool, res, call, 200, 'revived');
 };
 
 exports.REMOVE = function(pool, req, res, table, jsonObject) {
@@ -289,157 +202,5 @@ exports.REMOVE = function(pool, req, res, table, jsonObject) {
 
     call = call.slice(0, -5);
 
-    pool.query(call, function(error) {
-        logIt({call: call, error: error, name: 'REMOVE'});
-
-        if(error) {
-            res.status(500).send({error: error});
-        } else {
-            res.status(202).send({success: 'removed'});
-        }
-    });
-};
-
-// USER SPECIFIC
-
-exports.USERADD = function(pool, req, res) {
-    var user = req.body.username,
-        firstname = req.body.firstname,
-        surname = req.body.surname,
-        email = req.body.email;
-
-    bcrypt.hash(onion.hash(req.body.password), saltRounds, function(error, hash) {
-        if(error) {
-            logIt({call: 'REDACTED', error: error, name: 'BCRYPT HASH'});
-            res.status(500).send({error: error});
-        } else {
-            var call = 'INSERT INTO user (username,password,firstname,surname,email,admin) VALUES (\'' + user + '\',\'' + onion.encrypt(hash) + '\',\'' + firstname + '\',\'' + surname + '\',\'' + email + '\',\'0\')';
-
-            pool.query(call, function(error, result) {
-                if(error) {
-                    logIt({call: 'INSERT INTO user (username,password,firstname,surname,email,admin) VALUES (\'' + user + '\',\'PASSWORD_REDACTED\',\'' + firstname + '\',\'' + surname + '\',\'' + email + '\',\'0\')', error: error, name: 'USERADD'});
-
-                    res.status(500).send({error: error});
-                } else {
-                    var token = tokens.generate(req,{
-                        id: result.insertId,
-                        username: user,
-                        firstname: firstname,
-                        surname: surname,
-                        admin: 0,
-                        permissions: null
-                    });
-                    res.status(201).send({success: token});
-                }
-            });
-        }
-    });
-};
-
-exports.USERAUTH = function(pool, req, res) {
-    var call = 'SELECT * FROM user WHERE user.username = \'' + req.body.username + '\' AND user.deleted is null';
-
-    pool.query(call, function(error, rows) {
-        if(error) {
-            logIt({call: 'REDACTED', error: error, name: 'USERAUTH'});
-
-            res.status(500).send({error: error});
-        } else {
-            if(!rows) {
-                res.status(404).send({error: 'user not found'});
-            } else {
-                var row = rows[0];
-
-                bcrypt.compare(onion.hash(req.body.password), onion.decrypt(row.password), function(error, response) {
-                    if(error) {
-                        logIt({call: call, error: error, name: 'BCRYPT COMPARE'});
-                        res.status(500).send({error: error});
-                    } else {
-                        if(!response) {
-                            res.status(403).send({forbidden: 'wrong password'});
-                        } else {
-                            var token = tokens.generate(req,{
-                                id: row.id,
-                                username: row.username,
-                                firstname: row.firstname,
-                                surname: row.surname,
-                                admin: row.admin,
-                                permissions: row.permissions
-                            });
-
-                            res.status(202).send({success: token});
-                        }
-                    }
-                });
-            }
-        }
-    });
-};
-
-exports.USERINFO = function(req, res) {
-    var token = tokens.validate(req);
-
-    if(!token) {
-        res.status(404).send({forbidden: 'missing token'});
-    } else {
-        var ip = req.headers['x-forwarded-for'] ||
-            req.connection.remoteAddress ||
-            req.socket.remoteAddress ||
-            req.connection.socket.remoteAddress;
-
-        var validity = validateToken({id: token.sub.id, expiry: token.exp, tokenip: token.oip, reqip: ip});
-
-        if(!validity) {
-            res.status(400).send({forbidden: 'invalid token'});
-        } else {
-            res.status(200).send({success: token.sub});
-        }
-    }
-};
-
-exports.USERPASS = function(pool, req, res) {
-    var token = tokens.validate(req);
-
-    if(!token) {
-        res.status(404).send({error: 'missing token'});
-    } else {
-        var ip = req.headers['x-forwarded-for'] ||
-            req.connection.remoteAddress ||
-            req.socket.remoteAddress ||
-            req.connection.socket.remoteAddress;
-
-        var validity = validateToken({id: token.sub.id, expiry: token.exp, tokenip: token.oip, reqip: ip});
-
-        if(!validity) {
-            res.status(400).send({forbidden: 'invalid token'});
-        } else {
-            bcrypt.hash(onion.hash(req.body.password), saltRounds, function(error, hash) {
-                if(error) {
-                    logIt({call: 'REDACTED', error: error, name: 'BCRYPT HASH'});
-
-                    res.status(500).send({error: error});
-                } else {
-                    var call = 'UPDATE user SET password = \'' + onion.encrypt(hash) + '\' WHERE user.id = ' + token.sub.id;
-
-                    pool.query(call, function(error, result) {
-                        if(error) {
-                            logIt({call: 'UPDATE user SET password = \'PASSWORD_REDACTED\' WHERE user.id = ' + token.sub.id, error: error, name: 'USERPASS'});
-
-                            res.status(500).send({error: error});
-                        } else {
-                            res.status(202).send({success: 'success'});
-                        }
-                    });
-                }
-            });
-        }
-    }
-};
-
-exports.USERPROMOTE = function(pool, req, res) {
-    adminifyUser(pool, req, res, 1);
-};
-
-exports.USERDEMOTE = function(pool, req, res) {
-    adminifyUser(pool, req, res, 0);
+    queryMessage(pool, res, call, 202, 'removed');
 };

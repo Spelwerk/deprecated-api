@@ -13,13 +13,8 @@ app.use(require('morgan')('combined', {'stream':logger.stream}));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-if(!config.keys.api) console.log('api: ' + hasher(40));
-if(!config.secrets.jwt) console.log('jwt: ' + hasher(40));
-if(!config.secrets.aes) console.log('aes: ' + hasher(40));
-if(!config.secrets.sha) console.log('sha: ' + hasher(40));
-
 router.use(function(req, res, next) {
-    if(req.headers.apikey != config.keys.api) {
+    if(req.headers.apikey != config.secrets.api) {
         var ip = req.headers['x-forwarded-for'] ||
             req.connection.remoteAddress ||
             req.socket.remoteAddress ||

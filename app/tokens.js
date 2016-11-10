@@ -1,28 +1,35 @@
 var jwt = require('jwt-simple'),
+    moment = require('moment'),
+    hasher = require('./hasher'),
     secret = require('./config').secrets.jwt;
 
-function generate(req, jsonData) {
-    var moment = require('moment'),
-        hasher = require('./hasher'),
-        start = moment.utc(),
+var iss = 'http://qateam.dev/';
+
+function generate(req, jsonData, permissions) {
+    permissions = permissions || null;
+
+    var ip = req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
+
+    var now = moment.utc(),
         end = moment.utc().add(30, 'days');
 
-        var ip = req.headers['x-forwarded-for'] ||
-                 req.connection.remoteAddress ||
-                 req.socket.remoteAddress ||
-                 req.connection.socket.remoteAddress;
-
     var payload = {
-        iat: start,
+        iat: now,
         exp: end,
         jti: hasher(16),
-        iss: 'http://spelwerk.se/',
+        iss: iss,
         oip: ip,
         sub: {
             id: jsonData.id,
             username: jsonData.username,
+            firstname: jsonData.firstname,
+            surname: jsonData.surname,
             admin: jsonData.admin,
-            permissions: jsonData.permissions
+            verified: jsonData.verified,
+            permissions: permissions
         },
         agent: req.headers['user-agent']
     };
@@ -30,9 +37,30 @@ function generate(req, jsonData) {
     return jwt.encode(payload, secret);
 }
 
-function validate(req) {
+function decode(req) {
     return jwt.decode(req.headers.authorization, secret);
 }
 
+function validate(req, token) {
+    var ip = req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
+
+    var now = moment.utc(),
+        exp = moment.utc(token.exp);
+
+    var validity = true;
+
+    if(now > exp) validity = false;
+
+    if(token.oip != ip) validity = false;
+
+    if(!token.sub.id) validity = false;
+
+    return validity;
+}
+
 module.exports.generate = generate;
+module.exports.decode = decode;
 module.exports.validate = validate;

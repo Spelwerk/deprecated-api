@@ -1,0 +1,35 @@
+[Unit]
+Description=API for SPELWERK
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /{FOLDER}/server.js
+WorkingDirectory=/{FOLDER}
+
+# User
+User=root
+Group=root
+
+# Environment Variables
+Environment=NODE_ENV=production
+
+# Allow many incoming connections
+LimitNOFILE=infinity
+
+# Allow core dumps for debugging
+LimitCORE=infinity
+
+# Standards
+StandardInput=null
+StandardOutput=syslog
+StandardError=syslog
+
+Restart=always
+
+Restart=always
+RestartSec=1
+
+SyslogIdentifier=api-spelwerk
+
+[Install]
+WantedBy=muli-user.target

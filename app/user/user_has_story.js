@@ -1,5 +1,4 @@
-var rest = require('./../rest'),
-    webtokens = require('./../tokens');
+var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -17,28 +16,24 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN story ON story.id = user_has_story.story_id ' +
         'LEFT JOIN setting ON setting.id = story.setting_id';
 
-    router.get(path, function(req, res) {
-        var token = webtokens.validate(req),
-            call = query + ' WHERE ' +
+    router.get(path + '/id/:id', function(req, res) {
+        var call = query + ' WHERE ' +
             'user_has_story.user_id = ? AND ' +
             'story.deleted is null';
 
-        rest.QUERY(pool, req, res, call, [token.sub.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
     router.post(path, function(req, res) {
-        var token = webtokens.validate(req);
-        req.body.user_id = token.sub.id;
-
         rest.INSERT(pool, req, res, table);
     });
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var call = {
+        var json = {
             "user_id": req.params.id1,
             "story_id": req.params.id2
         };
 
-        rest.REMOVE(pool, req, res, table, call);
+        rest.REMOVE(pool, req, res, table, json);
     });
 };

@@ -30,3 +30,22 @@ module.exports.stream = {
         logger.debug(message);
     }
 };
+
+module.exports.logCall = function(file, call, error) {
+    file = file || 'unknown';
+    error = error || null;
+
+    if(error) {
+        logger.error({error: error, file: file, method: 'SQL', call: call});
+        logger.debug({error: error, file: file, method: 'SQL', call: call});
+    } else {
+        logger.debug({file: file, method: 'SQL', call: call});
+    }
+};
+
+module.exports.logError = function(file, error, method) {
+    file = file || 'unknown';
+    method = method || 'DEFAULT';
+
+    logger.error({error: error, file: file, method: method});
+};
