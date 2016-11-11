@@ -20,9 +20,9 @@ router.use(function(req, res, next) {
             req.socket.remoteAddress ||
             req.connection.socket.remoteAddress;
 
-        logger.error('caught faulty api key in header from IP: ' + ip + '. Key used: ' + req.headers.apikey);
+        logger.logError('server.js', 'Faulty apikey in header from IP: ' + ip + '. Key used: ' + req.headers.apikey, 'APIVERIFICATION');
 
-        res.status(403).send({error: 'faulty api key'});
+        res.status(403).send({header: 'Faulty API Key', message: 'Faulty API Key used.'});
     } else {
         next();
     }

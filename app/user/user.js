@@ -17,17 +17,15 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'user.id, ' +
-        'user.name, ' +
         'user.username, ' +
         'user.email, ' +
         'user.admin, ' +
+        'user.firstname, ' +
+        'user.surname, ' +
         'user.verified, ' +
-        'user.usergroup_id, ' +
-        'usergroup.name AS usergroup_name, ' +
         'user.created, ' +
         'user.deleted ' +
-        'FROM user ' +
-        'LEFT JOIN usergroup ON usergroup.id = user.usergroup_id';
+        'FROM user';
 
     router.get(path, function(req, res) {
         rest.QUERY(pool, req, res, query, null);
@@ -70,26 +68,56 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path + '/password', function(req, res) {
-        var password = req.body.password;
+        var orig_password = req.body.original_password,
+            new_password = req.body.new_password;
 
-        if(!req.headers.authorization) {
-            res.status(404).send({message: 'missing token'});
+        if(!req.headers.token) {
+            res.status(404).send({header: 'Missing Token', message: 'missing token'});
         } else {
             var token = tokens.decode(req),
-                validity = tokens.validate(req, token);
+                validity = tokens.validate(req, token),
+                user_id = token.sub.id;
 
             if(!validity) {
-                res.status(400).send({message: 'invalid token'});
+                res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
             } else {
-                bcrypt.hash(onion.hash(password), saltRounds, function(error, hash) {
+                var user_call = 'SELECT * FROM user WHERE user.id = \'' + user_id + '\' AND user.deleted is null';
+
+                pool.query(user_call, function(error, user_result) {
+                    logger.logCall(file, user_call, error);
+
                     if(error) {
-                        logger.logError(file, error, 'BCRYPT');
-
-                        res.status(500).send({header: 'Internal Server Error', message: error});
+                        res.status(500).send({header: 'Internal SQL Error', message: error});
                     } else {
-                        var call = 'UPDATE user SET password = \'' + onion.encrypt(hash) + '\' WHERE user.id = ' + token.sub.id;
+                        if(!user_result[0]) {
+                            res.status(204).send({header: 'User ID Not Found', message: 'user ID not found'});
+                        } else {
+                            var user_password = user_result[0].password;
 
-                        rest.queryMessage(pool, res, call);
+                            bcrypt.compare(onion.hash(orig_password), onion.decrypt(user_password), function(error, response) {
+                                if (error) {
+                                    logger.logError(file, error, 'BCRYPT');
+
+                                    res.status(500).send({header: 'Internal Server Error', message: error});
+                                } else {
+                                    if (!response) {
+                                        res.status(403).send({header: 'Wrong Password', message: 'wrong password'});
+                                    } else {
+                                        bcrypt.hash(onion.hash(new_password), saltRounds, function(error, hash) {
+                                            if(error) {
+                                                logger.logError(file, error, 'BCRYPT');
+
+                                                res.status(500).send({header: 'Internal Server Error', message: error});
+                                            } else {
+                                                var call = 'UPDATE user SET password = \'' + onion.encrypt(hash) + '\' WHERE user.id = ' + user_id;
+
+                                                rest.queryMessage(pool, res, call);
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
                     }
                 });
             }
@@ -117,6 +145,7 @@ module.exports = function(pool, router, table, path) {
                     bcrypt.compare(onion.hash(req_pass), onion.decrypt(res_pass), function(error, response) {
                         if(error) {
                             logger.logError(file, error, 'BCRYPT');
+
                             res.status(500).send({header: 'Internal Server Error', message: error});
                         } else {
                             if(!response) {
@@ -157,19 +186,15 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
-    router.post(path + '/relog', function(req, res) {
-
-    });
-
     router.get(path + '/token', function(req, res) {
-        if(!req.headers.authorization) {
-            res.status(404).send({message: 'missing token'});
+        if(!req.headers.token) {
+            res.status(404).send({header: 'Missing Token', message: 'missing token'});
         } else {
             var token = tokens.decode(req),
                 validity = tokens.validate(req, token);
 
             if(!validity) {
-                res.status(400).send({message: 'invalid token'});
+                res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
             } else {
                 res.status(200).send({user: token.sub});
             }
@@ -177,10 +202,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path + '/admin', function(req, res) {
-        var admin = req.body.admin,
-            user = req.body.user;
-
-        if(!req.headers.authorization) {
+        if(!req.headers.token) {
             res.status(403).send({header: 'Missing Token', message: 'missing token'});
         } else {
             var token = tokens.decode(req),
@@ -192,6 +214,9 @@ module.exports = function(pool, router, table, path) {
                 if(!token.sub.admin) {
                     res.status(403).send({header: 'Not Admin', message: 'you are not admin'});
                 } else {
+                    var admin = req.body.admin,
+                        user = req.body.user;
+
                     var call = 'UPDATE user SET admin = \'' + admin + '\' WHERE user.id = \'' + user + '\'';
 
                     pool.query(call, function(error, result) {

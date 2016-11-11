@@ -1,9 +1,8 @@
 var jwt = require('jwt-simple'),
     moment = require('moment'),
     hasher = require('./hasher'),
-    secret = require('./config').secrets.jwt;
-
-var iss = 'http://qateam.dev/';
+    secrets = require('./config').secrets,
+    base = require('./config').base;
 
 function generate(req, jsonData, permissions) {
     permissions = permissions || null;
@@ -20,7 +19,7 @@ function generate(req, jsonData, permissions) {
         iat: now,
         exp: end,
         jti: hasher(16),
-        iss: iss,
+        iss: base,
         oip: ip,
         sub: {
             id: jsonData.id,
@@ -34,11 +33,11 @@ function generate(req, jsonData, permissions) {
         agent: req.headers['user-agent']
     };
 
-    return jwt.encode(payload, secret);
+    return jwt.encode(payload, secrets.jwt);
 }
 
 function decode(req) {
-    return jwt.decode(req.headers.authorization, secret);
+    return jwt.decode(req.headers.token, secrets.jwt);
 }
 
 function validate(req, token) {

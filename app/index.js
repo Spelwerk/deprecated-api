@@ -55,7 +55,7 @@ module.exports = function(pool, router) {
     require('./person/person_has_wound')(pool, router, 'person_has_wound', '/person-wound');
 
     // SETTING
-    require('./default')(pool, router, 'setting');
+    require('./setting/setting')(pool, router, 'setting');
     require('./setting/setting_has_asset')(pool, router, 'setting_has_asset', '/setting-asset');
     require('./setting/setting_has_attribute')(pool, router, 'setting_has_attribute', '/setting-attribute');
     require('./setting/setting_has_augmentation')(pool, router, 'setting_has_augmentation', '/setting-augmentation');
