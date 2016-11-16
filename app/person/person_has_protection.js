@@ -18,7 +18,8 @@ module.exports = function(pool, router, table, path) {
         'person_has_protection.protectionquality_id AS quality_id, ' +
         'protectionquality.name AS quality_name, ' +
         'protectionquality.price AS quality_price, ' +
-        'protectionquality.attribute_value AS quality_attribute_value ' +
+        'protectionquality.attribute_value AS quality_attribute_value, ' +
+        'person_has_protection.equipped ' +
         'FROM person_has_protection ' +
         'LEFT JOIN protection ON protection.id = person_has_protection.protection_id ' +
         'LEFT JOIN protectiontype ON protectiontype.id = protection.protectiontype_id ' +

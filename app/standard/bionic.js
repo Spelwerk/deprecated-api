@@ -17,32 +17,13 @@ module.exports = function(pool, router, table, path) {
         'FROM bionic ' +
         'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
+    require('./../default')(pool, router, table, path, query);
 
-    router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null);
-    });
+    router.get(path + '/bodypart/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            table + '.bodypart_id = ? AND ' +
+            table + '.deleted is NOT NULL';
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE bionic.id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
-    router.post(path, function(req, res) {
-        rest.POST(pool, req, res, table);
-    });
-
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
     });
 };

@@ -44,14 +44,6 @@ exports.HELP = function(pool, req, res, table) {
     queryDefault(pool, res, 'SHOW FULL COLUMNS FROM ' + table)
 };
 
-exports.GET = function(pool, req, res, table) {
-    var call = 'SELECT * FROM ' + table;
-
-    if(req.params.id) { call += ' WHERE id = ' + req.params.id; }
-
-    queryDefault(pool, res, call);
-};
-
 exports.QUERY = function(pool, req, res, call, params) {
     params = params || null;
 
@@ -112,9 +104,11 @@ exports.PUT = function(pool, req, res, table, jsonObject) {
     call += ' WHERE ';
 
     jsonObject = jsonObject || {id: req.params.id};
+
     for (var key in jsonObject) {
         call += table + '.' + key + ' = \'' + jsonObject[key] + '\' AND ';
     }
+
     call = call.slice(0, -5);
 
     var id = parseInt(req.params.id) || 0;

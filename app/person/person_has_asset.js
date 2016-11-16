@@ -13,7 +13,8 @@ module.exports = function(pool, router, table, path) {
         'asset.assettype_id, ' +
         'assettype.name AS assettype_name, ' +
         'assettype.assetgroup_id, ' +
-        'assetgroup.name AS assetgroup_name ' +
+        'assetgroup.name AS assetgroup_name, ' +
+        'person_has_asset.equipped ' +
         'FROM person_has_asset ' +
         'LEFT JOIN asset ON asset.id = person_has_asset.asset_id ' +
         'LEFT JOIN assettype ON assettype.id = asset.assettype_id ' +

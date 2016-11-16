@@ -35,7 +35,8 @@ module.exports = function(pool, router, table, path) {
         'weaponquality.critical_d12 AS quality_critical_d12, ' +
         'weaponquality.initiative AS quality_initiative, ' +
         'weaponquality.hit AS quality_hit, ' +
-        'weaponquality.distance AS quality_distance ' +
+        'weaponquality.distance AS quality_distance, ' +
+        'person_has_weapon.equipped ' +
         'FROM person_has_weapon ' +
         'LEFT JOIN weapon ON weapon.id = person_has_weapon.weapon_id ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +

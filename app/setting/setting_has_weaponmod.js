@@ -41,7 +41,7 @@ module.exports = function(pool, router, table, path) {
             'weaponmod.weapontype_id = ? AND ' +
             'weaponmod.deleted is null';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 
     router.post(path, function(req, res) {

@@ -22,13 +22,22 @@ module.exports = function(pool, router, table, path) {
         'user.admin, ' +
         'user.firstname, ' +
         'user.surname, ' +
-        'user.verified, ' +
         'user.created, ' +
         'user.deleted ' +
         'FROM user';
 
     router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null);
+        var call = query + ' WHERE ' + table + '.deleted is NULL';
+        rest.QUERY(pool, req, res, call);
+    });
+
+    router.get(path + '/deleted', function(req, res) {
+        var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
+        rest.QUERY(pool, req, res, call);
+    });
+
+    router.get(path + '/all', function(req, res) {
+        rest.QUERY(pool, req, res, query);
     });
 
     router.get(path + '/id/:id', function(req, res) {
@@ -36,7 +45,22 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.post(path + '/new', function(req, res) {
+    router.get(path + '/token', function(req, res) {
+        if(!req.headers.token) {
+            res.status(404).send({header: 'Missing Token', message: 'missing token'});
+        } else {
+            var token = tokens.decode(req),
+                validity = tokens.validate(req, token);
+
+            if(!validity) {
+                res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
+            } else {
+                res.status(200).send({user: token.sub});
+            }
+        }
+    });
+
+    router.post(path, function(req, res) {
         var username = req.body.username,
             password = req.body.password,
             email = req.body.email,
@@ -65,63 +89,6 @@ module.exports = function(pool, router, table, path) {
                 });
             }
         });
-    });
-
-    router.post(path + '/password', function(req, res) {
-        var orig_password = req.body.original_password,
-            new_password = req.body.new_password;
-
-        if(!req.headers.token) {
-            res.status(404).send({header: 'Missing Token', message: 'missing token'});
-        } else {
-            var token = tokens.decode(req),
-                validity = tokens.validate(req, token),
-                user_id = token.sub.id;
-
-            if(!validity) {
-                res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
-            } else {
-                var user_call = 'SELECT * FROM user WHERE user.id = \'' + user_id + '\' AND user.deleted is null';
-
-                pool.query(user_call, function(error, user_result) {
-                    logger.logCall(file, user_call, error);
-
-                    if(error) {
-                        res.status(500).send({header: 'Internal SQL Error', message: error});
-                    } else {
-                        if(!user_result[0]) {
-                            res.status(204).send({header: 'User ID Not Found', message: 'user ID not found'});
-                        } else {
-                            var user_password = user_result[0].password;
-
-                            bcrypt.compare(onion.hash(orig_password), onion.decrypt(user_password), function(error, response) {
-                                if (error) {
-                                    logger.logError(file, error, 'BCRYPT');
-
-                                    res.status(500).send({header: 'Internal Server Error', message: error});
-                                } else {
-                                    if (!response) {
-                                        res.status(403).send({header: 'Wrong Password', message: 'wrong password'});
-                                    } else {
-                                        bcrypt.hash(onion.hash(new_password), saltRounds, function(error, hash) {
-                                            if(error) {
-                                                logger.logError(file, error, 'BCRYPT');
-
-                                                res.status(500).send({header: 'Internal Server Error', message: error});
-                                            } else {
-                                                var call = 'UPDATE user SET password = \'' + onion.encrypt(hash) + '\' WHERE user.id = ' + user_id;
-
-                                                rest.queryMessage(pool, res, call);
-                                            }
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                    }
-                });
-            }
-        }
     });
 
     router.post(path + '/login', function(req, res) {
@@ -186,53 +153,6 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
-    router.get(path + '/token', function(req, res) {
-        if(!req.headers.token) {
-            res.status(404).send({header: 'Missing Token', message: 'missing token'});
-        } else {
-            var token = tokens.decode(req),
-                validity = tokens.validate(req, token);
-
-            if(!validity) {
-                res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
-            } else {
-                res.status(200).send({user: token.sub});
-            }
-        }
-    });
-
-    router.post(path + '/admin', function(req, res) {
-        if(!req.headers.token) {
-            res.status(403).send({header: 'Missing Token', message: 'missing token'});
-        } else {
-            var token = tokens.decode(req),
-                validity = tokens.validate(req, token);
-
-            if(!validity) {
-                res.status(403).send({header: 'Invalid Token', message: 'An invalid token has been provided.'});
-            } else {
-                if(!token.sub.admin) {
-                    res.status(403).send({header: 'Not Admin', message: 'you are not admin'});
-                } else {
-                    var admin = req.body.admin,
-                        user = req.body.user;
-
-                    var call = 'UPDATE user SET admin = \'' + admin + '\' WHERE user.id = \'' + user + '\'';
-
-                    pool.query(call, function(error, result) {
-                        logger.logCall(file, call, error);
-
-                        if(error) {
-                            res.status(500).send({header: 'Internal SQL Error', message: error});
-                        } else {
-                            res.status(200).send({message: 'success', data: result});
-                        }
-                    });
-                }
-            }
-        }
-    });
-
     router.post(path + '/recovery/set', function(req, res) {
         var call = 'UPDATE user SET recovery = \'' + hasher(32) + '\' WHERE user.email = \'' + req.body.email + '\'';
 
@@ -270,7 +190,111 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table);
+        if(!req.headers.token) {
+            res.status(403).send({header: 'Missing Token', message: 'missing token'});
+        } else {
+            var token = tokens.decode(req),
+                validity = tokens.validate(req, token);
+
+            if (!validity) {
+                res.status(403).send({header: 'Invalid Token', message: 'An invalid token has been provided.'});
+            } else {
+                if(!token.sub.admin || token.sub.id == req.params.id) {
+                    res.status(403).send({header: 'Not Allowed', message: 'you are not admin, nor are you the user editing this profile'});
+                } else {
+                    rest.PUT(pool, req, res, table);
+                }
+            }
+        }
+    });
+
+    router.put(path + '/password', function(req, res) {
+        var orig_password = req.body.original_password,
+            new_password = req.body.new_password;
+
+        if(!req.headers.token) {
+            res.status(404).send({header: 'Missing Token', message: 'missing token'});
+        } else {
+            var token = tokens.decode(req),
+                validity = tokens.validate(req, token),
+                user_id = token.sub.id;
+
+            if(!validity) {
+                res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
+            } else {
+                var user_call = 'SELECT * FROM user WHERE user.id = \'' + user_id + '\' AND user.deleted is null';
+
+                pool.query(user_call, function(error, user_result) {
+                    logger.logCall(file, user_call, error);
+
+                    if(error) {
+                        res.status(500).send({header: 'Internal SQL Error', message: error});
+                    } else {
+                        if(!user_result[0]) {
+                            res.status(204).send({header: 'User ID Not Found', message: 'user ID not found'});
+                        } else {
+                            var user_password = user_result[0].password;
+
+                            bcrypt.compare(onion.hash(orig_password), onion.decrypt(user_password), function(error, response) {
+                                if (error) {
+                                    logger.logError(file, error, 'BCRYPT');
+
+                                    res.status(500).send({header: 'Internal Server Error', message: error});
+                                } else {
+                                    if (!response) {
+                                        res.status(403).send({header: 'Wrong Password', message: 'wrong password'});
+                                    } else {
+                                        bcrypt.hash(onion.hash(new_password), saltRounds, function(error, hash) {
+                                            if(error) {
+                                                logger.logError(file, error, 'BCRYPT');
+
+                                                res.status(500).send({header: 'Internal Server Error', message: error});
+                                            } else {
+                                                var call = 'UPDATE user SET password = \'' + onion.encrypt(hash) + '\' WHERE user.id = ' + user_id;
+
+                                                rest.queryMessage(pool, res, call);
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    router.put(path + '/admin', function(req, res) {
+        if(!req.headers.token) {
+            res.status(403).send({header: 'Missing Token', message: 'missing token'});
+        } else {
+            var token = tokens.decode(req),
+                validity = tokens.validate(req, token);
+
+            if(!validity) {
+                res.status(403).send({header: 'Invalid Token', message: 'An invalid token has been provided.'});
+            } else {
+                if(!token.sub.admin) {
+                    res.status(403).send({header: 'Not Admin', message: 'you are not admin'});
+                } else {
+                    var admin = req.body.admin,
+                        user = req.body.user;
+
+                    var call = 'UPDATE user SET admin = \'' + admin + '\' WHERE user.id = \'' + user + '\'';
+
+                    pool.query(call, function(error, result) {
+                        logger.logCall(file, call, error);
+
+                        if(error) {
+                            res.status(500).send({header: 'Internal SQL Error', message: error});
+                        } else {
+                            res.status(200).send({message: 'success', data: result});
+                        }
+                    });
+                }
+            }
+        }
     });
 
     router.delete(path + '/id/:id', function(req, res) {

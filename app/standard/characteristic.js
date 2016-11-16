@@ -22,32 +22,15 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN manifestation ON manifestation.id = characteristic.manifestation_id ' +
         'LEFT JOIN attribute ON attribute.id = characteristic.attribute_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
+    require('./../default')(pool, router, table, path, query);
 
-    router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null);
-    });
+    router.get(path + '/gift/:id1/species/:id2/manifestation/:id3', function(req, res) {
+        var call = query + ' WHERE ' +
+            'characteristic.gift = ? AND ' +
+            '(characteristic.species_id = ? OR characteristic.species_id is NULL) AND ' +
+            '(characteristic.manifestation_id = ? OR characteristic.manifestation_id is NULL) AND ' +
+            'characteristic.deleted is NOT NULL';
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE characteristic.id = ?';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
-    router.post(path, function(req, res) {
-        rest.POST(pool, req, res, table);
-    });
-
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
     });
 };

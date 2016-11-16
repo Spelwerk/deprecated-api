@@ -40,7 +40,7 @@ module.exports = function(pool, router, table, path) {
             'attribute.manifestation_id = ? AND ' +
             'attribute.deleted is null';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2,req.params.id3]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
     });
 
     router.post(path, function(req, res) {

@@ -28,32 +28,16 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute a1 ON a1.id = expertise.skill_attribute_id ' +
         'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
+    require('./../default')(pool, router, table, path, query);
 
-    router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null);
-    });
+    router.get(path + '/skill/:id2/type/:id3/species/:id4/manifestation/:id5', function(req, res) {
+        var call = query + ' WHERE ' +
+            'expertise.skill_attribute_id = ? AND ' +
+            'expertise.expertisetype_id = ? AND ' +
+            '(expertise.species_id = ? OR expertise.species_id is NULL) AND ' +
+            '(expertise.manifestation_id = ? OR expertise.manifestation_id is NULL) AND ' +
+            'expertise.deleted is NOT NULL';
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE expertise.id = ?';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
-    router.post(path, function(req, res) {
-        rest.POST(pool, req, res, table);
-    });
-
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4]);
     });
 };

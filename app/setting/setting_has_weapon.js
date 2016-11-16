@@ -49,14 +49,14 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id1/group/:id2', function(req, res) {
+    router.get(path + '/id/:id1/type/:id3', function(req, res) {
         var call = query + ' WHERE ' +
             'setting_has_weapon.setting_id = ? AND ' +
-            'weapontype.weapongroup_id = ? AND ' +
+            'weapon.weapontype_id = ? AND ' +
             'weapon.deleted is null AND ' +
             'weapon.hidden = \'0\'';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
     });
 
     router.post(path, function(req, res) {

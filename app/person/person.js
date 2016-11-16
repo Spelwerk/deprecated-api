@@ -53,22 +53,36 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN manifestation ON manifestation.id = person.manifestation_id ' +
         'LEFT JOIN focus ON focus.id = person.focus_id';
 
+    router.get(path, function(req, res) {
+        var call = query + ' WHERE ' + table + '.deleted is NULL';
+        rest.QUERY(pool, req, res, call);
+    });
+
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
     });
 
-    router.get(path, function(req, res) {
-        var call = query + ' WHERE person.cheated = \'0\' AND person.deleted is null';
-        rest.QUERY(pool, req, res, call, null);
+    router.get(path + '/deleted', function(req, res) {
+        var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
+        rest.QUERY(pool, req, res, call);
+    });
+
+    router.get(path + '/all', function(req, res) {
+        rest.QUERY(pool, req, res, query);
     });
 
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE person.id = ?';
+        var call = query + ' WHERE ' + table + '.id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    router.get(path + '/legal', function(req, res) {
+        var call = query + ' WHERE person.cheated = \'0\' AND person.deleted is null';
+        rest.QUERY(pool, req, res, call);
+    });
+
     router.get(path + '/hash/:id', function(req, res) {
-        var call = query + ' WHERE person.hash = ?';
+        var call = query + ' WHERE ' + table + '.hash = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
@@ -79,9 +93,9 @@ module.exports = function(pool, router, table, path) {
 
     router.put(path + '/hash/:id', function(req, res) {
         if (req.body.hash) {
-            res.status(403).send({error: 'hash cannot be changed'})
+            res.status(403).send({header: 'HASH error', message: 'HASH cannot be changed'})
         } else {
-            rest.PUT(pool, req, res, table, req.body, 'hash');
+            rest.PUT(pool, req, res, table, {hash: req.params.id});
         }
     });
 

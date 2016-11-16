@@ -19,32 +19,13 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN assettype ON assettype.id = asset.assettype_id ' +
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
+    require('./../default')(pool, router, table, path, query);
 
-    router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null);
-    });
+    router.get(path + '/type/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            table + '.assettype_id = ? AND ' +
+            table + '.deleted is NOT NULL';
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE asset.id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
-    router.post(path, function(req, res) {
-        rest.POST(pool, req, res, table);
-    });
-
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
     });
 };

@@ -35,6 +35,16 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    router.get(path + '/id/:id1/type/:id2/bodypart/:id3', function(req, res) {
+        var call = query + ' WHERE ' +
+            'setting_has_protection.setting_id = ? AND ' +
+            'protection.protectiontype_id = ? AND ' +
+            'protection.bodypart_id = ? AND ' +
+            'protection.deleted is null';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
+    });
+
     router.post(path, function(req, res) {
         rest.INSERT(pool, req, res, table);
     });

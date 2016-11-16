@@ -25,32 +25,15 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = milestone.attribute_id ' +
         'LEFT JOIN loyalty ON loyalty.id = milestone.loyalty_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
+    require('./../default')(pool, router, table, path, query);
 
-    router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null);
-    });
+    router.get(path + '/upbringing/:id1/caste/:id2/manifestation/:id3', function(req, res) {
+        var call = query + ' WHERE ' +
+            'milestone.upbringing = ? AND ' +
+            'milestone.caste_id = ? AND ' +
+            '(milestone.manifestation_id = ? OR milestone.manifestation_id is NULL) AND ' +
+            'milestone.deleted is NOT NULL';
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE milestone.id = ?';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
-    router.post(path, function(req, res) {
-        rest.POST(pool, req, res, table);
-    });
-
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
     });
 };

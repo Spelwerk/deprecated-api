@@ -46,7 +46,7 @@ module.exports = function(pool, router, table, path) {
             '(milestone.manifestation_id = ? OR milestone.manifestation_id is null) AND ' +
             'milestone.deleted is null';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2,req.params.id3,req.params.id4]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4]);
     });
 
     router.post(path, function(req, res) {

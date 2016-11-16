@@ -79,7 +79,7 @@ module.exports = function(pool, router) {
     require('./user/user_has_person')(pool, router, 'user_has_person', '/user-person');
     require('./user/user_has_story')(pool, router, 'user_has_story', '/user-story');
 
-    // PAGE
+    // SITE
     require('./default')(pool, router, 'comment');
     require('./site/article')(pool, router, 'article');
     require('./site/article_has_comment')(pool, router, 'article_has_comment', '/article-comment');

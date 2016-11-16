@@ -23,32 +23,14 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id ' +
         'LEFT JOIN bodypart ON bodypart.id = protection.bodypart_id ';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
+    require('./../default')(pool, router, table, path, query);
 
-    router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null);
-    });
+    router.get(path + '/type/:id1/bodypart/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            table + '.protectiontype_id = ? AND ' +
+            table + '.bodypart_id = ? AND ' +
+            table + '.deleted is NOT NULL';
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE protection.id = ?';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
-    router.post(path, function(req, res) {
-        rest.POST(pool, req, res, table);
-    });
-
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 };

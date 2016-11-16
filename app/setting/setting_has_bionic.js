@@ -30,6 +30,15 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    router.get(path + '/id/:id1/bodypart/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'setting_has_bionic.setting_id = ? AND ' +
+            'bionic.bodypart_id = AND ' +
+            'bionic.deleted is null';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
+
     router.post(path, function(req, res) {
         rest.INSERT(pool, req, res, table);
     });
