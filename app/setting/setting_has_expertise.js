@@ -19,6 +19,8 @@ module.exports = function(pool, router, table, path) {
         'a1.name AS skill_attribute_name, ' +
         'expertise.give_attribute_id, ' +
         'a2.name AS give_attribute_name, ' +
+        'a1.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'expertise.created, ' +
         'expertise.deleted ' +
         'FROM setting_has_expertise ' +
@@ -27,7 +29,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN species ON species.id = expertise.species_id ' +
         'LEFT JOIN manifestation ON manifestation.id = expertise.manifestation_id ' +
         'LEFT JOIN attribute a1 ON a1.id = expertise.skill_attribute_id ' +
-        'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id';
+        'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id ' +
+        'LEFT JOIN icon ON icon.id = a1.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

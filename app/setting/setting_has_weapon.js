@@ -27,6 +27,8 @@ module.exports = function(pool, router, table, path) {
         'a2.name AS damage_attribute_name, ' +
         'weapongroup.expertise_id, ' +
         'expertise.name AS expertise_name, ' +
+        'weapongroup.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'weapon.created, ' +
         'weapon.deleted ' +
         'FROM setting_has_weapon ' +
@@ -35,7 +37,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +
         'LEFT JOIN attribute a1 ON a1.id = weapongroup.skill_attribute_id ' +
         'LEFT JOIN attribute a2 ON a2.id = weapongroup.damage_attribute_id ' +
-        'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id';
+        'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id ' +
+        'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

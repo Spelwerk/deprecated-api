@@ -8,10 +8,13 @@ module.exports = function(pool, router, table, path) {
         'species.name, ' +
         'species.description, ' +
         'species.max_age, ' +
+        'species.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'species.created, ' +
         'species.deleted ' +
         'FROM setting_has_species ' +
-        'LEFT JOIN species ON species.id = setting_has_species.species_id';
+        'LEFT JOIN species ON species.id = setting_has_species.species_id ' +
+        'LEFT JOIN icon ON icon.id = species.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

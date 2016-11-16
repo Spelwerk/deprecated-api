@@ -7,9 +7,9 @@ var secrets = {
 };
 
 var pool = {
-    host: '',
-    user: '',
-    database: '',
+    host: 'localhost',
+    user: 'spelwerk',
+    database: 'spelwerk',
     connectionLimit: 100,
     waitForConnections: true,
     queueLimit: 0,
@@ -22,11 +22,6 @@ var pool = {
 module.exports.secrets = secrets;
 module.exports.pool = pool;
 
-exports.port = 3000;
-exports.salt = 13;
-
-if(!secrets.api) console.log('api: ' + hasher(40));
-if(!secrets.jwt) console.log('jwt: ' + hasher(40));
-if(!secrets.aes) console.log('aes: ' + hasher(40));
-if(!secrets.sha) console.log('sha: ' + hasher(40));
-if(!secrets.dbp) console.log('dbp: ' + hasher(40));
+exports.base = '';
+exports.port = 3001;
+exports.salt = 10;

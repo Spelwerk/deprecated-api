@@ -7,10 +7,13 @@ module.exports = function(pool, router, table, path) {
         'manifestation.id, ' +
         'manifestation.name, ' +
         'manifestation.description, ' +
+        'manifestation.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'manifestation.created, ' +
         'manifestation.deleted ' +
         'FROM setting_has_manifestation ' +
-        'LEFT JOIN manifestation ON manifestation.id = setting_has_manifestation.manifestation_id';
+        'LEFT JOIN manifestation ON manifestation.id = setting_has_manifestation.manifestation_id ' +
+        'LEFT JOIN icon ON icon.id = manifestation.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

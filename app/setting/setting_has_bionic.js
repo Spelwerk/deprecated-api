@@ -12,11 +12,14 @@ module.exports = function(pool, router, table, path) {
         'bionic.legal, ' +
         'bionic.bodypart_id, ' +
         'bodypart.name AS bodypart_name, ' +
+        'bionic.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'bionic.created, ' +
         'bionic.deleted ' +
         'FROM setting_has_bionic ' +
         'LEFT JOIN bionic ON bionic.id = setting_has_bionic.bionic_id ' +
-        'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id';
+        'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
+        'LEFT JOIN icon ON icon.id = bionic.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

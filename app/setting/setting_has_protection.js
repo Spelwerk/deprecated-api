@@ -15,13 +15,16 @@ module.exports = function(pool, router, table, path) {
         'protection.attribute_value, ' +
         'protection.bodypart_id, ' +
         'bodypart.name AS bodypart_name, ' +
+        'protection.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'protection.created, ' +
         'protection.deleted ' +
         'FROM setting_has_protection ' +
         'LEFT JOIN protection ON protection.id = setting_has_protection.protection_id ' +
         'LEFT JOIN protectiontype ON protectiontype.id = protection.protectiontype_id ' +
         'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id ' +
-        'LEFT JOIN bodypart ON bodypart.id = protection.bodypart_id ';
+        'LEFT JOIN bodypart ON bodypart.id = protection.bodypart_id ' +
+        'LEFT JOIN icon ON icon.id = protection.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

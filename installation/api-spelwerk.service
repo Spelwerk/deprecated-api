@@ -25,9 +25,7 @@ StandardOutput=syslog
 StandardError=syslog
 
 Restart=always
-
-Restart=always
-RestartSec=1
+RestartSec=5
 
 SyslogIdentifier=api-spelwerk
 

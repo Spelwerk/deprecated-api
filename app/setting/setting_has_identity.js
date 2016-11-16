@@ -9,11 +9,14 @@ module.exports = function(pool, router, table, path) {
         'identity.description, ' +
         'identity.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
+        'identity.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'identity.created, ' +
         'identity.deleted ' +
         'FROM setting_has_identity ' +
         'LEFT JOIN identity ON identity.id = setting_has_identity.identity_id ' +
-        'LEFT JOIN attribute ON attribute.id = identity.attribute_id';
+        'LEFT JOIN attribute ON attribute.id = identity.attribute_id ' +
+        'LEFT JOIN icon ON icon.id = identity.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

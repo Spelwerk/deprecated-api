@@ -10,11 +10,14 @@ module.exports = function(pool, router, table, path) {
         'caste.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
         'caste.attribute_value AS attribute_value, ' +
+        'caste.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'caste.created, ' +
         'caste.deleted ' +
         'FROM setting_has_caste ' +
         'LEFT JOIN caste ON caste.id = setting_has_caste.caste_id ' +
-        'LEFT JOIN attribute ON attribute.id = caste.attribute_id';
+        'LEFT JOIN attribute ON attribute.id = caste.attribute_id ' +
+        'LEFT JOIN icon ON icon.id = caste.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
