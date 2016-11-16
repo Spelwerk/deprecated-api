@@ -12,10 +12,13 @@ module.exports = function(pool, router, table, path) {
         'bionic.legal, ' +
         'bionic.bodypart_id, ' +
         'bodypart.name AS bodypart_name, ' +
+        'bionic.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'bionic.created, ' +
         'bionic.deleted ' +
         'FROM bionic ' +
-        'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id';
+        'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
+        'LEFT JOIN icon ON icon.id = bionic.icon_id';
 
     require('./../default')(pool, router, table, path, query);
 

@@ -11,11 +11,14 @@ module.exports = function(pool, router, table, path) {
         'attribute.name AS attribute_name, ' +
         'focus.manifestation_id, ' +
         'manifestation.name AS manifestation_name, ' +
+        'focus.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'focus.created, ' +
         'focus.deleted ' +
         'FROM focus ' +
         'LEFT JOIN attribute ON attribute.id = focus.attribute_id ' +
-        'LEFT JOIN manifestation ON manifestation.id = focus.manifestation_id';
+        'LEFT JOIN manifestation ON manifestation.id = focus.manifestation_id ' +
+        'LEFT JOIN icon ON icon.id = focus.icon_id';
 
     require('./../default')(pool, router, table, path, query);
 

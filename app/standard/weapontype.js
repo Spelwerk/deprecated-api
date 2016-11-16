@@ -16,10 +16,13 @@ module.exports = function(pool, router, table, path) {
         'weapontype.distance, ' +
         'weapontype.weapongroup_id, ' +
         'weapongroup.name AS weapongroup_name, ' +
+        'weapongroup.icon_id, ' +
+        'icon.path AS icon_path, ' +
         'weapontype.created, ' +
         'weapontype.deleted ' +
         'FROM weapontype ' +
-        'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id';
+        'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +
+        'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
 
     require('./../default')(pool, router, table, path, query);
 
