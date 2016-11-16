@@ -9,6 +9,7 @@ module.exports = function(pool, router, table, path) {
         'nature.description, ' +
         'nature.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
+        'nature.attribute_value, ' +
         'nature.icon_id, ' +
         'icon.path AS icon_path, ' +
         'nature.created, ' +

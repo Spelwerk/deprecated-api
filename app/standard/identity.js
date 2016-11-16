@@ -9,6 +9,7 @@ module.exports = function(pool, router, table, path) {
         'identity.description, ' +
         'identity.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
+        'identity.attribute_value, ' +
         'identity.icon_id, ' +
         'icon.path AS icon_path, ' +
         'identity.created, ' +
