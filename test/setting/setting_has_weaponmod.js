@@ -37,7 +37,7 @@ var verifyData = function(data) {
 describe('Setting has Weapon Modification', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-weaponmod', testPOST)
+        api('/world-weaponmod', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -47,8 +47,8 @@ describe('Setting has Weapon Modification', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-weaponmod/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-weaponmod/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -58,8 +58,8 @@ describe('Setting has Weapon Modification', function() {
             });
     });
 
-    it('should successfully GET all rows for setting and type', function(done) {
-        api('/setting-weaponmod/id/' + testPOST.setting_id + '/type/1')
+    it('should successfully GET all rows for world and type', function(done) {
+        api('/world-weaponmod/id/' + testPOST.setting_id + '/type/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

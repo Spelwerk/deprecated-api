@@ -31,7 +31,7 @@ var verifyData = function(data) {
 describe('Setting has Software', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-software', testPOST)
+        api('/world-software', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -41,8 +41,8 @@ describe('Setting has Software', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-software/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-software/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

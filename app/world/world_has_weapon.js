@@ -31,8 +31,8 @@ module.exports = function(pool, router, table, path) {
         'icon.path AS icon_path, ' +
         'weapon.created, ' +
         'weapon.deleted ' +
-        'FROM setting_has_weapon ' +
-        'LEFT JOIN weapon ON weapon.id = setting_has_weapon.weapon_id ' +
+        'FROM world_has_weapon ' +
+        'LEFT JOIN weapon ON weapon.id = world_has_weapon.weapon_id ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
         'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +
         'LEFT JOIN attribute a1 ON a1.id = weapongroup.skill_attribute_id ' +
@@ -46,7 +46,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_weapon.setting_id = ? AND ' +
+            'world_has_weapon.world_id = ? AND ' +
             'weapon.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -54,7 +54,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id1/type/:id3', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_weapon.setting_id = ? AND ' +
+            'world_has_weapon.world_id = ? AND ' +
             'weapon.weapontype_id = ? AND ' +
             'weapon.deleted is null AND ' +
             'weapon.hidden = \'0\'';
@@ -68,7 +68,7 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
+            "world_id": req.params.id1,
             "weapon_id": req.params.id2
         };
 

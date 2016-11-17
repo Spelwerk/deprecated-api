@@ -34,7 +34,7 @@ var verifyData = function(data) {
 describe('Setting has Attribute', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-attribute', testPOST)
+        api('/world-attribute', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -44,8 +44,8 @@ describe('Setting has Attribute', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-attribute/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-attribute/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -55,8 +55,8 @@ describe('Setting has Attribute', function() {
             });
     });
 
-    it('should successfully GET all rows for setting, type, and manifestation', function(done) {
-        api('/setting-attribute/id/' + testPOST.setting_id + '/type/1/manifestation/1')
+    it('should successfully GET all rows for world, type, and manifestation', function(done) {
+        api('/world-attribute/id/' + testPOST.setting_id + '/type/1/manifestation/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

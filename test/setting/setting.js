@@ -48,7 +48,7 @@ var verifyData = function(data) {
 describe('Setting', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting', testPOST)
+        api('/world', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -61,7 +61,7 @@ describe('Setting', function() {
     });
 
     it('should successfully PUT new row', function(done) {
-        api('/setting/id/' + insertedID, testPUT, 'put')
+        api('/world/id/' + insertedID, testPUT, 'put')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -72,7 +72,7 @@ describe('Setting', function() {
     });
 
     it('should successfully GET all rows', function(done) {
-        api('/setting')
+        api('/world')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -83,7 +83,7 @@ describe('Setting', function() {
     });
 
     it('should successfully GET latest row', function(done) {
-        api('/setting/id/' + insertedID)
+        api('/world/id/' + insertedID)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

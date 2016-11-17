@@ -21,8 +21,8 @@ module.exports = function(pool, router, table, path) {
         'icon.path AS icon_path, ' +
         'milestone.created, ' +
         'milestone.deleted ' +
-        'FROM setting_has_milestone ' +
-        'LEFT JOIN milestone ON milestone.id = setting_has_milestone.milestone_id ' +
+        'FROM world_has_milestone ' +
+        'LEFT JOIN milestone ON milestone.id = world_has_milestone.milestone_id ' +
         'LEFT JOIN caste ON caste.id = milestone.caste_id ' +
         'LEFT JOIN manifestation ON manifestation.id = milestone.manifestation_id ' +
         'LEFT JOIN attribute ON attribute.id = milestone.attribute_id ' +
@@ -35,7 +35,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_milestone.setting_id = ? AND ' +
+            'world_has_milestone.world_id = ? AND ' +
             'milestone.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -43,7 +43,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id1/upbringing/:id2/caste/:id3/manifestation/:id4', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_milestone.setting_id = ? AND ' +
+            'world_has_milestone.world_id = ? AND ' +
             'milestone.upbringing = ? AND ' +
             'milestone.caste_id = ? AND ' +
             '(milestone.manifestation_id = ? OR milestone.manifestation_id is null) AND ' +
@@ -58,7 +58,7 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
+            "world_id": req.params.id1,
             "milestone_id": req.params.id2
         };
 

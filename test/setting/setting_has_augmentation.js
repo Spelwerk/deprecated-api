@@ -38,7 +38,7 @@ var verifyData = function(data) {
 describe('Setting has Augmentation', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-augmentation', testPOST)
+        api('/world-augmentation', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -48,8 +48,8 @@ describe('Setting has Augmentation', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-augmentation/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-augmentation/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -59,8 +59,8 @@ describe('Setting has Augmentation', function() {
             });
     });
 
-    it('should successfully GET all rows for setting and bionic', function(done) {
-        api('/setting-augmentation/id/' + testPOST.setting_id + '/bionic/1')
+    it('should successfully GET all rows for world and bionic', function(done) {
+        api('/world-augmentation/id/' + testPOST.setting_id + '/bionic/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

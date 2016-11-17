@@ -33,7 +33,7 @@ var verifyData = function(data) {
 describe('Setting has Asset', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-asset', testPOST)
+        api('/world-asset', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -43,8 +43,8 @@ describe('Setting has Asset', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-asset/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-asset/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -54,8 +54,8 @@ describe('Setting has Asset', function() {
             });
     });
 
-    it('should successfully GET all rows for setting and type', function(done) {
-        api('/setting-asset/id/' + testPOST.setting_id + '/type/1')
+    it('should successfully GET all rows for world and type', function(done) {
+        api('/world-asset/id/' + testPOST.setting_id + '/type/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

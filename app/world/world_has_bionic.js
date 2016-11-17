@@ -16,8 +16,8 @@ module.exports = function(pool, router, table, path) {
         'icon.path AS icon_path, ' +
         'bionic.created, ' +
         'bionic.deleted ' +
-        'FROM setting_has_bionic ' +
-        'LEFT JOIN bionic ON bionic.id = setting_has_bionic.bionic_id ' +
+        'FROM world_has_bionic ' +
+        'LEFT JOIN bionic ON bionic.id = world_has_bionic.bionic_id ' +
         'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
         'LEFT JOIN icon ON icon.id = bionic.icon_id';
 
@@ -27,7 +27,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_bionic.setting_id = ? AND ' +
+            'world_has_bionic.world_id = ? AND ' +
             'bionic.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -35,7 +35,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id1/bodypart/:id2', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_bionic.setting_id = ? AND ' +
+            'world_has_bionic.world_id = ? AND ' +
             'bionic.bodypart_id = AND ' +
             'bionic.deleted is null';
 
@@ -48,7 +48,7 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
+            "world_id": req.params.id1,
             "bionic_id": req.params.id2
         };
 

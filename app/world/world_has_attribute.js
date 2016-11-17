@@ -18,8 +18,8 @@ module.exports = function(pool, router, table, path) {
         'icon.path AS icon_path, ' +
         'attribute.created, ' +
         'attribute.deleted ' +
-        'FROM setting_has_attribute ' +
-        'LEFT JOIN attribute ON attribute.id = setting_has_attribute.attribute_id ' +
+        'FROM world_has_attribute ' +
+        'LEFT JOIN attribute ON attribute.id = world_has_attribute.attribute_id ' +
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
         'LEFT JOIN manifestation ON manifestation.id = attribute.manifestation_id ' +
         'LEFT JOIN icon ON icon.id = attribute.icon_id';
@@ -30,7 +30,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_attribute.setting_id = ? AND ' +
+            'world_has_attribute.world_id = ? AND ' +
             'attribute.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -38,7 +38,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id1/type/:id2/manifestation/:id3', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_attribute.setting_id = ? AND ' +
+            'world_has_attribute.world_id = ? AND ' +
             'attribute.attributetype_id = ? AND ' +
             'attribute.manifestation_id = ? AND ' +
             'attribute.deleted is null';
@@ -52,7 +52,7 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
+            "world_id": req.params.id1,
             "attribute_id": req.params.id2
         };
 

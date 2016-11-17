@@ -4,19 +4,16 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'identity.id, ' +
-        'identity.name, ' +
-        'identity.description, ' +
-        'identity.attribute_id, ' +
-        'attribute.name AS attribute_name, ' +
-        'identity.icon_id, ' +
+        'manifestation.id, ' +
+        'manifestation.name, ' +
+        'manifestation.description, ' +
+        'manifestation.icon_id, ' +
         'icon.path AS icon_path, ' +
-        'identity.created, ' +
-        'identity.deleted ' +
-        'FROM setting_has_identity ' +
-        'LEFT JOIN identity ON identity.id = setting_has_identity.identity_id ' +
-        'LEFT JOIN attribute ON attribute.id = identity.attribute_id ' +
-        'LEFT JOIN icon ON icon.id = identity.icon_id';
+        'manifestation.created, ' +
+        'manifestation.deleted ' +
+        'FROM world_has_manifestation ' +
+        'LEFT JOIN manifestation ON manifestation.id = world_has_manifestation.manifestation_id ' +
+        'LEFT JOIN icon ON icon.id = manifestation.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
@@ -24,8 +21,8 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_identity.setting_id = ? AND ' +
-            'identity.deleted is null';
+            'world_has_manifestation.world_id = ? AND ' +
+            'manifestation.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
@@ -36,8 +33,8 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
-            "identity_id": req.params.id2
+            "world_id": req.params.id1,
+            "manifestation_id": req.params.id2
         };
 
         rest.REMOVE(pool, req, res, table, call);

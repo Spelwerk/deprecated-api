@@ -35,7 +35,7 @@ var verifyData = function(data) {
 describe('Setting has Characteristic', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-characteristic', testPOST)
+        api('/world-characteristic', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -45,8 +45,8 @@ describe('Setting has Characteristic', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-characteristic/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-characteristic/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -56,8 +56,8 @@ describe('Setting has Characteristic', function() {
             });
     });
 
-    it('should successfully GET all rows for setting, gift, species, and manifestation', function(done) {
-        api('/setting-characteristic/id/' + testPOST.setting_id + '/gift/1/species/1/manifestation/1')
+    it('should successfully GET all rows for world, gift, species, and manifestation', function(done) {
+        api('/world-characteristic/id/' + testPOST.setting_id + '/gift/1/species/1/manifestation/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

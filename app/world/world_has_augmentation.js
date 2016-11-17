@@ -20,8 +20,8 @@ module.exports = function(pool, router, table, path) {
         'weapon.name AS weapon_name, ' +
         'augmentation.created, ' +
         'augmentation.deleted ' +
-        'FROM setting_has_augmentation ' +
-        'LEFT JOIN augmentation ON augmentation.id = setting_has_augmentation.augmentation_id ' +
+        'FROM world_has_augmentation ' +
+        'LEFT JOIN augmentation ON augmentation.id = world_has_augmentation.augmentation_id ' +
         'LEFT JOIN bionic ON bionic.id = augmentation.bionic_id ' +
         'LEFT JOIN attribute ON attribute.id = augmentation.attribute_id ' +
         'LEFT JOIN weapon ON weapon.id = augmentation.weapon_id';
@@ -32,7 +32,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_augmentation.setting_id = ? AND ' +
+            'world_has_augmentation.world_id = ? AND ' +
             'augmentation.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -40,7 +40,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id1/bionic/:id2', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_augmentation.setting_id = ? AND ' +
+            'world_has_augmentation.world_id = ? AND ' +
             'augmentation.bionic_id = ? AND ' +
             'augmentation.deleted is null';
 
@@ -53,7 +53,7 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
+            "world_id": req.params.id1,
             "augmentation_id": req.params.id2
         };
 

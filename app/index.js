@@ -55,24 +55,24 @@ module.exports = function(pool, router) {
     require('./person/person_has_wound')(pool, router, 'person_has_wound', '/person-wound');
 
     // SETTING
-    require('./setting/setting')(pool, router, 'setting');
-    require('./setting/setting_has_asset')(pool, router, 'setting_has_asset', '/setting-asset');
-    require('./setting/setting_has_attribute')(pool, router, 'setting_has_attribute', '/setting-attribute');
-    require('./setting/setting_has_augmentation')(pool, router, 'setting_has_augmentation', '/setting-augmentation');
-    require('./setting/setting_has_bionic')(pool, router, 'setting_has_bionic', '/setting-bionic');
-    require('./setting/setting_has_caste')(pool, router, 'setting_has_caste', '/setting-caste');
-    require('./setting/setting_has_characteristic')(pool, router, 'setting_has_characteristic', '/setting-characteristic');
-    require('./setting/setting_has_expertise')(pool, router, 'setting_has_expertise', '/setting-expertise');
-    require('./setting/setting_has_focus')(pool, router, 'setting_has_focus', '/setting-focus');
-    require('./setting/setting_has_identity')(pool, router, 'setting_has_identity', '/setting-identity');
-    require('./setting/setting_has_manifestation')(pool, router, 'setting_has_manifestation', '/setting-manifestation');
-    require('./setting/setting_has_milestone')(pool, router, 'setting_has_milestone', '/setting-milestone');
-    require('./setting/setting_has_nature')(pool, router, 'setting_has_nature', '/setting-nature');
-    require('./setting/setting_has_protection')(pool, router, 'setting_has_protection', '/setting-protection');
-    require('./setting/setting_has_software')(pool, router, 'setting_has_software', '/setting-software');
-    require('./setting/setting_has_species')(pool, router, 'setting_has_species', '/setting-species');
-    require('./setting/setting_has_weapon')(pool, router, 'setting_has_weapon', '/setting-weapon');
-    require('./setting/setting_has_weaponmod')(pool, router, 'setting_has_weaponmod', '/setting-weaponmod');
+    require('./world/world')(pool, router, 'world');
+    require('./world/world_has_asset')(pool, router, 'world_has_asset', '/world-asset');
+    require('./world/world_has_attribute')(pool, router, 'world_has_attribute', '/world-attribute');
+    require('./world/world_has_augmentation')(pool, router, 'world_has_augmentation', '/world-augmentation');
+    require('./world/world_has_bionic')(pool, router, 'world_has_bionic', '/world-bionic');
+    require('./world/world_has_caste')(pool, router, 'world_has_caste', '/world-caste');
+    require('./world/world_has_characteristic')(pool, router, 'world_has_characteristic', '/world-characteristic');
+    require('./world/world_has_expertise')(pool, router, 'world_has_expertise', '/world-expertise');
+    require('./world/world_has_focus')(pool, router, 'world_has_focus', '/world-focus');
+    require('./world/world_has_identity')(pool, router, 'world_has_identity', '/world-identity');
+    require('./world/world_has_manifestation')(pool, router, 'world_has_manifestation', '/world-manifestation');
+    require('./world/world_has_milestone')(pool, router, 'world_has_milestone', '/world-milestone');
+    require('./world/world_has_nature')(pool, router, 'world_has_nature', '/world-nature');
+    require('./world/world_has_protection')(pool, router, 'world_has_protection', '/world-protection');
+    require('./world/world_has_software')(pool, router, 'world_has_software', '/world-software');
+    require('./world/world_has_species')(pool, router, 'world_has_species', '/world-species');
+    require('./world/world_has_weapon')(pool, router, 'world_has_weapon', '/world-weapon');
+    require('./world/world_has_weaponmod')(pool, router, 'world_has_weaponmod', '/world-weaponmod');
 
     // USER
     require('./user/user')(pool, router, 'user');

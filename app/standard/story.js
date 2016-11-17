@@ -8,12 +8,12 @@ module.exports = function(pool, router, table, path) {
         'story.id, ' +
         'story.name, ' +
         'story.description, ' +
-        'story.setting_id, ' +
-        'setting.name AS setting_name, ' +
+        'story.world_id, ' +
+        'world.name AS world_name, ' +
         'story.created, ' +
         'story.deleted ' +
         'FROM story ' +
-        'LEFT JOIN setting ON setting.id = story.setting_id';
+        'LEFT JOIN world ON world.id = story.world_id';
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NULL';

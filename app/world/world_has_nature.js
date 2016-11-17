@@ -4,20 +4,19 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'caste.id, ' +
-        'caste.name, ' +
-        'caste.description, ' +
-        'caste.attribute_id, ' +
+        'nature.id, ' +
+        'nature.name, ' +
+        'nature.description, ' +
+        'nature.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
-        'caste.attribute_value AS attribute_value, ' +
-        'caste.icon_id, ' +
+        'nature.icon_id, ' +
         'icon.path AS icon_path, ' +
-        'caste.created, ' +
-        'caste.deleted ' +
-        'FROM setting_has_caste ' +
-        'LEFT JOIN caste ON caste.id = setting_has_caste.caste_id ' +
-        'LEFT JOIN attribute ON attribute.id = caste.attribute_id ' +
-        'LEFT JOIN icon ON icon.id = caste.icon_id';
+        'nature.created, ' +
+        'nature.deleted ' +
+        'FROM world_has_nature ' +
+        'LEFT JOIN nature ON nature.id = world_has_nature.nature_id ' +
+        'LEFT JOIN attribute ON attribute.id = nature.attribute_id ' +
+        'LEFT JOIN icon ON icon.id = nature.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
@@ -25,8 +24,8 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_caste.setting_id = ? AND ' +
-            'caste.deleted is null';
+            'world_has_nature.world_id = ? AND ' +
+            'nature.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
@@ -37,8 +36,8 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
-            "caste_id": req.params.id2
+            "world_id": req.params.id1,
+            "nature_id": req.params.id2
         };
 
         rest.REMOVE(pool, req, res, table, call);

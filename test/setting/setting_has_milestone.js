@@ -37,7 +37,7 @@ var verifyData = function(data) {
 describe('Setting has Milestone', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-milestone', testPOST)
+        api('/world-milestone', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -47,8 +47,8 @@ describe('Setting has Milestone', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-milestone/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-milestone/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -58,8 +58,8 @@ describe('Setting has Milestone', function() {
             });
     });
 
-    it('should successfully GET all rows for setting, upbringing, caste, and manifestation', function(done) {
-        api('/setting-milestone/id/' + testPOST.setting_id + '/upbringing/1/caste/1/manifestation/1')
+    it('should successfully GET all rows for world, upbringing, caste, and manifestation', function(done) {
+        api('/world-milestone/id/' + testPOST.setting_id + '/upbringing/1/caste/1/manifestation/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

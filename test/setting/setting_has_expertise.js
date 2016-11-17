@@ -39,7 +39,7 @@ var verifyData = function(data) {
 describe('Setting has Expertise', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-expertise', testPOST)
+        api('/world-expertise', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -49,8 +49,8 @@ describe('Setting has Expertise', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-expertise/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-expertise/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -60,8 +60,8 @@ describe('Setting has Expertise', function() {
             });
     });
 
-    it('should successfully GET all rows for setting, skill, type, species, and manifestation', function(done) {
-        api('/setting-expertise/id/1/skill/1/type/1/species/1/manifestation/1')
+    it('should successfully GET all rows for world, skill, type, species, and manifestation', function(done) {
+        api('/world-expertise/id/1/skill/1/type/1/species/1/manifestation/1')
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

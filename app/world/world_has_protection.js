@@ -19,8 +19,8 @@ module.exports = function(pool, router, table, path) {
         'icon.path AS icon_path, ' +
         'protection.created, ' +
         'protection.deleted ' +
-        'FROM setting_has_protection ' +
-        'LEFT JOIN protection ON protection.id = setting_has_protection.protection_id ' +
+        'FROM world_has_protection ' +
+        'LEFT JOIN protection ON protection.id = world_has_protection.protection_id ' +
         'LEFT JOIN protectiontype ON protectiontype.id = protection.protectiontype_id ' +
         'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id ' +
         'LEFT JOIN bodypart ON bodypart.id = protection.bodypart_id ' +
@@ -32,7 +32,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_protection.setting_id = ? AND ' +
+            'world_has_protection.world_id = ? AND ' +
             'protection.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -40,7 +40,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id1/type/:id2/bodypart/:id3', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_protection.setting_id = ? AND ' +
+            'world_has_protection.world_id = ? AND ' +
             'protection.protectiontype_id = ? AND ' +
             'protection.bodypart_id = ? AND ' +
             'protection.deleted is null';
@@ -54,7 +54,7 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
+            "world_id": req.params.id1,
             "protection_id": req.params.id2
         };
 

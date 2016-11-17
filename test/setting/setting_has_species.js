@@ -28,7 +28,7 @@ var verifyData = function(data) {
 describe('Setting has Species', function() {
 
     it('should successfully POST new row', function(done) {
-        api('/setting-species', testPOST)
+        api('/world-species', testPOST)
             .expect(201)
             .end(function(error, response) {
                 assert.ifError(error);
@@ -38,8 +38,8 @@ describe('Setting has Species', function() {
             });
     });
 
-    it('should successfully GET all rows for setting', function(done) {
-        api('/setting-species/id/' + testPOST.setting_id)
+    it('should successfully GET all rows for world', function(done) {
+        api('/world-species/id/' + testPOST.setting_id)
             .expect(200)
             .end(function(error, response) {
                 assert.ifError(error);

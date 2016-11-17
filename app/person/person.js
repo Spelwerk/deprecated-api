@@ -21,9 +21,9 @@ module.exports = function(pool, router, table, path) {
         'person.personality, ' +
         'person.template, ' +
         'person.popularity, ' +
-        'person.setting_id, ' +
-        'setting.name AS setting_name, ' +
-        'setting.description AS setting_description, ' +
+        'person.world_id, ' +
+        'world.name AS world_name, ' +
+        'world.description AS world_description, ' +
         'person.species_id, ' +
         'species.name AS species_name, ' +
         'species.description AS species_description, ' +
@@ -45,7 +45,7 @@ module.exports = function(pool, router, table, path) {
         'person.created, ' +
         'person.deleted ' +
         'FROM person ' +
-        'LEFT JOIN setting ON setting.id = person.setting_id ' +
+        'LEFT JOIN world ON world.id = person.world_id ' +
         'LEFT JOIN species ON species.id = person.species_id ' +
         'LEFT JOIN caste ON caste.id = person.caste_id ' +
         'LEFT JOIN nature ON nature.id = person.nature_id ' +

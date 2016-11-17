@@ -19,8 +19,8 @@ module.exports = function(pool, router, table, path) {
         'weapontype.name AS weapontype_name, ' +
         'weaponmod.created, ' +
         'weaponmod.deleted ' +
-        'FROM setting_has_weaponmod ' +
-        'LEFT JOIN weaponmod ON weaponmod.id = setting_has_weaponmod.weaponmod_id ' +
+        'FROM world_has_weaponmod ' +
+        'LEFT JOIN weaponmod ON weaponmod.id = world_has_weaponmod.weaponmod_id ' +
         'LEFT JOIN weapontype ON weapontype.id = weaponmod.weapontype_id';
 
     router.get(path + '/help', function(req, res) {
@@ -29,7 +29,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_weaponmod.setting_id = ? AND ' +
+            'world_has_weaponmod.world_id = ? AND ' +
             'weaponmod.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -37,7 +37,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_weaponmod.setting_id = ? AND ' +
+            'world_has_weaponmod.world_id = ? AND ' +
             'weaponmod.weapontype_id = ? AND ' +
             'weaponmod.deleted is null';
 
@@ -50,7 +50,7 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
+            "world_id": req.params.id1,
             "weaponmod_id": req.params.id2
         };
 

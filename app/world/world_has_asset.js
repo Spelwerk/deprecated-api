@@ -17,8 +17,8 @@ module.exports = function(pool, router, table, path) {
         'icon.path AS icon_path, ' +
         'asset.created, ' +
         'asset.deleted ' +
-        'FROM setting_has_asset ' +
-        'LEFT JOIN asset ON asset.id = setting_has_asset.asset_id ' +
+        'FROM world_has_asset ' +
+        'LEFT JOIN asset ON asset.id = world_has_asset.asset_id ' +
         'LEFT JOIN assettype ON assettype.id = asset.assettype_id ' +
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id ' +
         'LEFT JOIN icon ON icon.id = assettype.icon_id';
@@ -29,7 +29,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_asset.setting_id = ? AND ' +
+            'world_has_asset.world_id = ? AND ' +
             'asset.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -37,7 +37,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
-            'setting_has_asset.setting_id = ? AND ' +
+            'world_has_asset.world_id = ? AND ' +
             'asset.assettype_id = ? AND ' +
             'asset.deleted is null';
 
@@ -50,7 +50,7 @@ module.exports = function(pool, router, table, path) {
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
         var call = {
-            "setting_id": req.params.id1,
+            "world_id": req.params.id1,
             "asset_id": req.params.id2
         };
 
