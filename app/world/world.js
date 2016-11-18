@@ -8,7 +8,9 @@ module.exports = function(pool, router, table, path) {
         'world.description, ' +
         'world.popularity, ' +
         'world.template, ' +
+        'world.bionic, ' +
         'world.augmentation, ' +
+        'world.software, ' +
         'world.supernatural, ' +
         'world.supernatural_name, ' +
         'world.supernatural_attributetype_id, ' +
