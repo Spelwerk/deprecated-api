@@ -15,11 +15,13 @@ module.exports = function(pool, router, table, path) {
         'person_has_bionic.bionicquality_id AS quality_id, ' +
         'bionicquality.name AS quality_name, ' +
         'bionicquality.price AS quality_price, ' +
-        'bionicquality.energy AS quality_energy ' +
+        'bionicquality.energy AS quality_energy, ' +
+        'icon.path AS icon_path ' +
         'FROM person_has_bionic ' +
         'LEFT JOIN bionic ON bionic.id = person_has_bionic.bionic_id ' +
         'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
-        'LEFT JOIN bionicquality ON bionicquality.id = person_has_bionic.bionicquality_id';
+        'LEFT JOIN bionicquality ON bionicquality.id = person_has_bionic.bionicquality_id ' +
+        'LEFT JOIN icon ON icon.id = bionic.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

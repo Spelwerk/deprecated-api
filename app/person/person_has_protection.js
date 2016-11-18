@@ -19,13 +19,15 @@ module.exports = function(pool, router, table, path) {
         'protectionquality.name AS quality_name, ' +
         'protectionquality.price AS quality_price, ' +
         'protectionquality.attribute_value AS quality_attribute_value, ' +
-        'person_has_protection.equipped ' +
+        'person_has_protection.equipped, ' +
+        'icon.path AS icon_path ' +
         'FROM person_has_protection ' +
         'LEFT JOIN protection ON protection.id = person_has_protection.protection_id ' +
         'LEFT JOIN protectiontype ON protectiontype.id = protection.protectiontype_id ' +
         'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id ' +
         'LEFT JOIN bodypart ON bodypart.id = protection.bodypart_id ' +
-        'LEFT JOIN protectionquality ON protectionquality.id = person_has_protection.protectionquality_id';
+        'LEFT JOIN protectionquality ON protectionquality.id = person_has_protection.protectionquality_id ' +
+        'LEFT JOIN icon ON icon.id = protection.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

@@ -14,11 +14,13 @@ module.exports = function(pool, router, table, path) {
         'assettype.name AS assettype_name, ' +
         'assettype.assetgroup_id, ' +
         'assetgroup.name AS assetgroup_name, ' +
-        'person_has_asset.equipped ' +
+        'person_has_asset.equipped, ' +
+        'icon.path AS icon_path ' +
         'FROM person_has_asset ' +
         'LEFT JOIN asset ON asset.id = person_has_asset.asset_id ' +
         'LEFT JOIN assettype ON assettype.id = asset.assettype_id ' +
-        'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id';
+        'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id ' +
+        'LEFT JOIN icon ON icon.id = assettype.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

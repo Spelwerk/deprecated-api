@@ -6,22 +6,22 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'world.name, ' +
         'world.description, ' +
-        'world.template, ' +
         'world.popularity, ' +
+        'world.template, ' +
+        'world.augmentation, ' +
         'world.supernatural, ' +
-        'world.supernatural, ' +
-        'world.supernatural, ' +
+        'world.supernatural_name, ' +
         'world.supernatural_attributetype_id, ' +
         'a1.name AS supernatural_attributetype_name, ' +
-        'world.augmentation, ' +
-        'world.skill_split, ' +
         'world.skill_attributetype_id, ' +
         'a2.name AS skill_attributetype_name, ' +
-        'world.expertise_split, ' +
-        'world.milestone_split, ' +
-        'world.relationship_split, ' +
-        'world.timeline_split, ' +
-        'world.characteristic_max, ' +
+        'world.split_supernatural, ' +
+        'world.split_skill, ' +
+        'world.split_expertise, ' +
+        'world.split_milestone, ' +
+        'world.split_relationship, ' +
+        'world.split_timeline, ' +
+        'world.max_characteristic, ' +
         'world.created, ' +
         'world.deleted ' +
         'FROM world ' +

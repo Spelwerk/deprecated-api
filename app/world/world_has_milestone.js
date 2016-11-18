@@ -17,8 +17,6 @@ module.exports = function(pool, router, table, path) {
         'milestone.attribute_value, ' +
         'milestone.loyalty_id, ' +
         'loyalty.name AS loyalty_name, ' +
-        'caste.icon_id, ' +
-        'icon.path AS icon_path, ' +
         'milestone.created, ' +
         'milestone.deleted ' +
         'FROM world_has_milestone ' +
@@ -26,8 +24,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN caste ON caste.id = milestone.caste_id ' +
         'LEFT JOIN manifestation ON manifestation.id = milestone.manifestation_id ' +
         'LEFT JOIN attribute ON attribute.id = milestone.attribute_id ' +
-        'LEFT JOIN loyalty ON loyalty.id = milestone.loyalty_id ' +
-        'LEFT JOIN icon ON icon.id = caste.icon_id';
+        'LEFT JOIN loyalty ON loyalty.id = milestone.loyalty_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

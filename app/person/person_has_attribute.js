@@ -13,11 +13,13 @@ module.exports = function(pool, router, table, path) {
         'attribute.attributetype_id, ' +
         'attributetype.name AS attributetype_name, ' +
         'attribute.manifestation_id, ' +
-        'manifestation.name AS manifestation_name ' +
+        'manifestation.name AS manifestation_name, ' +
+        'icon.path AS icon_path ' +
         'FROM person_has_attribute ' +
         'LEFT JOIN attribute ON attribute.id = person_has_attribute.attribute_id ' +
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
-        'LEFT JOIN manifestation ON manifestation.id = attribute.manifestation_id';
+        'LEFT JOIN manifestation ON manifestation.id = attribute.manifestation_id ' +
+        'LEFT JOIN icon ON icon.id = attribute.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);

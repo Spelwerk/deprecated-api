@@ -36,7 +36,8 @@ module.exports = function(pool, router, table, path) {
         'weaponquality.initiative AS quality_initiative, ' +
         'weaponquality.hit AS quality_hit, ' +
         'weaponquality.distance AS quality_distance, ' +
-        'person_has_weapon.equipped ' +
+        'person_has_weapon.equipped, ' +
+        'icon.path AS icon_path ' +
         'FROM person_has_weapon ' +
         'LEFT JOIN weapon ON weapon.id = person_has_weapon.weapon_id ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
@@ -44,7 +45,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute a1 ON a1.id = weapongroup.skill_attribute_id ' +
         'LEFT JOIN attribute a2 ON a2.id = weapongroup.damage_attribute_id ' +
         'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id ' +
-        'LEFT JOIN weaponquality ON weaponquality.id = person_has_weapon.weaponquality_id';
+        'LEFT JOIN weaponquality ON weaponquality.id = person_has_weapon.weaponquality_id ' +
+        'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
 
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
