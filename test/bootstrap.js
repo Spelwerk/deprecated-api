@@ -37,7 +37,7 @@ module.exports = function(path, data, type) {
             .set({
                 'Accept' : 'application/x-www-form-urlencoded',
                 'apikey' : testdata.keys.api,
-                'Authorization' : data
+                'token' : data
             });
     }
 

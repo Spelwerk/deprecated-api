@@ -9,6 +9,7 @@ module.exports = function(pool, router, table, path) {
         'focus.description, ' +
         'focus.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
+        'focus.attribute_value, ' +
         'focus.manifestation_id, ' +
         'manifestation.name AS manifestation_name, ' +
         'focus.icon_id, ' +
@@ -47,11 +48,11 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var call = {
+        var where = {
             "world_id": req.params.id1,
             "focus_id": req.params.id2
         };
 
-        rest.REMOVE(pool, req, res, table, call);
+        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
     });
 };

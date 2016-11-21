@@ -9,6 +9,7 @@ module.exports = function(pool, router, table, path) {
         'nature.description, ' +
         'nature.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
+        'nature.attribute_value, ' +
         'nature.icon_id, ' +
         'icon.path AS icon_path, ' +
         'nature.created, ' +
@@ -35,11 +36,11 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var call = {
+        var where = {
             "world_id": req.params.id1,
             "nature_id": req.params.id2
         };
 
-        rest.REMOVE(pool, req, res, table, call);
+        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
     });
 };

@@ -31,10 +31,10 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var call = {
+        var where = {
             "species_id": req.params.id1,
             "attribute_id": req.params.id2
         };
-        rest.REMOVE(pool, req, res, table, call);
+        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
     });
 };

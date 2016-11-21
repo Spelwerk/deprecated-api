@@ -52,11 +52,11 @@ module.exports = function(pool, router, table, path) {
         if (req.body.hash) {
             res.status(403).send({header: 'HASH error', message: 'HASH cannot be changed'})
         } else {
-            rest.PUT(pool, req, res, table, {hash: req.params.id});
+            rest.PUT(pool, req, res, table, {where: {hash: req.params.id}});
         }
     });
 
     router.delete(path + '/hash/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table, {hash: req.params.id});
+        rest.DELETE(pool, req, res, table, {where: {hash: req.params.id}});
     });
 };

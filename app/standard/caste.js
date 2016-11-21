@@ -9,7 +9,7 @@ module.exports = function(pool, router, table, path) {
         'caste.description, ' +
         'caste.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
-        'caste.attribute_value AS attribute_value, ' +
+        'caste.attribute_value, ' +
         'caste.icon_id, ' +
         'icon.path AS icon_path, ' +
         'caste.created, ' +

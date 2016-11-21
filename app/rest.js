@@ -40,11 +40,11 @@ module.exports.queryMessage = queryMessage;
 
 // DEFAULT
 
-exports.HELP = function(pool, req, res, table) {
+exports.HELP =   function(pool, req, res, table) {
     queryDefault(pool, res, 'SHOW FULL COLUMNS FROM ' + table)
 };
 
-exports.QUERY = function(pool, req, res, call, params) {
+exports.QUERY =  function(pool, req, res, call, params) {
     params = params || null;
 
     if(params) {
@@ -54,7 +54,7 @@ exports.QUERY = function(pool, req, res, call, params) {
     queryDefault(pool, res, call);
 };
 
-exports.POST = function(pool, req, res, table) {
+exports.POST =   function(pool, req, res, table) {
     var body = req.body,
         rows = {},
         into = 'INSERT INTO ' + table + '(',
@@ -88,7 +88,10 @@ exports.POST = function(pool, req, res, table) {
     });
 };
 
-exports.PUT = function(pool, req, res, table, jsonObject) {
+exports.PUT =    function(pool, req, res, table, options) {
+    var where = options.where || {id: req.params.id },
+        update = options.update || true;
+
     var body = req.body,
         rows = {},
         call = 'UPDATE ' + table + ' SET ';
@@ -101,12 +104,15 @@ exports.PUT = function(pool, req, res, table, jsonObject) {
     }
 
     call = call.slice(0, -2);
+
+    if(update) {
+        call += ', updated = CURRENT_TIMESTAMP';
+    }
+
     call += ' WHERE ';
 
-    jsonObject = jsonObject || {id: req.params.id};
-
-    for (var key in jsonObject) {
-        call += table + '.' + key + ' = \'' + jsonObject[key] + '\' AND ';
+    for (var key in where) {
+        call += table + '.' + key + ' = \'' + where[key] + '\' AND ';
     }
 
     call = call.slice(0, -5);
@@ -157,13 +163,16 @@ exports.INSERT = function(pool, req, res, table) {
     });
 };
 
-exports.DELETE = function(pool, req, res, table, jsonObject) {
-    var call = 'UPDATE ' + table + ' SET deleted = CURRENT_TIMESTAMP WHERE ';
+exports.DELETE = function(pool, req, res, table, options) {
+    var where = options.where || {id: req.params.id},
+        timestamp = options.timestamp || true;
 
-    jsonObject = jsonObject || {id: req.params.id};
+    var call = timestamp
+        ? 'UPDATE ' + table + ' SET deleted = CURRENT_TIMESTAMP WHERE '
+        : 'DELETE FROM ' + table + ' WHERE ';
 
-    for (var key in jsonObject) {
-        call += key + ' = \'' + jsonObject[key] + '\' AND ';
+    for (var key in where) {
+        call += key + ' = \'' + where[key] + '\' AND ';
     }
 
     call = call.slice(0, -5);
@@ -171,30 +180,19 @@ exports.DELETE = function(pool, req, res, table, jsonObject) {
     queryMessage(pool, res, call, 202, 'deleted');
 };
 
-exports.REVIVE = function(pool, req, res, table, jsonObject) {
-    var call = 'UPDATE ' + table + ' SET deleted = \'null\' WHERE ';
+exports.REVIVE = function(pool, req, res, table, options) {
+    var where = options.where || {id: req.params.id},
+        timestamp = options.timestamp || true;
 
-    jsonObject = jsonObject || {id: req.params.id};
+    var call = timestamp
+        ? 'UPDATE ' + table + ' SET deleted = \'null\', updated = CURRENT_TIMESTAMP WHERE '
+        : 'UPDATE ' + table + ' SET deleted = \'null\' WHERE ';
 
-    for (var key in jsonObject) {
-        call += key + ' = \'' + jsonObject[key] + '\' AND ';
+    for (var key in where) {
+        call += key + ' = \'' + where[key] + '\' AND ';
     }
 
     call = call.slice(0, -5);
 
     queryMessage(pool, res, call, 200, 'revived');
-};
-
-exports.REMOVE = function(pool, req, res, table, jsonObject) {
-    var call = 'DELETE from ' + table + ' WHERE ';
-
-    jsonObject = jsonObject || {id: req.params.id};
-
-    for (var key in jsonObject) {
-        call += key + ' = \'' + jsonObject[key] + '\' AND ';
-    }
-
-    call = call.slice(0, -5);
-
-    queryMessage(pool, res, call, 202, 'removed');
 };

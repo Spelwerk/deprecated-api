@@ -8,7 +8,8 @@ module.exports = function(pool, router, table, path) {
         'attribute.name, ' +
         'attribute.description, ' +
         'attribute.protected, ' +
-        'attribute.roll, ' +
+        'attributetype.roll, ' +
+        'attributetype.consumable, ' +
         'attributetype.maximum, ' +
         'attribute.attributetype_id, ' +
         'attributetype.name AS attributetype_name, ' +

@@ -26,8 +26,10 @@ module.exports = function(pool, router, table, path) {
         'world.name AS world_name, ' +
         'world.description AS world_description, ' +
         'world.supernatural_name AS world_supernatural_name, ' +
-        'world.supernatural_attributetype_id AS world_supernatural_attributetype_id, ' +
+        'world.consumable_attributetype_id AS world_consumable_attributetype_id, ' +
         'world.skill_attributetype_id AS world_skill_attributetype_id, ' +
+        'world.supernatural_attributetype_id AS world_supernatural_attributetype_id, ' +
+        'world.hitpoints_attributetype_id AS world_hitpoints_attributetype_id, ' +
 
         'person.species_id, ' +
         'species.name AS species_name, ' +
@@ -128,11 +130,11 @@ module.exports = function(pool, router, table, path) {
         if (req.body.hash) {
             res.status(403).send({header: 'HASH error', message: 'HASH cannot be changed'})
         } else {
-            rest.PUT(pool, req, res, table, {hash: req.params.id});
+            rest.PUT(pool, req, res, table, {where: {hash: req.params.id}});
         }
     });
 
     router.delete(path + '/hash/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table, {hash: req.params.id});
+        rest.DELETE(pool, req, res, table, {where: {hash: req.params.id}});
     });
 };

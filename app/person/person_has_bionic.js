@@ -12,6 +12,9 @@ module.exports = function(pool, router, table, path) {
         'bionic.legal, ' +
         'bionic.bodypart_id, ' +
         'bodypart.name AS bodypart_name, ' +
+        'bionic.attribute_id, ' +
+        'attribute.name AS attribute_name, ' +
+        'bionic.attribute_value, ' +
         'person_has_bionic.bionicquality_id AS quality_id, ' +
         'bionicquality.name AS quality_name, ' +
         'bionicquality.price AS quality_price, ' +
@@ -20,6 +23,7 @@ module.exports = function(pool, router, table, path) {
         'FROM person_has_bionic ' +
         'LEFT JOIN bionic ON bionic.id = person_has_bionic.bionic_id ' +
         'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
+        'LEFT JOIN attribute ON attribute.id = bionic.attribute_id ' +
         'LEFT JOIN bionicquality ON bionicquality.id = person_has_bionic.bionicquality_id ' +
         'LEFT JOIN icon ON icon.id = bionic.icon_id';
 
@@ -40,11 +44,11 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var call = {
+        var where = {
             "person_id": req.params.id1,
             "bionic_id": req.params.id2
         };
 
-        rest.REMOVE(pool, req, res, table, call);
+        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
     });
 };

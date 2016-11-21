@@ -9,6 +9,8 @@ module.exports = function(pool, router, table, path) {
         'person_has_attribute.value, ' +
         'attribute.description, ' +
         'attribute.protected, ' +
+        'attributetype.roll, ' +
+        'attributetype.consumable, ' +
         'attributetype.maximum, ' +
         'attribute.attributetype_id, ' +
         'attributetype.name AS attributetype_name, ' +
@@ -42,11 +44,11 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var call = {
+        var where = {
             "person_id": req.params.id1,
             "attribute_id": req.params.id2
         };
 
-        rest.REMOVE(pool, req, res, table, call);
+        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
     });
 };
