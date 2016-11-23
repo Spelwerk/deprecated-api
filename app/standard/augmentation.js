@@ -18,7 +18,8 @@ module.exports = function(pool, router, table, path) {
         'augmentation.weapon_id, ' +
         'weapon.name AS weapon_name, ' +
         'augmentation.created, ' +
-        'augmentation.deleted ' +
+        'augmentation.deleted, ' +
+        'augmentation.updated ' +
         'FROM augmentation ' +
         'LEFT JOIN bionic ON bionic.id = augmentation.bionic_id ' +
         'LEFT JOIN attribute ON attribute.id = augmentation.attribute_id ' +

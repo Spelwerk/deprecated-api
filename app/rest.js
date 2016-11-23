@@ -54,40 +54,6 @@ exports.QUERY =  function(pool, req, res, call, params) {
     queryDefault(pool, res, call);
 };
 
-exports.POST =   function(pool, req, res, table) {
-    var body = req.body,
-        rows = {},
-        into = 'INSERT INTO ' + table + '(',
-        vals = ' VALUES (',
-        call;
-
-    for (var key in body) {
-        if(body.hasOwnProperty(key)) {
-            into += key + ',';
-            vals += '\'' + body[key] + '\',';
-            rows[key] = body[key];
-        }
-    }
-
-    into = into.slice(0, -1) + ')';
-    vals = vals.slice(0, -1) + ')';
-    call = into + vals;
-
-    pool.query(call, function(error, result) {
-        logger.logCall(file, call, error);
-
-        if(error) {
-            res.status(500).send({header: 'Internal SQL Error', message: error});
-        } else {
-            if(req.body.hash) {
-                res.status(201).send({data: result, id: result.insertId, hash: req.body.hash});
-            } else {
-                res.status(201).send({data: result, id: result.insertId});
-            }
-        }
-    });
-};
-
 exports.PUT =    function(pool, req, res, table, options) {
     var where = options.where || {id: req.params.id },
         update = options.update || true;
@@ -140,8 +106,8 @@ exports.INSERT = function(pool, req, res, table) {
 
     for (var key in body) {
         if(body.hasOwnProperty(key)) {
-            into += key + ',';
-            vals += '\'' + body[key] + '\',';
+            into += key + ', ';
+            vals += '\'' + body[key] + '\', ';
             updt += key + ' = \'' + body[key] + '\', ';
             rows[key] = body[key];
         }
@@ -150,6 +116,7 @@ exports.INSERT = function(pool, req, res, table) {
     into = into.slice(0, -1) + ')';
     vals = vals.slice(0, -1) + ')';
     updt = updt.slice(0, -2);
+
     call = into + vals + ' ON DUPLICATE KEY UPDATE ' + updt;
 
     pool.query(call, function(error, result) {
@@ -158,7 +125,7 @@ exports.INSERT = function(pool, req, res, table) {
         if(error) {
             res.status(500).send({header: 'Internal SQL Error', message: error});
         } else {
-            res.status(201).send({data: result, id: result.insertId});
+            res.status(201).send({data: result, id: result.insertId, hash: req.body.hash});
         }
     });
 };

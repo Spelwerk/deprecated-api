@@ -11,7 +11,8 @@ module.exports = function(pool, router, table, path) {
         'story.world_id, ' +
         'world.name AS world_name, ' +
         'story.created, ' +
-        'story.deleted ' +
+        'story.deleted, ' +
+        'story.updated ' +
         'FROM story ' +
         'LEFT JOIN world ON world.id = story.world_id';
 
@@ -44,8 +45,8 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path, function(req, res) {
-        req.body.hash = hasher(20);
-        rest.POST(pool, req, res, table);
+        req.body.hash = hasher(24);
+        rest.INSERT(pool, req, res, table);
     });
 
     router.put(path + '/hash/:id', function(req, res) {
@@ -54,6 +55,10 @@ module.exports = function(pool, router, table, path) {
         } else {
             rest.PUT(pool, req, res, table, {where: {hash: req.params.id}});
         }
+    });
+
+    router.put(path + '/revive/:id', function(req, res) {
+        rest.REVIVE(pool, req, res, table);
     });
 
     router.delete(path + '/hash/:id', function(req, res) {

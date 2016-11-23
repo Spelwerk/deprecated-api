@@ -11,7 +11,8 @@ module.exports = function(pool, router, table, path) {
         'assettype.icon_id, ' +
         'icon.path AS icon_path, ' +
         'assettype.created, ' +
-        'assettype.deleted ' +
+        'assettype.deleted,' +
+        'assettype.updated  ' +
         'FROM assettype ' +
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id ' +
         'LEFT JOIN icon ON icon.id = assettype.icon_id';

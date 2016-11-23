@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'world.name, ' +
+        'world.hash, ' +
         'world.description, ' +
         'world.popularity, ' +
         'world.template, ' +
@@ -13,14 +14,9 @@ module.exports = function(pool, router, table, path) {
         'world.software, ' +
         'world.supernatural, ' +
         'world.supernatural_name, ' +
-        'world.consumable_attributetype_id, ' +
-        'a1.name AS consumable_attributetype_name, ' +
-        'world.finance_attributetype_id, ' +
-        'a2.name AS finance_attributetype_name, ' +
         'world.skill_attributetype_id, ' +
-        'a3.name AS skill_attributetype_name, ' +
-        'world.supernatural_attributetype_id, ' +
-        'a4.name AS supernatural_attributetype_name, ' +
+        'world.attribute_expertisetype_id, ' +
+        'world.roll_expertisetype_id, ' +
         'world.split_supernatural, ' +
         'world.split_skill, ' +
         'world.split_expertise, ' +
@@ -28,13 +24,67 @@ module.exports = function(pool, router, table, path) {
         'world.split_relationship, ' +
         'world.split_timeline, ' +
         'world.max_characteristic, ' +
+        'world.max_supernatural, ' +
+        'world.max_skill, ' +
+        'world.max_expertise, ' +
+        'world.max_milestone, ' +
+        'world.max_relationship, ' +
+        'world.max_timeline_upbringing, ' +
+        'world.max_timeline_flexible, ' +
         'world.created, ' +
-        'world.deleted ' +
-        'FROM world ' +
-        'LEFT JOIN attributetype a1 ON a1.id = world.consumable_attributetype_id ' +
-        'LEFT JOIN attributetype a2 ON a2.id = world.finance_attributetype_id ' +
-        'LEFT JOIN attributetype a3 ON a3.id = world.skill_attributetype_id ' +
-        'LEFT JOIN attributetype a4 ON a4.id = world.supernatural_attributetype_id';
+        'world.deleted,' +
+        'world.updated ' +
+        'FROM world';
 
-    require('./../default')(pool, router, table, path, query);
+    router.get(path, function(req, res) {
+        var call = query + ' WHERE deleted is NULL';
+
+        rest.QUERY(pool, req, res, call);
+    });
+
+    router.get(path + '/help', function(req, res) {
+        rest.HELP(pool, req, res, table);
+    });
+
+    router.get(path + '/deleted', function(req, res) {
+        var call = query + ' WHERE deleted is NOT NULL';
+
+        rest.QUERY(pool, req, res, call);
+    });
+
+    router.get(path + '/all', function(req, res) {
+        rest.QUERY(pool, req, res, query);
+    });
+
+    router.get(path + '/id/:id', function(req, res) {
+        var call = query + ' WHERE id = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/hash/:id', function(req, res) {
+        var call = query + ' WHERE ' + table + '.hash = ?';
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.post(path, function(req, res) {
+        req.body.hash = hasher(24);
+        rest.INSERT(pool, req, res, table);
+    });
+
+    router.put(path + '/hash/:id', function(req, res) {
+        if (req.body.hash) {
+            res.status(403).send({header: 'HASH error', message: 'HASH cannot be changed'})
+        } else {
+            rest.PUT(pool, req, res, table, {where: {hash: req.params.id}});
+        }
+    });
+
+    router.put(path + '/revive/:id', function(req, res) {
+        rest.REVIVE(pool, req, res, table);
+    });
+
+    router.delete(path + '/hash/:id', function(req, res) {
+        rest.DELETE(pool, req, res, table, {where: {hash: req.params.id}});
+    });
 };

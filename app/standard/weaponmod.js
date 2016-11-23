@@ -18,7 +18,8 @@ module.exports = function(pool, router, table, path) {
         'weaponmod.weapontype_id, ' +
         'weapontype.name AS weapontype_name, ' +
         'weaponmod.created, ' +
-        'weaponmod.deleted ' +
+        'weaponmod.deleted, ' +
+        'weaponmod.updated ' +
         'FROM weaponmod ' +
         'LEFT JOIN weapontype ON weapontype.id = weaponmod.weapontype_id';
 

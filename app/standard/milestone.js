@@ -20,7 +20,8 @@ module.exports = function(pool, router, table, path) {
         'caste.icon_id, ' +
         'icon.path AS icon_path, ' +
         'milestone.created, ' +
-        'milestone.deleted ' +
+        'milestone.deleted, ' +
+        'milestone.updated ' +
         'FROM milestone ' +
         'LEFT JOIN caste ON caste.id = milestone.caste_id ' +
         'LEFT JOIN manifestation ON manifestation.id = milestone.manifestation_id ' +

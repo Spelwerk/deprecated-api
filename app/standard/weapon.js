@@ -17,7 +17,8 @@ module.exports = function(pool, router, table, path) {
         'weapongroup.icon_id, ' +
         'icon.path AS icon_path, ' +
         'weapon.created, ' +
-        'weapon.deleted ' +
+        'weapon.deleted, ' +
+        'weapon.updated ' +
         'FROM weapon ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
         'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +

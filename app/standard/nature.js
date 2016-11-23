@@ -13,7 +13,8 @@ module.exports = function(pool, router, table, path) {
         'nature.icon_id, ' +
         'icon.path AS icon_path, ' +
         'nature.created, ' +
-        'nature.deleted ' +
+        'nature.deleted, ' +
+        'nature.updated ' +
         'FROM nature ' +
         'LEFT JOIN attribute ON attribute.id = nature.attribute_id ' +
         'LEFT JOIN icon ON icon.id = nature.icon_id';

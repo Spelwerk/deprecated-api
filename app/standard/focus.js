@@ -14,7 +14,8 @@ module.exports = function(pool, router, table, path) {
         'focus.icon_id, ' +
         'icon.path AS icon_path, ' +
         'focus.created, ' +
-        'focus.deleted ' +
+        'focus.deleted, ' +
+        'focus.updated ' +
         'FROM focus ' +
         'LEFT JOIN attribute ON attribute.id = focus.attribute_id ' +
         'LEFT JOIN manifestation ON manifestation.id = focus.manifestation_id ' +

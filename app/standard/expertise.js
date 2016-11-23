@@ -8,9 +8,11 @@ module.exports = function(pool, router, table, path) {
         'expertise.name, ' +
         'expertise.description, ' +
         'expertise.hidden, ' +
-        'expertisetype.maximum, ' +
         'expertise.expertisetype_id, ' +
         'expertisetype.name AS expertisetype_name, ' +
+        'expertisetype.maximum, ' +
+        'expertisetype.skill_attribute_required, ' +
+        'expertisetype.skill_attribute_increment, ' +
         'expertise.species_id, ' +
         'species.name AS species_name, ' +
         'expertise.manifestation_id, ' +
@@ -22,7 +24,8 @@ module.exports = function(pool, router, table, path) {
         'a1.icon_id, ' +
         'icon.path AS icon_path, ' +
         'expertise.created, ' +
-        'expertise.deleted ' +
+        'expertise.deleted, ' +
+        'expertise.updated ' +
         'FROM expertise ' +
         'LEFT JOIN expertisetype ON expertisetype.id = expertise.expertisetype_id ' +
         'LEFT JOIN species ON species.id = expertise.species_id ' +

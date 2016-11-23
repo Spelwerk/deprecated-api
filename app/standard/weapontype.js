@@ -6,7 +6,6 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'weapontype.id, ' +
         'weapontype.name, ' +
-        'weapontype.description, ' +
         'weapontype.damage_d12, ' +
         'weapontype.damage_bonus, ' +
         'weapontype.critical_d12, ' +
@@ -19,7 +18,8 @@ module.exports = function(pool, router, table, path) {
         'weapongroup.icon_id, ' +
         'icon.path AS icon_path, ' +
         'weapontype.created, ' +
-        'weapontype.deleted ' +
+        'weapontype.deleted, ' +
+        'weapontype.updated ' +
         'FROM weapontype ' +
         'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +
         'LEFT JOIN icon ON icon.id = weapongroup.icon_id';

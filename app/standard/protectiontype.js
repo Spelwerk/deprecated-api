@@ -9,7 +9,8 @@ module.exports = function(pool, router, table, path) {
         'protectiontype.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
         'protectiontype.created, ' +
-        'protectiontype.deleted ' +
+        'protectiontype.deleted, ' +
+        'protectiontype.updated ' +
         'FROM protectiontype ' +
         'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id';
 

@@ -18,7 +18,8 @@ module.exports = function(pool, router, table, path) {
         'bionic.icon_id, ' +
         'icon.path AS icon_path, ' +
         'bionic.created, ' +
-        'bionic.deleted ' +
+        'bionic.deleted, ' +
+        'bionic.updated ' +
         'FROM bionic ' +
         'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
         'LEFT JOIN attribute ON attribute.id = bionic.attribute_id ' +

@@ -6,7 +6,6 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'weapongroup.id, ' +
         'weapongroup.name, ' +
-        'weapongroup.description, ' +
         'weapongroup.skill_attribute_id, ' +
         'a1.name AS skill_attribute_name, ' +
         'weapongroup.damage_attribute_id, ' +
@@ -16,7 +15,8 @@ module.exports = function(pool, router, table, path) {
         'weapongroup.icon_id, ' +
         'icon.path AS icon_path, ' +
         'weapongroup.created, ' +
-        'weapongroup.deleted ' +
+        'weapongroup.deleted, ' +
+        'weapongroup.updated ' +
         'FROM weapongroup ' +
         'LEFT JOIN attribute a1 ON a1.id = weapongroup.skill_attribute_id ' +
         'LEFT JOIN attribute a2 ON a2.id = weapongroup.damage_attribute_id ' +

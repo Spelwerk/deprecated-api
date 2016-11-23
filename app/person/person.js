@@ -122,8 +122,8 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path, function(req, res) {
-        req.body.hash = hasher(20);
-        rest.POST(pool, req, res, table);
+        req.body.hash = hasher(24);
+        rest.INSERT(pool, req, res, table);
     });
 
     router.put(path + '/hash/:id', function(req, res) {

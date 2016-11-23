@@ -19,7 +19,8 @@ module.exports = function(pool, router, table, path) {
         'protection.icon_id, ' +
         'icon.path AS icon_path, ' +
         'protection.created, ' +
-        'protection.deleted ' +
+        'protection.deleted, ' +
+        'protection.updated ' +
         'FROM protection ' +
         'LEFT JOIN protectiontype ON protectiontype.id = protection.protectiontype_id ' +
         'LEFT JOIN attribute ON attribute.id = protectiontype.attribute_id ' +

@@ -18,7 +18,8 @@ module.exports = function(pool, router, table, path) {
         'characteristic.icon_id, ' +
         'icon.path AS icon_path, ' +
         'characteristic.created, ' +
-        'characteristic.deleted ' +
+        'characteristic.deleted, ' +
+        'characteristic.updated ' +
         'FROM characteristic ' +
         'LEFT JOIN species ON species.id = characteristic.species_id ' +
         'LEFT JOIN manifestation ON manifestation.id = characteristic.manifestation_id ' +
