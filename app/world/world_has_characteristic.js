@@ -15,10 +15,7 @@ module.exports = function(pool, router, table, path) {
         'characteristic.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
         'characteristic.attribute_value, ' +
-        'characteristic.icon_id, ' +
-        'icon.path AS icon_path, ' +
-        'characteristic.created, ' +
-        'characteristic.deleted ' +
+        'icon.path AS icon_path ' +
         'FROM world_has_characteristic ' +
         'LEFT JOIN characteristic ON characteristic.id = world_has_characteristic.characteristic_id ' +
         'LEFT JOIN species ON species.id = characteristic.species_id ' +
@@ -26,39 +23,16 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = characteristic.attribute_id ' +
         'LEFT JOIN icon ON icon.id = characteristic.icon_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world_has_characteristic.world_id = ? AND ' +
-            'characteristic.deleted is null';
-
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
     router.get(path + '/id/:id1/gift/:id2/species/:id3/manifestation/:id4', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_characteristic.world_id = ? AND ' +
             'characteristic.gift = ? AND ' +
-            '(characteristic.species_id = ? OR characteristic.species_id is null) AND ' +
-            '(characteristic.manifestation_id = ? OR characteristic.manifestation_id is null) AND ' +
-            'characteristic.deleted is null';
+            '(characteristic.species_id = ? OR characteristic.species_id IS NULL) AND ' +
+            '(characteristic.manifestation_id = ? OR characteristic.manifestation_id IS NULL) AND ' +
+            'characteristic.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "world_id": req.params.id1,
-            "characteristic_id": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, query, path, ["world_id","characteristic_id"]);
 };

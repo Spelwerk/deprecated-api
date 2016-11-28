@@ -19,7 +19,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'article_has_comment.article_id = ? AND comment.deleted is null';
+            'article_has_comment.article_id = ? AND comment.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

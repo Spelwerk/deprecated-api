@@ -13,28 +13,10 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN species ON species.id = species_has_attribute.species_id ' +
         'LEFT JOIN attribute ON attribute.id = species_has_attribute.attribute_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE species_has_attribute.species_id = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "species_id": req.params.id1,
-            "attribute_id": req.params.id2
-        };
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, path, ["species_id","attribute_id"]);
 };

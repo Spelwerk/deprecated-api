@@ -13,24 +13,17 @@ module.exports = function(pool, router, table, path) {
         'assettype.name AS assettype_name, ' +
         'assettype.assetgroup_id, ' +
         'assetgroup.name AS assetgroup_name, ' +
-        'assettype.icon_id, ' +
-        'icon.path AS icon_path, ' +
-        'asset.created, ' +
-        'asset.deleted ' +
+        'icon.path AS icon_path ' +
         'FROM world_has_asset ' +
         'LEFT JOIN asset ON asset.id = world_has_asset.asset_id ' +
         'LEFT JOIN assettype ON assettype.id = asset.assettype_id ' +
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id ' +
         'LEFT JOIN icon ON icon.id = assettype.icon_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_asset.world_id = ? AND ' +
-            'asset.deleted is null';
+            'asset.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
@@ -39,21 +32,10 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'world_has_asset.world_id = ? AND ' +
             'asset.assettype_id = ? AND ' +
-            'asset.deleted is null';
+            'asset.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "world_id": req.params.id1,
-            "asset_id": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, path, ["world_id","asset_id"]);
 };

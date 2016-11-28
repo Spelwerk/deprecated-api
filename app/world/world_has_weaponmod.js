@@ -16,21 +16,15 @@ module.exports = function(pool, router, table, path) {
         'weaponmod.hit, ' +
         'weaponmod.distance, ' +
         'weaponmod.weapontype_id, ' +
-        'weapontype.name AS weapontype_name, ' +
-        'weaponmod.created, ' +
-        'weaponmod.deleted ' +
+        'weapontype.name AS weapontype_name ' +
         'FROM world_has_weaponmod ' +
         'LEFT JOIN weaponmod ON weaponmod.id = world_has_weaponmod.weaponmod_id ' +
         'LEFT JOIN weapontype ON weapontype.id = weaponmod.weapontype_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_weaponmod.world_id = ? AND ' +
-            'weaponmod.deleted is null';
+            'weaponmod.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
@@ -39,21 +33,10 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'world_has_weaponmod.world_id = ? AND ' +
             'weaponmod.weapontype_id = ? AND ' +
-            'weaponmod.deleted is null';
+            'weaponmod.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "world_id": req.params.id1,
-            "weaponmod_id": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, query, path, ["world_id","weaponmod_id"]);
 };

@@ -10,8 +10,6 @@ module.exports = function(pool, router, table, path) {
         'bionic.price, ' +
         'bionic.energy, ' +
         'bionic.legal, ' +
-        'bionic.bodypart_id, ' +
-        'bodypart.name AS bodypart_name, ' +
         'bionic.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
         'bionic.attribute_value, ' +
@@ -22,14 +20,9 @@ module.exports = function(pool, router, table, path) {
         'icon.path AS icon_path ' +
         'FROM person_has_bionic ' +
         'LEFT JOIN bionic ON bionic.id = person_has_bionic.bionic_id ' +
-        'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
         'LEFT JOIN attribute ON attribute.id = bionic.attribute_id ' +
         'LEFT JOIN bionicquality ON bionicquality.id = person_has_bionic.bionicquality_id ' +
         'LEFT JOIN icon ON icon.id = bionic.icon_id';
-
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
 
     router.get(path + '/id/:id1/body/:id2', function(req, res) {
         var call = query + ' WHERE ' +
@@ -39,16 +32,5 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "person_id": req.params.id1,
-            "bionic_id": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, path, ["person_id","bionic_id"]);
 };

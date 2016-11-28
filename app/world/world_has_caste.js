@@ -10,37 +10,19 @@ module.exports = function(pool, router, table, path) {
         'caste.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
         'caste.attribute_value AS attribute_value, ' +
-        'caste.icon_id, ' +
-        'icon.path AS icon_path, ' +
-        'caste.created, ' +
-        'caste.deleted ' +
+        'icon.path AS icon_path ' +
         'FROM world_has_caste ' +
         'LEFT JOIN caste ON caste.id = world_has_caste.caste_id ' +
         'LEFT JOIN attribute ON attribute.id = caste.attribute_id ' +
         'LEFT JOIN icon ON icon.id = caste.icon_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_caste.world_id = ? AND ' +
-            'caste.deleted is null';
+            'caste.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "world_id": req.params.id1,
-            "caste_id": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, query, path, ["world_id","caste_id"]);
 };

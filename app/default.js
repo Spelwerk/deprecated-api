@@ -6,7 +6,7 @@ module.exports = function(pool, router, table, path, query) {
     query = query || 'SELECT * FROM ' + table;
 
     router.get(path, function(req, res) {
-        var call = query + ' WHERE deleted is NULL';
+        var call = query + ' WHERE ' + table + '.deleted is NULL';
 
         rest.QUERY(pool, req, res, call);
     });
@@ -16,17 +16,17 @@ module.exports = function(pool, router, table, path, query) {
     });
 
     router.get(path + '/deleted', function(req, res) {
-        var call = query + ' WHERE deleted is NOT NULL';
+        var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
 
-        rest.QUERY(pool, req, res, call);
+        rest.QUERY(pool, req, res, call, null, {"id": "ASC"});
     });
 
     router.get(path + '/all', function(req, res) {
-        rest.QUERY(pool, req, res, query);
+        rest.QUERY(pool, req, res, query, null, {"id": "ASC"});
     });
 
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE id = ?';
+        var call = query + ' WHERE ' + table + '.id = ?';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

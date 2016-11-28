@@ -24,7 +24,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'article.articletype_id = ? AND ' +
             'article.published = ?' +
-            'AND article.deleted is null';
+            'AND article.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });

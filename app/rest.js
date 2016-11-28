@@ -9,10 +9,11 @@ function queryDefault(pool, res, call) {
         logger.logCall(file, call, error);
 
         if(error) {
+            console.log(error);
             res.status(500).send({header: 'Internal SQL Error', message: error});
         } else {
-            if(!result[0] || !result) {
-                res.status(204).send({header: 'No Content', message: error});
+            if(!result[0]) {
+                res.status(204).send({header: 'No Content', message: 'No Content'});
             } else {
                 res.status(200).send({data: result});
             }
@@ -40,21 +41,32 @@ module.exports.queryMessage = queryMessage;
 
 // DEFAULT
 
-exports.HELP =   function(pool, req, res, table) {
+exports.HELP = function(pool, req, res, table) {
     queryDefault(pool, res, 'SHOW FULL COLUMNS FROM ' + table)
 };
 
-exports.QUERY =  function(pool, req, res, call, params) {
+exports.QUERY = function(pool, req, res, call, params, order) {
     params = params || null;
+    order = order || {"name": "ASC"};
 
     if(params) {
         call = mysql.format(call, params);
     }
 
+    if(order) {
+        call += ' ORDER BY ';
+
+        for (var key in order) {
+            call += key + ' ' + order[key] + ', ';
+        }
+
+        call = call.slice(0, -2);
+    }
+
     queryDefault(pool, res, call);
 };
 
-exports.PUT =    function(pool, req, res, table, options) {
+exports.PUT = function(pool, req, res, table, options) {
     var where = options.where || {id: req.params.id },
         update = options.update || true;
 

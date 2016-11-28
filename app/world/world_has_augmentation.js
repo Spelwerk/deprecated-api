@@ -14,26 +14,19 @@ module.exports = function(pool, router, table, path) {
         'bionic.name AS bionic_name, ' +
         'augmentation.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
-        'attribute.description AS attribute_description, ' +
         'augmentation.attribute_value, ' +
         'augmentation.weapon_id, ' +
-        'weapon.name AS weapon_name, ' +
-        'augmentation.created, ' +
-        'augmentation.deleted ' +
+        'weapon.name AS weapon_name ' +
         'FROM world_has_augmentation ' +
         'LEFT JOIN augmentation ON augmentation.id = world_has_augmentation.augmentation_id ' +
         'LEFT JOIN bionic ON bionic.id = augmentation.bionic_id ' +
         'LEFT JOIN attribute ON attribute.id = augmentation.attribute_id ' +
         'LEFT JOIN weapon ON weapon.id = augmentation.weapon_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_augmentation.world_id = ? AND ' +
-            'augmentation.deleted is null';
+            'augmentation.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
@@ -42,21 +35,10 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'world_has_augmentation.world_id = ? AND ' +
             'augmentation.bionic_id = ? AND ' +
-            'augmentation.deleted is null';
+            'augmentation.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "world_id": req.params.id1,
-            "augmentation_id": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, query, path, ["world_id","augmentation_id"]);
 };

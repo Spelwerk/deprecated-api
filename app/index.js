@@ -1,4 +1,5 @@
 module.exports = function(pool, router) {
+
     // DEFAULT
     require('./default')(pool, router, 'assetgroup');
     require('./default')(pool, router, 'attributetype');
@@ -6,11 +7,10 @@ module.exports = function(pool, router) {
     require('./default')(pool, router, 'bionicquality');
     require('./default')(pool, router, 'bodypart');
     require('./default')(pool, router, 'expertisetype');
-    require('./default')(pool, router, 'loyalty');
-    require('./default')(pool, router, 'manifestation');
-    require('./default')(pool, router, 'permissions');
+    require('./default')(pool, router, 'icon');
+    require('./default')(pool, router, 'language');
+    require('./default')(pool, router, 'permission');
     require('./default')(pool, router, 'protectionquality');
-    require('./default')(pool, router, 'species');
     require('./default')(pool, router, 'software');
     require('./default')(pool, router, 'weaponquality');
     require('./default')(pool, router, 'wound');
@@ -18,7 +18,7 @@ module.exports = function(pool, router) {
     // STANDARD
     require('./standard/asset')(pool, router, 'asset');
     require('./standard/assettype')(pool, router, 'assettype');
-    require('./standard/attribute')(pool, router, 'attribute');
+    //require('./standard/attribute')(pool, router, 'attribute');
     require('./standard/augmentation')(pool, router, 'augmentation');
     require('./standard/bionic')(pool, router, 'bionic');
     require('./standard/caste')(pool, router, 'caste');
@@ -26,12 +26,14 @@ module.exports = function(pool, router) {
     require('./standard/expertise')(pool, router, 'expertise');
     require('./standard/focus')(pool, router, 'focus');
     require('./standard/identity')(pool, router, 'identity');
+    require('./standard/loyalty')(pool, router, 'loyalty');
+    require('./standard/manifestation')(pool, router, 'manifestation');
     require('./standard/milestone')(pool, router, 'milestone');
     require('./standard/nature')(pool, router, 'nature');
     require('./standard/protection')(pool, router, 'protection');
     require('./standard/protectiontype')(pool, router, 'protectiontype');
+    require('./standard/species')(pool, router, 'species');
     require('./standard/species_has_attribute')(pool, router, 'species_has_attribute', '/species-attribute');
-    require('./standard/story')(pool, router, 'story');
     require('./standard/story_has_person')(pool, router, 'story_has_person', '/story-person');
     require('./standard/weapon')(pool, router, 'weapon');
     require('./standard/weapongroup')(pool, router, 'weapongroup');
@@ -73,11 +75,13 @@ module.exports = function(pool, router) {
     require('./world/world_has_species')(pool, router, 'world_has_species', '/world-species');
     require('./world/world_has_weapon')(pool, router, 'world_has_weapon', '/world-weapon');
     require('./world/world_has_weaponmod')(pool, router, 'world_has_weaponmod', '/world-weaponmod');
+    require('./world/country')(pool, router, 'country');
 
     // USER
     require('./user/user')(pool, router, 'user');
     require('./user/user_has_person')(pool, router, 'user_has_person', '/user-person');
     require('./user/user_has_story')(pool, router, 'user_has_story', '/user-story');
+    require('./user/user_has_world')(pool, router, 'user_has_world.js', '/user-world');
 
     // SITE
     require('./default')(pool, router, 'comment');

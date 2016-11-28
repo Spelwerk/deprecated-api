@@ -15,10 +15,7 @@ module.exports = function(pool, router, table, path) {
         'protection.attribute_value, ' +
         'protection.bodypart_id, ' +
         'bodypart.name AS bodypart_name, ' +
-        'protection.icon_id, ' +
-        'icon.path AS icon_path, ' +
-        'protection.created, ' +
-        'protection.deleted ' +
+        'icon.path AS icon_path ' +
         'FROM world_has_protection ' +
         'LEFT JOIN protection ON protection.id = world_has_protection.protection_id ' +
         'LEFT JOIN protectiontype ON protectiontype.id = protection.protectiontype_id ' +
@@ -26,14 +23,10 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN bodypart ON bodypart.id = protection.bodypart_id ' +
         'LEFT JOIN icon ON icon.id = protection.icon_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_protection.world_id = ? AND ' +
-            'protection.deleted is null';
+            'protection.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
@@ -43,21 +36,10 @@ module.exports = function(pool, router, table, path) {
             'world_has_protection.world_id = ? AND ' +
             'protection.protectiontype_id = ? AND ' +
             'protection.bodypart_id = ? AND ' +
-            'protection.deleted is null';
+            'protection.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "world_id": req.params.id1,
-            "protection_id": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, query, path, ["world_id","protection_id"]);
 };

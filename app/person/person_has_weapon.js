@@ -48,10 +48,6 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN weaponquality ON weaponquality.id = person_has_weapon.weaponquality_id ' +
         'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_weapon.person_id = ?';
@@ -59,16 +55,5 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "person_id": req.params.id1,
-            "weapon_id": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, path, ["person_id","weapon_id"]);
 };

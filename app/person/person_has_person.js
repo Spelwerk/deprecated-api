@@ -14,14 +14,12 @@ module.exports = function(pool, router, table, path) {
         'person_has_person.loyalty_id, ' +
         'loyalty.name AS loyalty_name, ' +
         'loyalty.description AS loyalty_description, ' +
-        'loyalty.value AS loyalty_value ' +
+        'loyalty.value AS loyalty_value, ' +
+        'icon.path AS icon_path ' +
         'FROM person_has_person ' +
         'LEFT JOIN person ON person.id = person_has_person.person_id_2 ' +
-        'LEFT JOIN loyalty ON loyalty.id = person_has_person.loyalty_id';
-
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
+        'LEFT JOIN loyalty ON loyalty.id = person_has_person.loyalty_id ' +
+        'LEFT JOIN icon ON icon.id = loyalty.icon_id';
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
@@ -30,20 +28,5 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.put(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
-    });
-
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var where = {
-            "person_id_1": req.params.id1,
-            "person_id_2": req.params.id2
-        };
-
-        rest.DELETE(pool, req, res, table, {where: where, timestamp: false});
-    });
+    require('../default-has')(pool, router, table, path, ["person_id_1","person_id_2"]);
 };

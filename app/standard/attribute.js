@@ -24,13 +24,4 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN icon ON icon.id = attribute.icon_id';
 
     require('./../default')(pool, router, table, path, query);
-
-    router.get(path + '/type/:id1/species/:id2', function(req, res) {
-        var call = query + ' WHERE ' +
-            'attribute.attributetype_id = ? AND ' +
-            '(attribute.species_id = ? OR attribute.species_id is NULL) AND ' +
-            'attribute.deleted is NOT NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
-    });
 };

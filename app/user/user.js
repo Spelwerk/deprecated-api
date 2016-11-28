@@ -95,7 +95,7 @@ module.exports = function(pool, router, table, path) {
         var req_user = req.body.username,
             req_pass = req.body.password;
 
-        var user_call = 'SELECT * FROM user WHERE user.username = \'' + req_user + '\' AND user.deleted is null';
+        var user_call = 'SELECT * FROM user WHERE user.username = \'' + req_user + '\' AND user.deleted IS NULL';
 
         pool.query(user_call, function(error, user_result) {
             logger.logCall(file, user_call, error);
@@ -222,7 +222,7 @@ module.exports = function(pool, router, table, path) {
             if(!validity) {
                 res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
             } else {
-                var user_call = 'SELECT * FROM user WHERE user.id = \'' + user_id + '\' AND user.deleted is null';
+                var user_call = 'SELECT * FROM user WHERE user.id = \'' + user_id + '\' AND user.deleted IS NULL';
 
                 pool.query(user_call, function(error, user_result) {
                     logger.logCall(file, user_call, error);
