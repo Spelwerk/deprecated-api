@@ -18,7 +18,7 @@ module.exports = function(pool, router) {
     // STANDARD
     require('./standard/asset')(pool, router, 'asset');
     require('./standard/assettype')(pool, router, 'assettype');
-    //require('./standard/attribute')(pool, router, 'attribute');
+    require('./standard/attribute')(pool, router, 'attribute');
     require('./standard/augmentation')(pool, router, 'augmentation');
     require('./standard/bionic')(pool, router, 'bionic');
     require('./standard/caste')(pool, router, 'caste');
