@@ -1,7 +1,5 @@
-var jwt = require('jwt-simple'),
-    moment = require('moment'),
-    hasher = require('./hasher'),
-    secrets = require('./config').secrets,
+var jwt = require('jsonwebtoken'),
+    secret = require('./config').secrets.jwt,
     base = require('./config').base;
 
 function generate(req, jsonData, permissions) {
@@ -12,13 +10,12 @@ function generate(req, jsonData, permissions) {
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
 
-    var now = moment.utc(),
-        end = moment.utc().add(30, 'days');
+    var now = Math.floor(Date.now() / 1000),
+        end = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
 
     var payload = {
         iat: now,
         exp: end,
-        jti: hasher(16),
         iss: base,
         oip: ip,
         sub: {
@@ -33,11 +30,11 @@ function generate(req, jsonData, permissions) {
         agent: req.headers['user-agent']
     };
 
-    return jwt.encode(payload, secrets.jwt);
+    return jwt.sign(payload, secret);
 }
 
 function decode(req) {
-    return jwt.decode(req.headers.token, secrets.jwt);
+    return jwt.verify(req.headers.token, secret);
 }
 
 function validate(req, token) {
@@ -46,8 +43,8 @@ function validate(req, token) {
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
 
-    var now = moment.utc(),
-        exp = moment.utc(token.exp);
+    var now = Math.floor(Date.now() / 1000),
+        exp = token.exp;
 
     var validity = true;
 

@@ -98,10 +98,20 @@ module.exports = function(pool, router, table, path) {
 
     require('./../default-hash')(pool, router, table, path, query);
 
-    router.get(path + '/legal', function(req, res) {
+    router.get(path, function(req, res) {
         var call = query + ' WHERE ' +
             'person.deleted IS NULL AND ' +
-            'person.cheated = \'0\'';
+            'person.cheated = \'0\' AND ' +
+            'person.template = \'0\'';
+
+        rest.QUERY(pool, req, res, call, null, {"popularity": "DEC", "nickname": "ASC"});
+    });
+
+    router.get(path + '/template', function(req, res) {
+        var call = query + ' WHERE ' +
+            'person.deleted IS NULL AND ' +
+            'person.cheated = \'0\' AND ' +
+            'person.template = \'1\'';
 
         rest.QUERY(pool, req, res, call, null, {"popularity": "DEC", "nickname": "ASC"});
     });

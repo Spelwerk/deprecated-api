@@ -6,14 +6,6 @@ module.exports = function(pool, router, table, path, query) {
 
     query = query || 'SELECT * FROM ' + table;
 
-    /** DEFAULT FUNCTIONS **/
-
-    router.get(path, function(req, res) {
-        var call = query + ' WHERE ' + table + '.deleted is NULL';
-
-        rest.QUERY(pool, req, res, call);
-    });
-
     router.get(path + '/help', function(req, res) {
         rest.HELP(pool, req, res, table);
     });
@@ -37,8 +29,6 @@ module.exports = function(pool, router, table, path, query) {
     router.put(path + '/revive/:id', function(req, res) {
         rest.REVIVE(pool, req, res, table);
     });
-
-    /** HASH RELATED FUNCTIONS **/
 
     router.get(path + '/hash/:id', function(req, res) {
         var call = query + ' WHERE ' + table + '.hash = ?';
