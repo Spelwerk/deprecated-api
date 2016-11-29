@@ -18,6 +18,8 @@ module.exports = function(pool, router, table, path) {
         'FROM person_has_weaponmod ' +
         'LEFT JOIN weaponmod ON weaponmod.id = person_has_weaponmod.weaponmod_id';
 
+    require('../default-has')(pool, router, table, path, ["person_id","weaponmod_id"]);
+
     router.get(path + '/id/:id1/weapon/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_weaponmod.person_id = ? AND ' +
@@ -25,6 +27,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, path, ["person_id","weaponmod_id"]);
 };

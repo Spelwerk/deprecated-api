@@ -1,4 +1,4 @@
-var rest = require('./../rest');
+//var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;

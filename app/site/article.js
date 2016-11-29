@@ -26,6 +26,6 @@ module.exports = function(pool, router, table, path) {
             'article.published = ?' +
             'AND article.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
 };

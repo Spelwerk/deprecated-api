@@ -18,12 +18,12 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = milestone.attribute_id ' +
         'LEFT JOIN loyalty ON loyalty.id = milestone.loyalty_id';
 
+    require('../default-has')(pool, router, table, path, ["person_id","milestone_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_milestone.person_id = ?';
 
         rest.QUERY(pool, req, res, call, [req.params.id], {"upbringing": "DESC", "name": "ASC"});
     });
-
-    require('../default-has')(pool, router, table, path, ["person_id","milestone_id"]);
 };

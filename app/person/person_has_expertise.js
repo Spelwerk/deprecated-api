@@ -13,6 +13,7 @@ module.exports = function(pool, router, table, path) {
         'expertisetype.maximum, ' +
         'expertisetype.skill_attribute_required, ' +
         'expertisetype.skill_attribute_increment, ' +
+        'expertisetype.startsat, ' +
         'expertise.skill_attribute_id, ' +
         'a1.name AS skill_attribute_name, ' +
         'expertise.give_attribute_id, ' +
@@ -25,13 +26,13 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id ' +
         'LEFT JOIN icon ON icon.id = a1.icon_id';
 
-    router.get(path + '/id/:id1/type/:id2/species/:id3', function(req, res) {
+    require('../default-has')(pool, router, table, path, ["person_id","expertise_id"]);
+
+    router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_expertise.person_id = ? AND ' +
             'expertise.expertisetype_id = ?';
 
         rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, path, ["person_id","expertise_id"]);
 };

@@ -25,6 +25,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN weapon ON weapon.id = augmentation.weapon_id ' +
         'LEFT JOIN augmentationquality ON augmentationquality.id = person_has_augmentation.augmentationquality_id';
 
+    require('../default-has')(pool, router, table, path, ["person_id","augmentation_id"]);
 
     router.get(path + '/id/:id1/bionic/:id2', function(req, res) {
         var call = query + ' WHERE ' +
@@ -33,6 +34,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, path, ["person_id","augmentation_id"]);
 };

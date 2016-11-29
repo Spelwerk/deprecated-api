@@ -43,7 +43,7 @@ module.exports = function(pool, router, table, path, query) {
         rest.REVIVE(pool, req, res, table);
     });
 
-    router.delete(path + '/delete/:id', function(req, res) {
+    router.delete(path + '/id/:id', function(req, res) {
         rest.DELETE(pool, req, res, table);
     });
 };

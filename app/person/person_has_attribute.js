@@ -18,6 +18,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
         'LEFT JOIN icon ON icon.id = attribute.icon_id';
 
+    require('../default-has')(pool, router, table, path, ["person_id","attribute_id"]);
+
     router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_attribute.person_id = ? AND ' +
@@ -25,6 +27,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, path, ["person_id","attribute_id"]);
 };

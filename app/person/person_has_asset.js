@@ -22,10 +22,13 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id ' +
         'LEFT JOIN icon ON icon.id = assettype.icon_id';
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE person_has_asset.person_id = ?';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
     require('../default-has')(pool, router, table, path, ["person_id","asset_id"]);
+
+    router.get(path + '/id/:id1/equipped/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'person_has_asset.person_id = ? AND ' +
+            'person_has_asset.equipped = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
 };

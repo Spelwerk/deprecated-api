@@ -14,6 +14,8 @@ module.exports = function(pool, router, table, path) {
         'FROM user_has_world ' +
         'LEFT JOIN world ON world.id = user_has_world.world_id';
 
+    require('../default-has')(pool, router, table, path, ["user_id","world_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'user_has_world.user_id = ? AND ' +
@@ -21,6 +23,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
-
-    require('../default-has')(pool, router, table, path, ["user_id","world_id"]);
 };

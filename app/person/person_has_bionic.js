@@ -24,6 +24,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN bionicquality ON bionicquality.id = person_has_bionic.bionicquality_id ' +
         'LEFT JOIN icon ON icon.id = bionic.icon_id';
 
+    require('../default-has')(pool, router, table, path, ["person_id","bionic_id"]);
+
     router.get(path + '/id/:id1/body/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_bionic.person_id = ? AND ' +
@@ -31,6 +33,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, path, ["person_id","bionic_id"]);
 };

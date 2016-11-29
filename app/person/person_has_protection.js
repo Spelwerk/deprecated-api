@@ -29,12 +29,13 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN protectionquality ON protectionquality.id = person_has_protection.protectionquality_id ' +
         'LEFT JOIN icon ON icon.id = protection.icon_id';
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE ' +
-            'person_has_protection.person_id = ?';
-
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
     require('../default-has')(pool, router, table, path, ["person_id","protection_id"]);
+
+    router.get(path + '/id/:id1/equipped/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'person_has_protection.person_id = ? AND ' +
+            'person_has_protection.equipped = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
 };

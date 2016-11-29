@@ -1,4 +1,4 @@
-var rest = require('./../rest');
+//var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -13,6 +13,7 @@ module.exports = function(pool, router, table, path) {
         'expertisetype.maximum, ' +
         'expertisetype.skill_attribute_required, ' +
         'expertisetype.skill_attribute_increment, ' +
+        'expertisetype.startsat, ' +
         'expertise.species_id, ' +
         'species.name AS species_name, ' +
         'expertise.skill_attribute_id, ' +

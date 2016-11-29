@@ -18,7 +18,6 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'user.id, ' +
         'user.username, ' +
-        'user.email, ' +
         'user.admin, ' +
         'user.firstname, ' +
         'user.surname, ' +
@@ -298,6 +297,21 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
+        if(!req.headers.token) {
+            res.status(403).send({header: 'Missing Token', message: 'missing token'});
+        } else {
+            var token = tokens.decode(req),
+                validity = tokens.validate(req, token);
+
+            if (!validity) {
+                res.status(403).send({header: 'Invalid Token', message: 'An invalid token has been provided.'});
+            } else {
+                if(!token.sub.admin || token.sub.id == req.params.id) {
+                    res.status(403).send({header: 'Not Allowed', message: 'you are not admin, nor are you the user deleting this profile'});
+                } else {
+                    rest.DELETE(pool, req, res, table);
+                }
+            }
+        }
     });
 };
