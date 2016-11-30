@@ -16,6 +16,8 @@ module.exports = function(pool, router, table, path) {
         'expertisetype.startsat, ' +
         'expertise.species_id, ' +
         'species.name AS species_name, ' +
+        'expertise.manifestation_id, ' +
+        'manifestation.name AS manifestation_name, ' +
         'expertise.skill_attribute_id, ' +
         'a1.name AS skill_attribute_name, ' +
         'expertise.give_attribute_id, ' +
@@ -28,6 +30,7 @@ module.exports = function(pool, router, table, path) {
         'FROM expertise ' +
         'LEFT JOIN expertisetype ON expertisetype.id = expertise.expertisetype_id ' +
         'LEFT JOIN species ON species.id = expertise.species_id ' +
+        'LEFT JOIN manifestation ON manifestation.id = expertise.manifestation_id ' +
         'LEFT JOIN attribute a1 ON a1.id = expertise.skill_attribute_id ' +
         'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id ' +
         'LEFT JOIN icon ON icon.id = a1.icon_id';

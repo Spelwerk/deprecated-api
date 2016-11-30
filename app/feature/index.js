@@ -18,4 +18,9 @@ module.exports = function(pool, router) {
     // require('./species_has_unarmed')(pool, router, 'species_has_unarmed', '/species-unarmed');
     require('./../default')(pool, router, 'wound');
 
+    // require('./../default')(pool, router, 'appearance');
+    // require('./../default')(pool, router, 'behaviour');
+    // require('./../default')(pool, router, 'feature');
+    // require('./../default')(pool, router, 'personality');
+
 };
