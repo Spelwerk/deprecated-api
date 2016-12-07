@@ -13,7 +13,7 @@ function queryDefault(pool, res, call) {
             res.status(500).send({header: 'Internal SQL Error', message: error});
         } else {
             if(!result[0]) {
-                res.status(204).send({header: 'No Content', message: 'No Content'});
+                res.status(404).send({header: 'No Content', message: 'No Content'});
             } else {
                 res.status(200).send({data: result});
             }

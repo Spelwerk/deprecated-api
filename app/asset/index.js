@@ -11,7 +11,6 @@ module.exports = function(pool, router) {
     require('./protectiontype')(pool, router, 'protectiontype');
     require('./../default')(pool, router, 'protectionquality');
     require('./../default')(pool, router, 'software');
-    //require('./unarmed')(pool, router, 'unarmed');
     require('./weapon')(pool, router, 'weapon');
     require('./weapontype')(pool, router, 'weapontype');
     require('./weapongroup')(pool, router, 'weapongroup');

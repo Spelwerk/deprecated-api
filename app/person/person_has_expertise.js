@@ -8,6 +8,7 @@ module.exports = function(pool, router, table, path) {
         'expertise.name, ' +
         'expertise.description, ' +
         'expertise.hidden, ' +
+        'person_has_expertise.level, ' +
         'expertise.expertisetype_id, ' +
         'expertisetype.name AS expertisetype_name, ' +
         'expertisetype.maximum, ' +

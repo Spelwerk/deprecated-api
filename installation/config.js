@@ -34,3 +34,10 @@ module.exports.superuser = superuser;
 exports.base = '';
 exports.port = 3001;
 exports.salt = 12;
+
+if(!secrets.api) { console.log('api key suggestion: ' + require('./hasher')(40)); }
+if(!secrets.jwt) { console.log('jwt key suggestion: ' + require('./hasher')(40)); }
+if(!secrets.aes) { console.log('aes key suggestion: ' + require('./hasher')(40)); }
+if(!secrets.sha) { console.log('sha key suggestion: ' + require('./hasher')(40)); }
+if(!secrets.dbp) { console.log('dbp key suggestion: ' + require('./hasher')(40)); }
+if(!superuser.password) { console.log('superuser password suggestion: ' + require('./hasher')(40)); }

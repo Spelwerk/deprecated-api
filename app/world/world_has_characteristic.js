@@ -23,6 +23,14 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = characteristic.attribute_id ' +
         'LEFT JOIN icon ON icon.id = characteristic.icon_id';
 
+    router.get(path + '/id/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_characteristic.world_id = ? AND ' +
+            'characteristic.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
     router.get(path + '/id/:id1/gift/:id2/species/:id3/manifestation/:id4', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_characteristic.world_id = ? AND ' +

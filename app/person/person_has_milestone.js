@@ -12,7 +12,8 @@ module.exports = function(pool, router, table, path) {
         'attribute.name AS attribute_name, ' +
         'milestone.attribute_value, ' +
         'milestone.loyalty_id, ' +
-        'loyalty.name AS loyalty_name ' +
+        'loyalty.name AS loyalty_name, ' +
+        'milestone.loyalty_occupation ' +
         'FROM person_has_milestone ' +
         'LEFT JOIN milestone ON milestone.id = person_has_milestone.milestone_id ' +
         'LEFT JOIN attribute ON attribute.id = milestone.attribute_id ' +

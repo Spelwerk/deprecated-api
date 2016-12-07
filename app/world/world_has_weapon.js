@@ -37,14 +37,23 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id ' +
         'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
 
-    router.get(path + '/id/:id1/type/:id3', function(req, res) {
+    router.get(path + '/id/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_weapon.world_id = ? AND ' +
+            'weapon.deleted IS NULL AND ' +
+            'weapon.hidden = \'0\'';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_weapon.world_id = ? AND ' +
             'weapon.weapontype_id = ? AND ' +
             'weapon.deleted IS NULL AND ' +
             'weapon.hidden = \'0\'';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 
     require('../default-has')(pool, router, table, query, path, ["world_id","weapon_id"]);

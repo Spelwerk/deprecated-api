@@ -19,6 +19,6 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'species_has_attribute.species_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id], {"species_name": "ASC", "attribute_name": "ASC"});
     });
 };

@@ -7,6 +7,7 @@ var mysql = require('mysql'),
 bcrypt.hash(onion.hash(superuser.password), require('./config').salt, function(error, hash) {
     if(error) {
         console.log(error);
+        process.exit(1);
     } else {
         var call = 'INSERT INTO user ' +
             '(id, username, password, email, admin, firstname, surname, verified)' +
@@ -16,8 +17,10 @@ bcrypt.hash(onion.hash(superuser.password), require('./config').salt, function(e
         pool.query(call, function(error, result) {
             if(error) {
                 console.log(error);
+                process.exit(1);
             } else {
                 console.log(result);
+                process.exit(0);
             }
         });
     }

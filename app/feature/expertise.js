@@ -22,6 +22,7 @@ module.exports = function(pool, router, table, path) {
         'a1.name AS skill_attribute_name, ' +
         'expertise.give_attribute_id, ' +
         'a2.name AS give_attribute_name, ' +
+        'expertise.give_weapon, ' +
         'a1.icon_id, ' +
         'icon.path AS icon_path, ' +
         'expertise.created, ' +

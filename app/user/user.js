@@ -103,7 +103,7 @@ module.exports = function(pool, router, table, path) {
                 res.status(500).send({header: 'Internal SQL Error', message: error});
             } else {
                 if(!user_result[0]) {
-                    res.status(204).send({header: 'Username Not Found', message: 'username not found'});
+                    res.status(404).send({header: 'Username Not Found', message: 'username not found'});
                 } else {
                     var res_id = user_result[0].id,
                         res_pass = user_result[0].password;
@@ -164,7 +164,7 @@ module.exports = function(pool, router, table, path) {
             password = req.body.password;
 
         if(!recovery) {
-            res.status(204).send({header: 'Recovery Missing', message: 'Recovery code is missing from request.'});
+            res.status(404).send({header: 'Recovery Missing', message: 'Recovery code is missing from request.'});
         } else {
             bcrypt.hash(onion.hash(password), saltRounds, function(error, hash) {
                 if(error) {
@@ -230,7 +230,7 @@ module.exports = function(pool, router, table, path) {
                         res.status(500).send({header: 'Internal SQL Error', message: error});
                     } else {
                         if(!user_result[0]) {
-                            res.status(204).send({header: 'User ID Not Found', message: 'user ID not found'});
+                            res.status(404).send({header: 'User ID Not Found', message: 'user ID not found'});
                         } else {
                             var user_password = user_result[0].password;
 

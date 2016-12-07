@@ -26,13 +26,13 @@ module.exports = function(pool, router, table, path, query) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(pool, req, res, table);
-    });
-
     router.get(path + '/hash/:id', function(req, res) {
         var call = query + ' WHERE ' + table + '.hash = ?';
         rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.put(path + '/revive/:id', function(req, res) {
+        rest.REVIVE(pool, req, res, table);
     });
 
     router.post(path, function(req, res) {

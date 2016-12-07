@@ -28,13 +28,6 @@ module.exports = function(pool, router, table, path) {
         'person.personality, ' +
 
         'person.world_id, ' +
-        'world.name AS world_name, ' +
-        'world.description AS world_description, ' +
-        'world.supernatural_name AS world_supernatural_name, ' +
-        'world.consumable_attributetype_id AS world_consumable_attributetype_id, ' +
-        'world.skill_attributetype_id AS world_skill_attributetype_id, ' +
-        'world.supernatural_attributetype_id AS world_supernatural_attributetype_id, ' +
-        'world.hitpoints_attributetype_id AS world_hitpoints_attributetype_id, ' +
 
         'person.species_id, ' +
         'species.name AS species_name, ' +
@@ -62,10 +55,10 @@ module.exports = function(pool, router, table, path) {
         'person.manifestation_id, ' +
         'manifestation.name AS manifestation_name, ' +
         'manifestation.description AS manifestation_description, ' +
-        'manifestation.attributetype_id, ' +
-        'attributetype.name AS attributetype_name, ' +
-        'manifestation.expertisetype_id, ' +
-        'expertisetype.name AS expertisetype_name, ' +
+        'manifestation.manifestation_attributetype_id, ' +
+        'attributetype.name AS manifestation_attributetype_name, ' +
+        'manifestation.manifestation_expertisetype_id, ' +
+        'expertisetype.name AS manifestation_expertisetype_name, ' +
         'i5.name AS manifestation_icon_path, ' +
 
         'person.focus_id, ' +
@@ -79,7 +72,6 @@ module.exports = function(pool, router, table, path) {
 
         'FROM person ' +
 
-        'LEFT JOIN world ON world.id = person.world_id ' +
         'LEFT JOIN species ON species.id = person.species_id ' +
         'LEFT JOIN caste ON caste.id = person.caste_id ' +
         'LEFT JOIN nature ON nature.id = person.nature_id ' +

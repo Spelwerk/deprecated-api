@@ -14,6 +14,14 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN species ON species.id = world_has_species.species_id ' +
         'LEFT JOIN icon ON icon.id = species.icon_id';
 
+    router.get(path + '/id/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_species.world_id = ? AND ' +
+            'species.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
     router.get(path + '/id/:id1/playable/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_species.world_id = ? AND ' +

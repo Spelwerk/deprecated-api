@@ -20,7 +20,16 @@ module.exports = function(pool, router, table, path) {
         'FROM world_has_bionic ' +
         'LEFT JOIN bionic ON bionic.id = world_has_bionic.bionic_id ' +
         'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
+        'LEFT JOIN attribute ON attribute.id = bionic.attribute_id ' +
         'LEFT JOIN icon ON icon.id = bionic.icon_id';
+
+    router.get(path + '/id/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_bionic.world_id = ? AND ' +
+            'bionic.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
 
     router.get(path + '/id/:id1/bodypart/:id2', function(req, res) {
         var call = query + ' WHERE ' +

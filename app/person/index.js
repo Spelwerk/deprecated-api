@@ -12,7 +12,6 @@ module.exports = function(pool, router) {
     require('./person_has_person')(pool, router, 'person_has_person', '/person-person');
     require('./person_has_protection')(pool, router, 'person_has_protection', '/person-protection');
     require('./person_has_software')(pool, router, 'person_has_software', '/person-software');
-    // require('./person_has_unarmed')(pool, router, 'person_has_unarmed', '/person-unarmed');
     require('./person_has_weapon')(pool, router, 'person_has_weapon', '/person-weapon');
     require('./person_has_weaponmod')(pool, router, 'person_has_weaponmod', '/person-weaponmod');
     require('./person_has_wound')(pool, router, 'person_has_wound', '/person-wound');
