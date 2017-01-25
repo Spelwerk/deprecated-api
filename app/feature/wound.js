@@ -12,6 +12,6 @@ module.exports = function(pool, router, table, path) {
             'wound.deleted IS NULL AND ' +
             'wound.hidden = \'0\'';
 
-        rest.QUERY(pool, req, res, call, null, {"popularity": "DEC", "name": "ASC"});
+        rest.QUERY(pool, req, res, call, null, {"popularity": "DESC", "name": "ASC"});
     });
 };

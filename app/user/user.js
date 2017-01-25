@@ -2,6 +2,7 @@ var rest = require('./../rest'),
     mysql = require('mysql'),
     bcrypt = require('bcrypt'),
     moment = require('moment'),
+    nodemailer = require('nodemailer'),
     logger = require('./../logger'),
     config = require('./../config'),
     tokens = require('./../tokens'),
@@ -83,7 +84,25 @@ module.exports = function(pool, router, table, path) {
                     if(error) {
                         res.status(500).send({header: 'Internal SQL Error', message: error});
                     } else {
-                        res.status(201).send({verification: verified_hash, data: result});
+                        var transporter = nodemailer.createTransport(config.smtp);
+
+                        var mailOptions = {
+                            from: config.superuser.email,
+                            to: email,
+                            subject: 'User Verification',
+                            text: '',
+                            html: '<b>Hello!</b><br><br>This is your verification code: <a href="' + config.links.user_verification + verified_hash + '">' + verified_hash + '</a><br><br>'
+                        };
+
+                        transporter.sendMail(mailOptions, function(error, info){
+                            if(error){
+                                logger.logError(file, error, 'MAILER');
+
+                                res.status(500).send({header: 'Email Error', message: error});
+                            } else {
+                                res.status(201).send({data: result, mail: info.response});
+                            }
+                        });
                     }
                 });
             }
@@ -153,9 +172,38 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path + '/recovery/set', function(req, res) {
-        var call = 'UPDATE user SET recovery = \'' + hasher(32) + '\' WHERE user.email = \'' + req.body.email + '\'';
+        var email = req.body.email,
+            recovery_hash = hasher(32);
 
-        rest.queryMessage(pool, res, call);
+        var call = 'UPDATE user SET recovery = \'' + recovery_hash + '\' WHERE user.email = \'' + email + '\'';
+
+        pool.query(call, function(err, result) {
+            logger.logCall(file, call, err);
+
+            if(err) {
+                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            } else {
+                var transporter = nodemailer.createTransport(config.smtp);
+
+                var mailOptions = {
+                    from: config.superuser.email,
+                    to: email,
+                    subject: 'User Recovery',
+                    text: '',
+                    html: '<b>Hello!</b><br><br>This is your recovery code: <a href="' + config.links.user_recovery + recovery_hash + '">' + recovery_hash + '</a><br><br>'
+                };
+
+                transporter.sendMail(mailOptions, function(error, info){
+                    if(error){
+                        logger.logError(file, error, 'MAILER');
+
+                        res.status(500).send({header: 'Email Error', message: error});
+                    } else {
+                        res.status(201).send({data: result, mail: info.response});
+                    }
+                });
+            }
+        });
     });
 
     router.post(path + '/recovery/pass', function(req, res) {

@@ -27,9 +27,17 @@ var superuser = {
     surname: ''
 };
 
+var smtp = {
+    host: '',
+    port: 2525,
+    username: '',
+    password: ''
+};
+
 module.exports.secrets = secrets;
 module.exports.pool = pool;
 module.exports.superuser = superuser;
+module.exports.smtp = smtp;
 
 exports.base = '';
 exports.port = 3001;

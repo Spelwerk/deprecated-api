@@ -55,7 +55,7 @@ module.exports = function(pool, router, table, path) {
         'person.manifestation_id, ' +
         'manifestation.name AS manifestation_name, ' +
         'manifestation.description AS manifestation_description, ' +
-        'manifestation.manifestation_attributetype_id, ' +
+        'manifestation.attributetype_id AS manifestation_attributetype_id, ' +
         'attributetype.name AS manifestation_attributetype_name, ' +
         'manifestation.manifestation_expertisetype_id, ' +
         'expertisetype.name AS manifestation_expertisetype_name, ' +
@@ -96,7 +96,7 @@ module.exports = function(pool, router, table, path) {
             'person.cheated = \'0\' AND ' +
             'person.template = \'0\'';
 
-        rest.QUERY(pool, req, res, call, null, {"popularity": "DEC", "nickname": "ASC"});
+        rest.QUERY(pool, req, res, call, null, {"popularity": "DESC", "nickname": "ASC"});
     });
 
     router.get(path + '/template', function(req, res) {
@@ -105,6 +105,6 @@ module.exports = function(pool, router, table, path) {
             'person.cheated = \'0\' AND ' +
             'person.template = \'1\'';
 
-        rest.QUERY(pool, req, res, call, null, {"popularity": "DEC", "nickname": "ASC"});
+        rest.QUERY(pool, req, res, call, null, {"popularity": "DESC", "nickname": "ASC"});
     });
 };

@@ -10,7 +10,7 @@ module.exports = function(pool, router, table, path) {
         'species.playable, ' +
         'species.max_age, ' +
         'species.icon_id, ' +
-        'icon.name AS icon_name, ' +
+        'icon.path AS icon_path, ' +
         'species.created, ' +
         'species.deleted, ' +
         'species.updated ' +

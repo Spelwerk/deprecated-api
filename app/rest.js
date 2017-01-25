@@ -5,15 +5,16 @@ var mysql = require('mysql'),
 var file = 'rest.js';
 
 function queryDefault(pool, res, call) {
-    pool.query(call, function(error, result) {
-        logger.logCall(file, call, error);
+    pool.query(call, function(err, result) {
+        logger.logCall(file, call, err);
 
-        if(error) {
-            console.log(error);
-            res.status(500).send({header: 'Internal SQL Error', message: error});
+        if(err) {
+            console.log(err);
+            console.log(err.code);
+            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
         } else {
             if(!result[0]) {
-                res.status(404).send({header: 'No Content', message: 'No Content'});
+                res.status(204).send();
             } else {
                 res.status(200).send({data: result});
             }
@@ -25,11 +26,11 @@ function queryMessage(pool, res, call, status, message) {
     status = status || 200;
     message = message || 'success';
 
-    pool.query(call, function(error, result) {
-        logger.logCall(file, call, error);
+    pool.query(call, function(err, result) {
+        logger.logCall(file, call, err);
 
-        if(error) {
-            res.status(500).send({header: 'Internal SQL Error', message: error});
+        if(err) {
+            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
         } else {
             res.status(status).send({data: result, message: message});
         }
@@ -71,29 +72,34 @@ exports.INSERT = function(pool, req, res, table) {
         into = 'INSERT INTO ' + table + '(',
         vals = ' VALUES (',
         updt = '',
+        varr = [],
         call;
 
     for (var key in body) {
         if(body.hasOwnProperty(key)) {
             into += key + ', ';
-            vals += '\'' + body[key] + '\', ';
-            updt += key + ' = \'' + body[key] + '\', ';
+            vals += '?, ';
+            updt += key + ' = ?, ';
+            varr.push(body[key]);
         }
     }
 
-    into = into.slice(0, -1) + ')';
-    vals = vals.slice(0, -1) + ')';
+    into = into.slice(0, -2) + ')';
+    vals = vals.slice(0, -2) + ')';
     updt = updt.slice(0, -2);
 
     call = into + vals + ' ON DUPLICATE KEY UPDATE ' + updt;
 
-    pool.query(call, function(error, result) {
-        logger.logCall(file, call, error);
+    call = mysql.format(call, varr); // format to fix vals
+    call = mysql.format(call, varr); // format to fix updt
+
+    pool.query(call, function(err, result) {
+        logger.logCall(file, call, err);
 
         var id = result.insertId ? result.insertId : req.body.id;
 
-        if(error) {
-            res.status(500).send({header: 'Internal SQL Error', message: error});
+        if(err) {
+            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
         } else {
             res.status(201).send({data: result, id: id, hash: req.body.hash});
         }
@@ -104,11 +110,13 @@ exports.PUT = function(pool, req, res, table, options) {
     options = options || {id: req.params.id };
 
     var body = req.body,
-        call = 'UPDATE ' + table + ' SET ';
+        call = 'UPDATE ' + table + ' SET ',
+        varr = [];
 
     for (var key in body) {
         if (body.hasOwnProperty(key)) {
-            call += key + ' = \'' + body[key] + '\', ';
+            call += key + ' = ?, ';
+            varr.push(body[key]);
         }
     }
 
@@ -120,6 +128,8 @@ exports.PUT = function(pool, req, res, table, options) {
     }
 
     call = call.slice(0, -5);
+
+    call = mysql.format(call, varr); // format to fix vals
 
     pool.query(call, function(error, result) {
         logger.logCall(file, call, error);

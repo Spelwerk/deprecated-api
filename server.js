@@ -30,7 +30,7 @@ router.use(function(req, res, next) {
 
 require('./app/index')(pool, router);
 
-app.use('/api/', router);
+app.use('/', router);
 
 logger.debug('server.js listening on port: %s', config.port);
 

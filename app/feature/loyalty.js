@@ -9,7 +9,7 @@ module.exports = function(pool, router, table, path) {
         'loyalty.description, ' +
         'loyalty.value, ' +
         'loyalty.icon_id, ' +
-        'icon.name AS icon_name, ' +
+        'icon.path AS icon_path, ' +
         'loyalty.created, ' +
         'loyalty.deleted, ' +
         'loyalty.updated ' +
