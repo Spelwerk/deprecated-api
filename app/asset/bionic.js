@@ -30,7 +30,7 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/bodypart/:id', function(req, res) {
         var call = query + ' WHERE ' +
             table + '.bodypart_id = ? AND ' +
-            table + '.deleted is NOT NULL';
+            table + '.deleted is null';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

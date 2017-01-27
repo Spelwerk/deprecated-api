@@ -32,7 +32,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             table + '.protectiontype_id = ? AND ' +
             table + '.bodypart_id = ? AND ' +
-            table + '.deleted is NOT NULL';
+            table + '.deleted is NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });

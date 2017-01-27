@@ -10,7 +10,6 @@ function queryDefault(pool, res, call) {
 
         if(err) {
             console.log(err);
-            console.log(err.code);
             res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
         } else {
             if(!result[0]) {

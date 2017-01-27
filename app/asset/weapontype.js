@@ -29,7 +29,7 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/group/:id', function(req, res) {
         var call = query + ' WHERE ' +
             table + '.weapongroup_id = ? AND ' +
-            table + '.deleted is NOT NULL';
+            table + '.deleted is NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
