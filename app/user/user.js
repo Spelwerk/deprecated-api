@@ -166,6 +166,37 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
+    router.post(path + '/verify', function(req, res) {
+        var verify_hash = req.body.verify_hash,
+            now = Math.floor(Date.now() / 1000);
+
+        var user_call = mysql.format(
+            'SELECT id, verify_timeout FROM user WHERE verify_hash = ?',
+            [verify_hash]
+        );
+
+        pool.query(user_call, function(err, user_result) {
+            logger.logCall(file, user_call, err);
+
+            if(err) {
+                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            } else if(!user_result[0]) {
+                res.status(404).send({header: 'User not found', message: 'User not found'});
+            } else if (user_result[0].verify_timeout > now) {
+                res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
+            } else {
+                var user_id = user_result[0].id;
+
+                var updt_call = mysql.format(
+                    'UPDATE user SET verify = ?, verify_hash = NULL, verify_timeout = NULL WHERE id = ?',
+                    [1, user_id]
+                );
+
+                rest.queryMessage(pool, res, updt_call, 200, 'success');
+            }
+        });
+    });
+
     router.post(path + '/login/password', function(req, res) {
         var req_user = req.body.username,
             req_pass = req.body.password;
@@ -247,37 +278,6 @@ module.exports = function(pool, router, table, path) {
                 res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
             } else {
                 loginToken(req, res, result)
-            }
-        });
-    });
-
-    router.post(path + '/verify', function(req, res) {
-        var verify_hash = req.body.verify_hash,
-            now = Math.floor(Date.now() / 1000);
-
-        var user_call = mysql.format(
-            'SELECT id, verify_timeout FROM user WHERE verify_hash = ?',
-            [verify_hash]
-        );
-
-        pool.query(user_call, function(err, user_result) {
-            logger.logCall(file, user_call, err);
-
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else if(!user_result[0]) {
-                res.status(404).send({header: 'User not found', message: 'User not found'});
-            } else if (user_result[0].login_timeout > now) {
-                res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
-            } else {
-                var user_id = user_result[0].id;
-
-                var updt_call = mysql.format(
-                    'UPDATE user SET verify = ?, verify_hash = NULL, verify_timeout = NULL WHERE id = ?',
-                    [1, user_id]
-                );
-
-                rest.queryMessage(pool, res, updt_call, 200, 'success');
             }
         });
     });

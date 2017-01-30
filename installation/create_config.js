@@ -30,14 +30,9 @@ var configFile =
     "    password: secrets.sus,\n" +
     "    email: 'noreply@email.com'\n" +
     "};\n\n" +
-    "var smtp = {\n" +
-    "    host: '',\n" +
-    "    port: 2525,\n" +
-    "    secure: true,\n" +
-    "    auth: {\n" +
-    "        user: '',\n" +
-    "        pass: ''\n" +
-    "    }\n" +
+    "var mailgun = {\n" +
+    "    apikey: '',\n" +
+    "    domain: ''\n" +
     "};\n\n" +
     "var links = {\n" +
     "    user_verification: '',\n" +
