@@ -17,9 +17,13 @@ bcrypt.hash(onion.hash(password), require('./../app/config').salt, function(erro
     } else {
         var pass = onion.encrypt(hash);
 
-        var call = mysql.format('INSERT INTO user (id, username, password, email, admin, firstname, surname, verify) VALUES ' +
-            '(?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE username = ?, password = ?, email = ?, admin = ?, firstname = ?, surname = ?, verify = ?',
-            [1, username, pass, email, 1, first, last, 1, username, pass, email, 1, first, last, 1]);
+        var query = 'INSERT INTO user (id, username, password, email, admin, firstname, surname, verify, twofactor) VALUES ' +
+            '(?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = ?, username = ?, password = ?, email = ?, admin = ?, firstname = ?, surname = ?, verify = ?, twofactor = ?';
+
+        var array = [1, username, pass, email, 1, first, last, 1, 0];
+
+        var call = mysql.format(query,array);
+            call = mysql.format(call,array);
 
         pool.query(call, function(error, result) {
             if(error) {

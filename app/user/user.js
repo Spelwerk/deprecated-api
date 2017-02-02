@@ -95,6 +95,10 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, null, {"username": "ASC"});
     });
 
+    router.get(path + '/help', function(req, res) {
+        rest.HELP(pool, req, res, table);
+    });
+
     router.get(path + '/deleted', function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
         rest.QUERY(pool, req, res, call);
@@ -133,7 +137,8 @@ module.exports = function(pool, router, table, path) {
             surname = req.body.surname,
             verify = 0,
             verify_hash = hasher(64),
-            verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+            verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60),
+            twofactor = req.body.twofactor;
 
         bcrypt.hash(onion.hash(password), saltRounds, function(error, hash) {
             if(error) {
@@ -142,18 +147,18 @@ module.exports = function(pool, router, table, path) {
                 res.status(500).send({header: 'Internal Error', message: error});
             } else {
                 var call = mysql.format(
-                    'INSERT INTO user (username,password,email,admin,firstname,surname,verify,verify_hash,verify_timeout) VALUES (?,?,?,?,?,?,?,?,?)',
-                    [username, onion.encrypt(hash), email, admin, firstname, surname, verify, verify_hash, verify_timeout]);
+                    'INSERT INTO user (username, password, email, admin, firstname, surname, verify, verify_hash, verify_timeout, twofactor) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                    [username, onion.encrypt(hash), email, admin, firstname, surname, verify, verify_hash, verify_timeout, twofactor]);
 
-                pool.query(call, function(error, result) {
+                pool.query(call, function(error) {
                     logger.logCall(file, call, error);
 
                     if(error) {
                         res.status(500).send({header: 'Internal SQL Error', message: error});
                     } else {
                         var mail = {
-                            from: email,
-                            to: 'serobnic@mail.ru',
+                            from: config.superuser.email,
+                            to: email,
                             subject: 'User Verification',
                             text: '',
                             html: '<b>Hello!</b><br><br>This is your verification code: <a href="' + config.links.user_new_verify + verify_hash + '">' + verify_hash + '</a><br><br>'
@@ -222,6 +227,8 @@ module.exports = function(pool, router, table, path) {
                         res.status(500).send({header: 'Internal Server Error', message: err});
                     } else if(!response) {
                         res.status(403).send({header: 'Wrong Password', message: 'wrong password'});
+                    } else if(user.twofactor == 1) {
+                        res.status(200).send({twofactor: true});
                     } else {
                         loginToken(req, res, result)
                     }
