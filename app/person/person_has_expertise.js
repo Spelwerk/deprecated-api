@@ -32,7 +32,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN manifestation ON manifestation.id = expertise.manifestation_id ' +
         'LEFT JOIN attribute a1 ON a1.id = expertise.skill_attribute_id ' +
         'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id ' +
-        'LEFT JOIN icon ON icon.id = a1.icon_id'
+        'LEFT JOIN icon ON icon.id = a1.icon_id';
 
     require('../default-has')(pool, router, table, path, ["person_id","expertise_id"]);
 
