@@ -43,6 +43,18 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    router.get(path + '/id/:id1/skill/:id2/type/:id3/species/:id4', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_expertise.world_id = ? AND ' +
+            'expertise.skill_attribute_id = ? AND ' +
+            'expertise.expertisetype_id = ? AND ' +
+            '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +
+            'expertise.hidden = \'0\' AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4]);
+    });
+
     router.get(path + '/id/:id1/skill/:id2/type/:id3/species/:id4/manifestation/:id5', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +
@@ -53,6 +65,6 @@ module.exports = function(pool, router, table, path) {
             'expertise.hidden = \'0\' AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2,req.params.id3,req.params.id4,req.params.id5]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4, req.params.id5]);
     });
 };

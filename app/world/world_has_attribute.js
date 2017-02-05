@@ -33,7 +33,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'world_has_attribute.world_id = ? AND ' +
             'attribute.attributetype_id = ? AND ' +
-            'attribute.species_id = ? AND ' +
+            '(attribute.species_id = ? OR attribute.species_id IS NULL) AND ' +
             'attribute.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);

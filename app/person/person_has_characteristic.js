@@ -19,10 +19,11 @@ module.exports = function(pool, router, table, path) {
 
     require('../default-has')(pool, router, table, path, ["person_id","characteristic_id"]);
 
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id1/gift/:id2', function(req, res) {
         var call = query + ' WHERE ' +
-            'person_has_characteristic.person_id = ?';
+            'person_has_characteristic.person_id = ? AND ' +
+            'characteristic.gift = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"gift": "DESC", "name": "ASC"});
+        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2], {"gift": "DESC", "name": "ASC"});
     });
 };

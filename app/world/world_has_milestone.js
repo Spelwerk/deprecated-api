@@ -36,6 +36,17 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    router.get(path + '/id/:id1/upbringing/:id2/caste/:id3/species/:id4', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_milestone.world_id = ? AND ' +
+            'milestone.upbringing = ? AND ' +
+            '(milestone.caste_id = ? OR milestone.caste_id IS NULL) AND ' +
+            '(milestone.species_id = ? OR milestone.species_id IS NULL) AND ' +
+            'milestone.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4]);
+    });
+
     router.get(path + '/id/:id1/upbringing/:id2/caste/:id3/species/:id4/manifestation/:id5', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_milestone.world_id = ? AND ' +
