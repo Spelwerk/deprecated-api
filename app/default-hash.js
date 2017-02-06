@@ -23,12 +23,12 @@ module.exports = function(pool, router, table, path, query) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' + table + '.id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id], {"id": "ASC"});
     });
 
     router.get(path + '/hash/:id', function(req, res) {
         var call = query + ' WHERE ' + table + '.hash = ?';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id], {"id": "ASC"});
     });
 
     router.put(path + '/revive/:id', function(req, res) {

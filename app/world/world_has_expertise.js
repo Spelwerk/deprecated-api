@@ -48,6 +48,7 @@ module.exports = function(pool, router, table, path) {
             'world_has_expertise.world_id = ? AND ' +
             'expertise.skill_attribute_id = ? AND ' +
             'expertise.expertisetype_id = ? AND ' +
+            'expertise.manifestation_id IS NULL AND ' +
             '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +
             'expertise.hidden = \'0\' AND ' +
             'expertise.deleted IS NULL';
