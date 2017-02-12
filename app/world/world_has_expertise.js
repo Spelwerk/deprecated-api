@@ -43,6 +43,16 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    router.get(path + '/id/:id1/type/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_expertise.world_id = ? AND ' +
+            'expertise.expertisetype_id = ? AND ' +
+            'expertise.hidden = \'0\' AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
+
     router.get(path + '/id/:id1/skill/:id2/type/:id3/species/:id4', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +

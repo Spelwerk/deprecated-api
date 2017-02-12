@@ -36,6 +36,7 @@ module.exports = function(pool, router, table, path) {
             'world_has_characteristic.world_id = ? AND ' +
             'characteristic.gift = ? AND ' +
             '(characteristic.species_id = ? OR characteristic.species_id IS NULL) AND ' +
+            'characteristic.manifestation_id IS NULL AND ' +
             'characteristic.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);

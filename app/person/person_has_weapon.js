@@ -23,10 +23,12 @@ module.exports = function(pool, router, table, path) {
         'weapontype.distance, ' +
         'weapongroup.skill_attribute_id, ' +
         'a1.name AS skill_attribute_name, ' +
+        'person_has_attribute.value AS skill_attribute_value, ' +
         'weapongroup.damage_attribute_id, ' +
         'a2.name AS damage_attribute_name, ' +
         'weapongroup.expertise_id, ' +
         'expertise.name AS expertise_name, ' +
+        'person_has_expertise.level AS expertise_level, ' +
         'person_has_weapon.weaponquality_id AS quality_id, ' +
         'weaponquality.name AS quality_name, ' +
         'weaponquality.price AS quality_price, ' +
@@ -45,7 +47,9 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute a1 ON a1.id = weapongroup.skill_attribute_id ' +
         'LEFT JOIN attribute a2 ON a2.id = weapongroup.damage_attribute_id ' +
         'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id ' +
-        'LEFT JOIN weaponquality ON weaponquality.id = person_has_weapon.weaponquality_id ' +
+        'LEFT JOIN weaponquality ON weaponquality.id = person_has_weapon.weaponquality_id AND person_has_weapon.weapon_id = weapon.id ' +
+        'LEFT JOIN person_has_attribute ON person_has_attribute.person_id = ? AND person_has_attribute.attribute_id = expertise.skill_attribute_id ' +
+        'LEFT JOIN person_has_expertise ON person_has_expertise.person_id = ? AND person_has_expertise.expertise_id = weapongroup.expertise_id ' +
         'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
 
     require('../default-has')(pool, router, table, path, ["person_id","weapon_id"]);
@@ -54,6 +58,6 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'person_has_weapon.person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id, req.params.id]);
     });
 };

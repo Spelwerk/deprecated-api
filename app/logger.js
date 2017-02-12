@@ -36,6 +36,10 @@ module.exports.logCall = function(file, call, error) {
     error = error || null;
 
     if(error) {
+
+        console.log(method);
+        console.log(error);
+
         logger.error({error: error, file: file, method: 'SQL', call: call});
         logger.debug({error: error, file: file, method: 'SQL', call: call});
     } else {

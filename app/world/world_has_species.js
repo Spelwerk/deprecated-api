@@ -9,6 +9,8 @@ module.exports = function(pool, router, table, path) {
         'species.description, ' +
         'species.playable, ' +
         'species.max_age, ' +
+        'species.multiply_skill, ' +
+        'species.multiply_expertise, ' +
         'icon.path AS icon_path ' +
         'FROM world_has_species ' +
         'LEFT JOIN species ON species.id = world_has_species.species_id ' +
