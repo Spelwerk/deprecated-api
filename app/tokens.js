@@ -21,10 +21,11 @@ function generate(req, jsonData, permissions) {
         sub: {
             id: jsonData.id,
             username: jsonData.username,
+            email: jsonData.email,
             firstname: jsonData.firstname,
             surname: jsonData.surname,
             admin: jsonData.admin,
-            verified: jsonData.verified,
+            verified: jsonData.verify,
             permissions: permissions
         },
         agent: req.headers['user-agent']

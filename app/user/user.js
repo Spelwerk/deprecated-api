@@ -84,7 +84,7 @@ module.exports = function(pool, router, table, path) {
                 if(err) {
                     res.status(500).send({header: 'Email Error', message: err});
                 } else {
-                    res.status(200).send({message: 'Mail has been sent!'});
+                    res.status(200).send({message: 'Mail has been sent to ' + mail.to + '!'});
                 }
             });
         });
@@ -172,12 +172,12 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path + '/verify', function(req, res) {
-        var verify_hash = req.body.verify_hash,
+        var verify_hash = req.body.verification,
             now = Math.floor(Date.now() / 1000);
 
         var user_call = mysql.format(
             'SELECT id, verify_timeout FROM user WHERE verify_hash = ?',
-            [verify_hash]
+            [vverify_hash]
         );
 
         pool.query(user_call, function(err, user_result) {
@@ -187,7 +187,7 @@ module.exports = function(pool, router, table, path) {
                 res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
             } else if(!user_result[0]) {
                 res.status(404).send({header: 'User not found', message: 'User not found'});
-            } else if (user_result[0].verify_timeout > now) {
+            } else if (user_result[0].verify_timeout < now) {
                 res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
             } else {
                 var user_id = user_result[0].id;
@@ -198,6 +198,34 @@ module.exports = function(pool, router, table, path) {
                 );
 
                 rest.queryMessage(pool, res, updt_call, 200, 'success');
+            }
+        });
+    });
+
+    router.post(path + '/verify/again', function(req, res) {
+        var email = req.body.email,
+            verify_hash = hasher(64),
+            verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+
+        var call = mysql.format(
+            'UPDATE user SET verify_hash = ?, verify_timeout = ? WHERE email = ?',
+            [verify_hash, verify_timeout, email]);
+
+        pool.query(call, function(error) {
+            logger.logCall(file, call, error);
+
+            if(error) {
+                res.status(500).send({header: 'Internal SQL Error', message: error});
+            } else {
+                var mail = {
+                    from: config.superuser.email,
+                    to: email,
+                    subject: 'User Verification',
+                    text: '',
+                    html: '<b>Hello!</b><br><br>This is your verification code: <a href="' + config.links.user_new_verify + verify_hash + '">' + verify_hash + '</a><br><br>'
+                };
+
+                sendMail(res, mail);
             }
         });
     });
@@ -267,7 +295,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path + '/login/mail/verify', function(req, res) {
-        var login_hash = req.body.login_hash,
+        var login_hash = req.body.verification,
             now = Math.floor(Date.now() / 1000);
 
         var call = mysql.format(
@@ -281,7 +309,7 @@ module.exports = function(pool, router, table, path) {
                 res.status(500).send({header: 'Internal SQL Error', message: err});
             } else if(!result[0]) {
                 res.status(404).send({header: 'User Not Found', message: 'user not found'});
-            } else if(result[0].login_timeout > now) {
+            } else if(result[0].login_timeout < now) {
                 res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
             } else {
                 loginToken(req, res, result)
@@ -356,18 +384,16 @@ module.exports = function(pool, router, table, path) {
             reset_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
         var call = mysql.format(
-            'UPDATE user SET reset_hash = ?, reset_timeout = ? WHERE user.email = ?',
+            'UPDATE user SET reset_hash = ?, reset_timeout = ? WHERE email = ?',
             [reset_hash, reset_timeout, email]
         );
 
-        pool.query(call, function(err, result) {
+        pool.query(call, function(err) {
             logger.logCall(file, call, err);
 
             if(err) {
                 res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
             } else {
-                var transporter = nodemailer.createTransport(config.smtp);
-
                 var mail = {
                     from: config.superuser.email,
                     to: email,
@@ -376,21 +402,13 @@ module.exports = function(pool, router, table, path) {
                     html: '<b>Hello!</b><br><br>Use <a href="' + config.links.user_password_reset + reset_hash + '">THIS LINK</a> to reset your password<br><br>'
                 };
 
-                transporter.sendMail(mail, function(error, info){
-                    if(error){
-                        logger.logError(file, error, 'MAILER');
-
-                        res.status(500).send({header: 'Email Error', message: error});
-                    } else {
-                        res.status(201).send({data: result, mail: info.response});
-                    }
-                });
+                sendMail(res, mail);
             }
         });
     });
 
     router.put(path + '/password/set', function(req, res) {
-        var reset_hash = req.body.reset_hash,
+        var reset_hash = req.body.verification,
             password = req.body.password,
             now = Math.floor(Date.now() / 1000);
 
@@ -405,7 +423,7 @@ module.exports = function(pool, router, table, path) {
                 res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
             } else if (!user_result[0]) {
                 res.status(404).send({header: 'User Not Found', message: 'user not found'});
-            } else if (user_result[0].reset_timeout > now) {
+            } else if (user_result[0].reset_timeout < now) {
                 res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
             } else {
                 var user_id = user_result[0].id;
