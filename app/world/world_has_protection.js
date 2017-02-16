@@ -31,6 +31,15 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    router.get(path + '/id/:id1/type/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_protection.world_id = ? AND ' +
+            'protection.protectiontype_id = ? AND ' +
+            'protection.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
+
     router.get(path + '/id/:id1/type/:id2/bodypart/:id3', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_protection.world_id = ? AND ' +

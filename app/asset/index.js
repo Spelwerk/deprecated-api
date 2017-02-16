@@ -8,7 +8,7 @@ module.exports = function(pool, router) {
     require('./bionic')(pool, router, 'bionic');
     require('./../default')(pool, router, 'bionicquality');
     require('./protection')(pool, router, 'protection');
-    require('./protectiontype')(pool, router, 'protectiontype');
+    require('./../default')(pool, router, 'protectiontype');
     require('./../default')(pool, router, 'protectionquality');
     require('./../default')(pool, router, 'software');
     require('./weapon')(pool, router, 'weapon');

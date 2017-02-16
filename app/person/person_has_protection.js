@@ -31,11 +31,22 @@ module.exports = function(pool, router, table, path) {
 
     require('../default-has')(pool, router, table, path, ["person_id","protection_id"]);
 
+    router.get(path + '/id/:id1', function(req, res) {
+        var call = query + ' WHERE ' +
+            'person_has_protection.person_id = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2], {"equipped": "DESC", "name": "ASC"});
+    });
+
     router.get(path + '/id/:id1/equipped/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_protection.person_id = ? AND ' +
             'person_has_protection.equipped = ?';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
+
+    router.put(path + '/id/:id1/id/:id2', function(req, res) {
+        rest.PUT(pool, req, res, table, {"person_id": req.params.id1, "protection_id": req.params.id2});
     });
 };
