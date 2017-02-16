@@ -5,7 +5,7 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'id, template, popularity, nickname, firstname, surname, cheated, supernatural, calculated, age, occupation, ' +
+        'id, hash, template, popularity, nickname, firstname, surname, cheated, supernatural, calculated, age, occupation, ' +
         'gender, description, behaviour, appearance, features, personality, ' +
         'point_supernatural, point_power, point_money, point_skill, point_expertise, point_milestone_upbringing, ' +
         'point_milestone_flexible, point_characteristic_gift, point_characteristic_imperfection, point_relationship, ' +

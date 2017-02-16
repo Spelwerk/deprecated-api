@@ -22,7 +22,6 @@ module.exports = function(pool, router, table, path) {
         'a1.name AS skill_attribute_name, ' +
         'expertise.give_attribute_id, ' +
         'a2.name AS give_attribute_name, ' +
-        'expertise.give_weapon, ' +
         'icon.path AS icon_path ' +
         'FROM world_has_expertise ' +
         'LEFT JOIN expertise ON expertise.id = world_has_expertise.expertise_id ' +
