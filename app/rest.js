@@ -6,10 +6,10 @@ var file = 'rest.js';
 
 function queryDefault(pool, res, call) {
     pool.query(call, function(err, result) {
+
         logger.logCall(file, call, err);
 
         if(err) {
-            console.log(err);
             res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
         } else {
             if(!result[0]) {
@@ -93,15 +93,28 @@ exports.INSERT = function(pool, req, res, table) {
     call = mysql.format(call, varr); // format to fix updt
 
     pool.query(call, function(err, result) {
-        logger.logCall(file, call, err);
+        if(!result) {
+            logger.logCall(file, call, err);
 
-        var id = result.insertId ? result.insertId : req.body.id;
-
-        if(err) {
             res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
         } else {
-            res.status(201).send({data: result, id: id, hash: req.body.hash});
+            var returnId = 0;
+
+            logger.logCall(file, call, err);
+
+            if(result.insertId != undefined) {
+                returnId = result.insertId;
+            } else if(req.body.id != undefined) {
+                returnId = req.body.id;
+            }
+
+            if(err) {
+                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            } else {
+                res.status(201).send({data: result, id: returnId, hash: req.body.hash});
+            }
         }
+
     });
 };
 
@@ -130,12 +143,12 @@ exports.PUT = function(pool, req, res, table, options) {
 
     call = mysql.format(call, varr); // format to fix vals
 
-    pool.query(call, function(error, result) {
-        logger.logCall(file, call, error);
-
+    pool.query(call, function(err, result) {
         var id = req.params.id || 0;
 
-        if(error) {
+        logger.logCall(file, call, err);
+
+        if(err) {
             res.status(500).send({header: 'Internal SQL Error', message: error});
         } else {
             res.status(200).send({data: result, id: id});

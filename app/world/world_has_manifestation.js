@@ -11,6 +11,7 @@ module.exports = function(pool, router, table, path) {
         'attributetype.name AS attributetype_name, ' +
         'manifestation.expertisetype_id, ' +
         'expertisetype.name AS expertisetype_name, ' +
+        'manifestation.power_attribute_id, ' +
         'icon.path AS icon_path ' +
         'FROM world_has_manifestation ' +
         'LEFT JOIN manifestation ON manifestation.id = world_has_manifestation.manifestation_id ' +

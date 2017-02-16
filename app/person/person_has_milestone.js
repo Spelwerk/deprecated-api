@@ -21,6 +21,13 @@ module.exports = function(pool, router, table, path) {
 
     require('../default-has')(pool, router, table, path, ["person_id","milestone_id"]);
 
+    router.get(path + '/id/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'person_has_milestone.person_id = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id], {"name": "ASC"});
+    });
+
     router.get(path + '/id/:id1/upbringing/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_milestone.person_id = ? AND ' +

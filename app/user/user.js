@@ -137,8 +137,7 @@ module.exports = function(pool, router, table, path) {
             surname = req.body.surname,
             verify = 0,
             verify_hash = hasher(64),
-            verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60),
-            twofactor = req.body.twofactor;
+            verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
         bcrypt.hash(onion.hash(password), saltRounds, function(error, hash) {
             if(error) {
@@ -147,8 +146,8 @@ module.exports = function(pool, router, table, path) {
                 res.status(500).send({header: 'Internal Error', message: error});
             } else {
                 var call = mysql.format(
-                    'INSERT INTO user (username, password, email, admin, firstname, surname, verify, verify_hash, verify_timeout, twofactor) VALUES (?,?,?,?,?,?,?,?,?,?)',
-                    [username, onion.encrypt(hash), email, admin, firstname, surname, verify, verify_hash, verify_timeout, twofactor]);
+                    'INSERT INTO user (username, password, email, admin, firstname, surname, verify, verify_hash, verify_timeout) VALUES (?,?,?,?,?,?,?,?,?)',
+                    [username, onion.encrypt(hash), email, admin, firstname, surname, verify, verify_hash, verify_timeout]);
 
                 pool.query(call, function(error) {
                     logger.logCall(file, call, error);
@@ -177,7 +176,7 @@ module.exports = function(pool, router, table, path) {
 
         var user_call = mysql.format(
             'SELECT id, verify_timeout FROM user WHERE verify_hash = ?',
-            [vverify_hash]
+            [verify_hash]
         );
 
         pool.query(user_call, function(err, user_result) {

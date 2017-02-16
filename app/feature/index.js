@@ -16,7 +16,7 @@ module.exports = function(pool, router) {
     require('./species')(pool, router, 'species');
     require('./species_has_attribute')(pool, router, 'species_has_attribute', '/species-attribute');
     require('./species_has_weapon')(pool, router, 'species_has_weapon', '/species-weapon');
-    require('./wound')(pool, router, 'wound');
+    require('./../default')(pool, router, 'wound');
 
     require('./../default')(pool, router, 'appearance');
     require('./../default')(pool, router, 'behaviour');

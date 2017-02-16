@@ -41,6 +41,14 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id]); // Using ? ON id IN LEFT JOIN
     });
 
+    router.get(path + '/id/:id1/expertise/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'person_has_expertise.person_id = ? AND ' +
+            'person_has_expertise.expertise_id = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id1, req.params.id2]); // Using ? ON id1 IN LEFT JOIN
+    });
+
     router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_expertise.person_id = ? AND ' +

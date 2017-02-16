@@ -29,14 +29,13 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id1/type/:id2/species/:id3', function(req, res) {
+    router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_attribute.world_id = ? AND ' +
             'attribute.attributetype_id = ? AND ' +
-            '(attribute.species_id = ? OR attribute.species_id IS NULL) AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 
     router.get(path + '/id/:id1/species/:id2', function(req, res) {
@@ -46,6 +45,16 @@ module.exports = function(pool, router, table, path) {
             'attribute.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
+
+    router.get(path + '/id/:id1/type/:id2/species/:id3', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_attribute.world_id = ? AND ' +
+            'attribute.attributetype_id = ? AND ' +
+            '(attribute.species_id = ? OR attribute.species_id IS NULL) AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
     });
 
     require('../default-has')(pool, router, table, query, path, ["world_id","attribute_id"]);

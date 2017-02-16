@@ -56,8 +56,21 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'person_has_weapon.person_id = ?';
+            'person_has_weapon.person_id = ? AND ' +
+            'weapon.hidden = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id, req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
+    });
+
+    router.get(path + '/id/:id1/equipped/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'person_has_weapon.person_id = ? AND ' +
+            'person_has_weapon.equipped = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id1, req.params.id1, req.params.id2]);
+    });
+
+    router.put(path + '/id/:id1/id/:id2', function(req, res) {
+        rest.PUT(pool, req, res, table, {"person_id": req.params.id1, "weapon_id": req.params.id2});
     });
 };

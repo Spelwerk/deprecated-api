@@ -11,6 +11,7 @@ module.exports = function(pool, router, table, path) {
         'attributetype.name AS attributetype_name, ' +
         'manifestation.expertisetype_id, ' +
         'expertisetype.name AS expertisetype_name, ' +
+        'manifestation.power_attribute_id, ' +
         'manifestation.icon_id, ' +
         'icon.path AS icon_path, ' +
         'manifestation.created, ' +

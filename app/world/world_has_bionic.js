@@ -34,7 +34,7 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id1/bodypart/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_bionic.world_id = ? AND ' +
-            'bionic.bodypart_id = AND ' +
+            'bionic.bodypart_id = ? AND ' +
             'bionic.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);

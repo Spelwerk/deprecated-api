@@ -6,7 +6,7 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'id, template, popularity, hidden, name, description, ' +
         'bionic, augmentation, software, supernatural, supernatural_name, ' +
-        'skill_attributetype_id, attribute_expertisetype_id, dice_expertisetype_id, ' +
+        'skill_attributetype_id, attribute_expertisetype_id, dice_expertisetype_id, money_attribute_id, ' +
         'split_supernatural, split_skill, split_expertise, split_milestone, split_relationship, ' +
         'max_characteristic_gift, max_characteristic_imperfection, max_supernatural, max_skill, max_expertise, ' +
         'max_milestone_upbringing, max_milestone_flexible, max_relationship, ' +

@@ -7,9 +7,9 @@ module.exports = function(pool, router, table, path) {
         'user_has_person.user_id, ' +
         'user_has_person.person_id, ' +
         'user_has_person.hash AS person_hash, ' +
-        'person.nickname AS person_nickname, ' +
-        'person.firstname AS person_firstname, ' +
-        'person.surname AS person_surname, ' +
+        'user_has_person.favorite, ' +
+        'person.nickname AS nickname, ' +
+        'person.occupation AS occupation, ' +
         'person.created, ' +
         'person.deleted ' +
         'FROM user_has_person ' +
@@ -22,6 +22,23 @@ module.exports = function(pool, router, table, path) {
             'user_has_person.user_id = ? AND ' +
             'person.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id], {"person_id": "ASC"});
+    });
+
+    router.get(path + '/id/:id/favorite', function(req, res) {
+        var call = query + ' WHERE ' +
+            'user_has_person.user_id = ? AND ' +
+            'user_has_person.favorite = ? AND ' +
+            'person.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, 1], {"person_id": "ASC"});
+    });
+
+    router.get(path + '/id/:id/deleted', function(req, res) {
+        var call = query + ' WHERE ' +
+            'user_has_person.user_id = ? AND ' +
+            'person.deleted IS NOT NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id], {"person_id": "ASC"});
     });
 };
