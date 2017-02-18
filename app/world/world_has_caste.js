@@ -16,6 +16,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = caste.attribute_id ' +
         'LEFT JOIN icon ON icon.id = caste.icon_id';
 
+    require('../default-has')(pool, router, table, path, ["world_id","caste_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_caste.world_id = ? AND ' +
@@ -23,6 +25,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
-
-    require('../default-has')(pool, router, table, query, path, ["world_id","caste_id"]);
 };

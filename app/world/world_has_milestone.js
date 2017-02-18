@@ -28,12 +28,23 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = milestone.attribute_id ' +
         'LEFT JOIN loyalty ON loyalty.id = milestone.loyalty_id';
 
+    require('../default-has')(pool, router, table, path, ["world_id","milestone_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_milestone.world_id = ? AND ' +
             'milestone.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/id/:id1/upbringing/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_milestone.world_id = ? AND ' +
+            'milestone.upbringing = ? AND ' +
+            'milestone.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 
     router.get(path + '/id/:id1/upbringing/:id2/caste/:id3/species/:id4', function(req, res) {
@@ -58,6 +69,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4, req.params.id5]);
     });
-
-    require('../default-has')(pool, router, table, query, path, ["world_id","milestone_id"]);
 };

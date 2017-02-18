@@ -1,4 +1,4 @@
-//var rest = require('./../rest');
+var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -31,4 +31,12 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN loyalty ON loyalty.id = milestone.loyalty_id';
 
     require('./../default')(pool, router, table, path, query);
+
+    router.get(path + '/upbringing/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'milestone.upbringing = ? AND ' +
+            'milestone.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
 };

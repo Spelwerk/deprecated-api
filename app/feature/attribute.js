@@ -1,4 +1,4 @@
-//var rest = require('./../rest');
+var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -24,4 +24,29 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN icon ON icon.id = attribute.icon_id';
 
     require('./../default')(pool, router, table, path, query);
+
+    router.get(path + '/type/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'attribute.attributetype_id = ? AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/protected', function(req, res) {
+        var call = query + ' WHERE ' +
+            'attribute.protected = ? AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [1]);
+    });
+
+    router.get(path + '/type/:id1/species/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'attribute.attributetype_id = ? AND ' +
+            '(attribute.species_id = ? OR attribute.species_id IS NULL) AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
 };

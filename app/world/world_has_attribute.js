@@ -6,7 +6,7 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'attribute.id, ' +
         'attribute.name, ' +
-        'world_has_attribute.default, ' +
+        'world_has_attribute.default_value, ' +
         'attribute.description, ' +
         'attribute.protected, ' +
         'attribute.attributetype_id, ' +
@@ -20,6 +20,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
         'LEFT JOIN species ON species.id = attribute.species_id ' +
         'LEFT JOIN icon ON icon.id = attribute.icon_id';
+
+    require('../default-has')(pool, router, table, path, ["world_id","attribute_id"]);
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
@@ -56,6 +58,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
     });
-
-    require('../default-has')(pool, router, table, query, path, ["world_id","attribute_id"]);
 };

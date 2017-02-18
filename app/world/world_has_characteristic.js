@@ -23,12 +23,23 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = characteristic.attribute_id ' +
         'LEFT JOIN icon ON icon.id = characteristic.icon_id';
 
+    require('../default-has')(pool, router, table, path, ["world_id","characteristic_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_characteristic.world_id = ? AND ' +
             'characteristic.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/id/:id1/gift/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_characteristic.world_id = ? AND ' +
+            'characteristic.gift = ? AND ' +
+            'characteristic.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
 
     router.get(path + '/id/:id1/gift/:id2/species/:id3', function(req, res) {
@@ -52,6 +63,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4]);
     });
-
-    require('../default-has')(pool, router, table, query, path, ["world_id","characteristic_id"]);
 };

@@ -1,4 +1,4 @@
-//var rest = require('./../rest');
+var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -22,7 +22,6 @@ module.exports = function(pool, router, table, path) {
         'a1.name AS skill_attribute_name, ' +
         'expertise.give_attribute_id, ' +
         'a2.name AS give_attribute_name, ' +
-        'expertise.give_weapon, ' +
         'a1.icon_id, ' +
         'icon.path AS icon_path, ' +
         'expertise.created, ' +
@@ -37,4 +36,13 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN icon ON icon.id = a1.icon_id';
 
     require('./../default')(pool, router, table, path, query);
+
+    router.get(path + '/type/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'expertise.expertisetype_id = ? AND ' +
+            'expertise.hidden = \'0\' AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
 };

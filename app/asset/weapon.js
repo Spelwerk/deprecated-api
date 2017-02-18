@@ -12,6 +12,13 @@ module.exports = function(pool, router, table, path) {
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
         'weapontype.name AS weapontype_name, ' +
+        'weapontype.damage_d12, ' +
+        'weapontype.damage_bonus, ' +
+        'weapontype.critical_d12, ' +
+        'weapontype.hand, ' +
+        'weapontype.initiative, ' +
+        'weapontype.hit, ' +
+        'weapontype.distance, ' +
         'weapontype.weapongroup_id, ' +
         'weapongroup.name AS weapongroup_name, ' +
         'weapongroup.icon_id, ' +

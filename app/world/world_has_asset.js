@@ -20,6 +20,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id ' +
         'LEFT JOIN icon ON icon.id = assettype.icon_id';
 
+    require('../default-has')(pool, router, table, path, ["world_id","asset_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_asset.world_id = ? AND ' +
@@ -36,6 +38,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, path, ["world_id","asset_id"]);
 };

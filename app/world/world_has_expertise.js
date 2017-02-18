@@ -32,7 +32,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id ' +
         'LEFT JOIN icon ON icon.id = a1.icon_id';
 
-    require('../default-has')(pool, router, table, query, path, ["world_id","expertise_id"]);
+    require('../default-has')(pool, router, table, path, ["world_id","expertise_id"]);
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +

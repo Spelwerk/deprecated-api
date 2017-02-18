@@ -23,6 +23,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = augmentation.attribute_id ' +
         'LEFT JOIN weapon ON weapon.id = augmentation.weapon_id';
 
+    require('../default-has')(pool, router, table, path, ["world_id","augmentation_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_augmentation.world_id = ? AND ' +
@@ -39,6 +41,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, query, path, ["world_id","augmentation_id"]);
 };

@@ -37,6 +37,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id ' +
         'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
 
+    require('../default-has')(pool, router, table, path, ["world_id","weapon_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_weapon.world_id = ? AND ' +
@@ -65,6 +67,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, query, path, ["world_id","weapon_id"]);
 };

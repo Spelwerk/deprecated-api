@@ -19,6 +19,8 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN manifestation ON manifestation.id = focus.manifestation_id ' +
         'LEFT JOIN icon ON icon.id = focus.icon_id';
 
+    require('../default-has')(pool, router, table, path, ["world_id","focus_id"]);
+
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_focus.world_id = ? AND ' +
@@ -35,6 +37,4 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
-
-    require('../default-has')(pool, router, table, query, path, ["world_id","focus_id"]);
 };
