@@ -1,5 +1,11 @@
 # Spelwerk API
 
+## Git
+
+- ```git init```
+- ```git remote add origin git@github.com:Spelwerk/spelwerk-api.git```
+- ```git pull git@github.com:Spelwerk/spelwerk-api.git master```
+
 ## Setup
 
 - Create the folder ```/logs/``` and set chmod to 666 (not sure why it doesn't work without it)
