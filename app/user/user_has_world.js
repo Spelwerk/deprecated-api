@@ -23,4 +23,13 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
+
+    router.get(path + '/id/:id/calculated', function(req, res) {
+        var call = query + ' WHERE ' +
+            'user_has_world.user_id = ? AND ' +
+            'world.calculated = ? AND ' +
+            'world.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
+    });
 };
