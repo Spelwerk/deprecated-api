@@ -5,7 +5,7 @@ module.exports = function(pool, router) {
     require('./world_has_attribute')(pool, router, 'world_has_attribute', '/world-attribute');
     require('./world_has_augmentation')(pool, router, 'world_has_augmentation', '/world-augmentation');
     require('./world_has_bionic')(pool, router, 'world_has_bionic', '/world-bionic');
-    require('./world_has_background')(pool, router, 'world_has_caste', '/world-caste');
+    require('./world_has_background')(pool, router, 'world_has_background', '/world-background');
     require('./world_has_characteristic')(pool, router, 'world_has_characteristic', '/world-characteristic');
     require('./world_has_expertise')(pool, router, 'world_has_expertise', '/world-expertise');
     require('./world_has_focus')(pool, router, 'world_has_focus', '/world-focus');
