@@ -32,6 +32,9 @@ require('./app/index')(pool, router);
 
 app.use('/', router);
 
-logger.debug('server.js listening on port: %s', config.port);
+var listeningMessage = 'server.js listening on port: ' + config.port;
+
+console.log(listeningMessage);
+logger.debug(listeningMessage);
 
 app.listen(config.port);

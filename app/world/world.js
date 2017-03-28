@@ -9,7 +9,7 @@ module.exports = function(pool, router, table, path) {
         'skill_attributetype_id, attribute_expertisetype_id, dice_expertisetype_id, money_attribute_id, ' +
         'split_supernatural, split_skill, split_expertise, split_milestone, split_relationship, ' +
         'max_characteristic_gift, max_characteristic_imperfection, max_supernatural, max_skill, max_expertise, ' +
-        'max_milestone_upbringing, max_milestone_flexible, max_relationship, ' +
+        'max_milestone, max_relationship, ' +
         'created, deleted, updated ' +
         'FROM world';
 

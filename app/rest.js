@@ -50,18 +50,52 @@ exports.QUERY = function(pool, req, res, call, params, order) {
     params = params || null;
     order = order || {"name": "ASC"};
 
+    var order_by = req.headers['x-order-by'] !== undefined
+        ? JSON.parse(req.headers['x-order-by'])
+        : null;
+
+    var pagination_limit = req.headers['x-pagination-limit'] !== undefined
+        ? req.headers['x-pagination-limit']
+        : null;
+
+    var pagination_amount = req.headers['x-pagination-amount'] !== undefined
+        ? req.headers['x-pagination-amount']
+        : null;
+
+    var filter_by = req.headers['x-filter-by'] !== undefined
+        ? JSON.parse(req.headers['x-filter-by'])
+        : null;
+
     if(params) {
         call = mysql.format(call, params);
     }
 
-    if(order) {
+    if(order_by !== null) {
         call += ' ORDER BY ';
 
-        for (var key in order) {
-            call += key + ' ' + order[key] + ', ';
+        for (var key in order_by) {
+            call += key + ' ' + order_by[key] + ', ';
         }
 
         call = call.slice(0, -2);
+    } else {
+        if(order) {
+            call += ' ORDER BY ';
+
+            for (var key in order) {
+                call += key + ' ' + order[key] + ', ';
+            }
+
+            call = call.slice(0, -2);
+        }
+    }
+
+    if(pagination_limit !== null) {
+        call += ' LIMIT ' + pagination_limit;
+    }
+
+    if(pagination_amount !== null) {
+        call += ',' + pagination_amount;
     }
 
     queryDefault(pool, res, call);

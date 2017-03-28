@@ -4,14 +4,7 @@ var rest = require('./../rest'),
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
-    var query = 'SELECT ' +
-        'id, hash, template, popularity, nickname, firstname, surname, cheated, supernatural, calculated, age, occupation, ' +
-        'gender, description, behaviour, appearance, features, personality, ' +
-        'point_supernatural, point_power, point_money, point_skill, point_expertise, point_milestone_upbringing, ' +
-        'point_milestone_flexible, point_characteristic_gift, point_characteristic_imperfection, point_relationship, ' +
-        'world_id, species_id, caste_id, nature_id, identity_id, country_id, manifestation_id, focus_id, ' +
-        'created, deleted, updated ' +
-        'FROM person';
+    var query = 'SELECT * FROM person';
 
     require('./../default-hash')(pool, router, table, path, query);
 
