@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'augmentation.id, ' +
         'augmentation.name, ' +
         'augmentation.description, ' +
+        'person_has_augmentation.augmentation_custom, ' +
         'augmentation.price, ' +
         'augmentation.energy, ' +
         'augmentation.legal, ' +

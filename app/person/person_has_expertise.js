@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'expertise.id, ' +
         'expertise.name, ' +
         'expertise.description, ' +
+        'person_has_expertise.expertise_custom, ' +
         'person_has_expertise.level, ' +
         'expertise.hidden, ' +
         'expertise.expertisetype_id, ' +

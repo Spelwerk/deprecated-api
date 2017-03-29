@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'bionic.id, ' +
         'bionic.name, ' +
         'bionic.description, ' +
+        'person_has_bionic.bionic_custom, ' +
         'bionic.price, ' +
         'bionic.energy, ' +
         'bionic.legal, ' +

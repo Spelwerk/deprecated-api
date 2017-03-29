@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'protection.id, ' +
         'protection.name, ' +
         'protection.description, ' +
+        'person_has_protection.protection_custom, ' +
         'protection.price, ' +
         'protection.protectiontype_id, ' +
         'protectiontype.name AS protectiontype_name, ' +

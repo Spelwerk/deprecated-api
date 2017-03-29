@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'characteristic.id, ' +
         'characteristic.name, ' +
         'characteristic.description, ' +
+        'person_has_characteristic.characteristic_custom, ' +
         'characteristic.gift, ' +
         'characteristic.attribute_id, ' +
         'attribute.name AS attribute_name, ' +

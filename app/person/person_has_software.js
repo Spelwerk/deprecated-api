@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'software.id, ' +
         'software.name, ' +
         'software.description, ' +
+        'person_has_software.software_custom, ' +
         'software.price, ' +
         'software.hacking, ' +
         'software.hacking_bonus, ' +

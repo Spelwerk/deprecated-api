@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'weapon.id, ' +
         'weapon.name, ' +
         'weapon.description, ' +
+        'person_has_weapon.weapon_custom, ' +
         'weapon.price, ' +
         'weapon.hidden, ' +
         'weapon.legal, ' +

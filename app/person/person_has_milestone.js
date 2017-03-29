@@ -7,6 +7,7 @@ module.exports = function(pool, router, table, path) {
         'milestone.id, ' +
         'milestone.name, ' +
         'milestone.description, ' +
+        'person_has_milestone.milestone_custom, ' +
         'milestone.background_id, ' +
         'background.name AS background_name, ' +
         'milestone.species_id, ' +
