@@ -20,7 +20,7 @@ function generate(req, jsonData, permissions) {
         oip: ip,
         sub: {
             id: jsonData.id,
-            username: jsonData.username,
+            displayname: jsonData.displayname,
             email: jsonData.email,
             firstname: jsonData.firstname,
             surname: jsonData.surname,

@@ -19,7 +19,9 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'id, ' +
-        'username, ' +
+        'displayname, ' +
+        'email, ' +
+        'verify, ' +
         'admin, ' +
         'firstname, ' +
         'surname, ' +
@@ -92,7 +94,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NULL';
-        rest.QUERY(pool, req, res, call, null, {"username": "ASC"});
+        rest.QUERY(pool, req, res, call, null, {"displayname": "ASC"});
     });
 
     router.get(path + '/help', function(req, res) {
@@ -110,7 +112,7 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE user.id = ?';
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id], {"displayname": "ASC"});
     });
 
     router.get(path + '/token', function(req, res) {
@@ -129,14 +131,12 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path, function(req, res) {
-        var username = req.body.username,
+        var displayname = req.body.displayname,
             password = req.body.password,
             email = req.body.email,
             admin = 0,
-            firstname = req.body.firstname,
-            surname = req.body.surname,
             verify = 0,
-            verify_hash = hasher(64),
+            verify_hash = hasher(96),
             verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
         bcrypt.hash(onion.hash(password), saltRounds, function(error, hash) {
@@ -145,16 +145,18 @@ module.exports = function(pool, router, table, path) {
 
                 res.status(500).send({header: 'Internal Error', message: error});
             } else {
-                var call = mysql.format(
-                    'INSERT INTO user (username, password, email, admin, firstname, surname, verify, verify_hash, verify_timeout) VALUES (?,?,?,?,?,?,?,?,?)',
-                    [username, onion.encrypt(hash), email, admin, firstname, surname, verify, verify_hash, verify_timeout]);
+                var insertCall = mysql.format(
+                    'INSERT INTO user (displayname, password, email, admin, verify, verify_hash, verify_timeout) VALUES (?,?,?,?,?,?,?)',
+                    [displayname, onion.encrypt(hash), email, admin, verify, verify_hash, verify_timeout]);
 
-                pool.query(call, function(error) {
-                    logger.logCall(file, call, error);
+                pool.query(insertCall, function(error, userCreationResult) {
+                    logger.logCall(file, insertCall, error);
 
                     if(error) {
                         res.status(500).send({header: 'Internal SQL Error', message: error});
                     } else {
+                        var userId = userCreationResult.insertId;
+
                         var mail = {
                             from: config.superuser.email,
                             to: email,
@@ -163,7 +165,34 @@ module.exports = function(pool, router, table, path) {
                             html: '<b>Hello!</b><br><br>This is your verification code: <a href="' + config.links.user_new_verify + verify_hash + '">' + verify_hash + '</a><br><br>'
                         };
 
-                        sendMail(res, mail);
+                        var composer = mailcomposer(mail);
+
+                        composer.build(function(err, message) {
+                            var dataToSend = {
+                                to: mail.to,
+                                message: message.toString('ascii')
+                            };
+
+                            mailgun.messages().sendMime(dataToSend, function(err) {
+                                if(err) {
+                                    res.status(500).send({header: 'Email Error', message: err});
+                                } else {
+                                    var selectCall = mysql.format(
+                                        'SELECT * FROM user WHERE id = ? AND deleted IS NULL',
+                                        [userId]);
+
+                                    pool.query(selectCall, function(err, result) {
+                                        logger.logCall(file, selectCall, err);
+
+                                        if(err) {
+                                            res.status(500).send({header: 'Internal SQL Error', message: err});
+                                        } else {
+                                            loginToken(req, res, result);
+                                        }
+                                    });
+                                }
+                            });
+                        });
                     }
                 });
             }
@@ -203,7 +232,7 @@ module.exports = function(pool, router, table, path) {
 
     router.post(path + '/verify/again', function(req, res) {
         var email = req.body.email,
-            verify_hash = hasher(64),
+            verify_hash = hasher(96),
             verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
         var call = mysql.format(
@@ -230,11 +259,11 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path + '/login/password', function(req, res) {
-        var req_user = req.body.username,
+        var req_user = req.body.email,
             req_pass = req.body.password;
 
         var call = mysql.format(
-            'SELECT * FROM user WHERE username = ? AND deleted IS NULL',
+            'SELECT * FROM user WHERE email = ? AND deleted IS NULL',
             [req_user]);
 
         pool.query(call, function(err, result) {
@@ -243,7 +272,7 @@ module.exports = function(pool, router, table, path) {
             if(err) {
                 res.status(500).send({header: 'Internal SQL Error', message: err});
             } else if(!result[0]) {
-                res.status(404).send({header: 'Username Not Found', message: 'username not found'});
+                res.status(404).send({header: 'Email Not Found', message: 'email not found'});
             } else {
                 var user = result[0];
 
@@ -254,8 +283,6 @@ module.exports = function(pool, router, table, path) {
                         res.status(500).send({header: 'Internal Server Error', message: err});
                     } else if(!response) {
                         res.status(403).send({header: 'Wrong Password', message: 'wrong password'});
-                    } else if(user.twofactor == 1) {
-                        res.status(200).send({twofactor: true});
                     } else {
                         loginToken(req, res, result)
                     }
@@ -266,7 +293,7 @@ module.exports = function(pool, router, table, path) {
 
     router.post(path + '/login/mail/start', function(req, res) {
         var email = req.body.email,
-            login_hash = hasher(64),
+            login_hash = hasher(96),
             login_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
         var call = mysql.format(
@@ -379,7 +406,7 @@ module.exports = function(pool, router, table, path) {
 
     router.put(path + '/password/start', function(req, res) {
         var email = req.body.email,
-            reset_hash = hasher(64),
+            reset_hash = hasher(96),
             reset_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
         var call = mysql.format(

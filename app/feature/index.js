@@ -7,6 +7,7 @@ module.exports = function(pool, router) {
     require('./background_has_asset')(pool, router, 'background_has_asset', '/background-asset');
     require('./background_has_attribute')(pool, router, 'background_has_attribute', '/background-attribute');
     require('./characteristic')(pool, router, 'characteristic');
+    require('./../default')(pool, router, 'disease');
     require('./expertise')(pool, router, 'expertise');
     require('./../default')(pool, router, 'expertisetype');
     require('./focus')(pool, router, 'focus');
@@ -15,6 +16,7 @@ module.exports = function(pool, router) {
     require('./manifestation')(pool, router, 'manifestation');
     require('./milestone')(pool, router, 'milestone');
     require('./nature')(pool, router, 'nature');
+    require('./../default')(pool, router, 'sanity');
     require('./species')(pool, router, 'species');
     require('./species_has_attribute')(pool, router, 'species_has_attribute', '/species-attribute');
     require('./species_has_weapon')(pool, router, 'species_has_weapon', '/species-weapon');
