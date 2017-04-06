@@ -98,6 +98,8 @@ exports.QUERY = function(pool, req, res, call, params, order) {
         call += ',' + pagination_amount;
     }
 
+    console.log(call);
+
     queryDefault(pool, res, call);
 };
 
