@@ -129,6 +129,8 @@ exports.INSERT = function(pool, req, res, table) {
     call = mysql.format(call, varr); // format to fix vals
     call = mysql.format(call, varr); // format to fix updt
 
+    console.log(call);
+
     pool.query(call, function(err, result) {
         logger.logCall(file, call, err);
 
