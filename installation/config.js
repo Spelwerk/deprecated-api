@@ -2,6 +2,7 @@ exports.base = '';
 exports.port = 3001;
 exports.salt = 12;
 exports.timeoutTTL = 60;
+exports.debugMode = false;
 
 var secrets = {
     api: '',

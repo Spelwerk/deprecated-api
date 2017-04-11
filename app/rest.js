@@ -6,11 +6,9 @@ var file = 'rest.js';
 
 function queryDefault(pool, res, call) {
     pool.query(call, function(err, result) {
-
         logger.logCall(file, call, err);
 
         if(err) {
-            console.log(err);
             res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
         } else {
             if(!result[0]) {
@@ -98,8 +96,6 @@ exports.QUERY = function(pool, req, res, call, params, order) {
         call += ',' + pagination_amount;
     }
 
-    console.log(call);
-
     queryDefault(pool, res, call);
 };
 
@@ -135,7 +131,6 @@ exports.INSERT = function(pool, req, res, table) {
         logger.logCall(file, call, err);
 
         if(!result || err) {
-            console.log(err);
             res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
         } else {
             var returnId = 0,
@@ -192,8 +187,6 @@ exports.PUT = function(pool, req, res, table, options) {
     call = mysql.format(call, varr); // format to fix vals
 
     pool.query(call, function(err) {
-        var id = req.params.id || 0;
-
         logger.logCall(file, call, err);
 
         if(err) {

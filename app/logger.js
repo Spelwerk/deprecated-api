@@ -1,4 +1,5 @@
-var winston = require('winston');
+var winston = require('winston'),
+    debugMode = require('./config').debugMode;
 
 var logger = new winston.Logger({
     transports: [
@@ -35,11 +36,20 @@ module.exports.logCall = function(file, call, error) {
     file = file || 'unknown';
     error = error || null;
 
+    if(debugMode) {
+        console.log('\ncall:'); console.log(call);
+
+        if(error) {
+            console.log('error:'); console.log(error);
+
+            logger.debug({error: error, file: file, method: 'SQL', call: call});
+        } else {
+            logger.debug({file: file, method: 'SQL', call: call});
+        }
+    }
+
     if(error) {
         logger.error({error: error, file: file, method: 'SQL', call: call});
-        logger.debug({error: error, file: file, method: 'SQL', call: call});
-    } else {
-        logger.debug({file: file, method: 'SQL', call: call});
     }
 };
 
