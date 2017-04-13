@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'focus.id, ' +
+        'focus.canon, ' +
         'focus.name, ' +
         'focus.description, ' +
         'focus.attribute_id, ' +

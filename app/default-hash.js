@@ -40,6 +40,14 @@ module.exports = function(pool, router, table, path, query) {
         rest.INSERT(pool, req, res, table);
     });
 
+    router.put(path + '/id/:id', function(req, res) {
+        if (req.body.hash) {
+            res.status(403).send({header: 'HASH error', message: 'HASH cannot be changed'})
+        } else {
+            rest.PUT(pool, req, res, table);
+        }
+    });
+
     router.put(path + '/hash/:id', function(req, res) {
         if (req.body.hash) {
             res.status(403).send({header: 'HASH error', message: 'HASH cannot be changed'})

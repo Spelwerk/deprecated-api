@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'software.id, ' +
+        'software.canon, ' +
         'software.name, ' +
         'software.description, ' +
         'person_has_software.software_custom, ' +

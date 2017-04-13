@@ -10,7 +10,7 @@ module.exports = function(pool, router, table, path) {
         'promotional.start, ' +
         'promotional.end, ' +
         'promotional.user_id, ' +
-        'user.username AS user_username, ' +
+        'user.displayname AS user_username, ' +
         'promotional.created ' +
         'FROM promotional ' +
         'LEFT JOIN user ON user.id = promotional.user_id';

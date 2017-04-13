@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'protection.id, ' +
+        'protection.canon, ' +
         'protection.name, ' +
         'protection.description, ' +
         'protection.price, ' +
@@ -28,18 +29,20 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_protection.world_id = ? AND ' +
+            'protection.canon = ? AND ' +
             'protection.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_protection.world_id = ? AND ' +
             'protection.protectiontype_id = ? AND ' +
+            'protection.canon = ? AND ' +
             'protection.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 
     router.get(path + '/id/:id1/type/:id2/bodypart/:id3', function(req, res) {
@@ -47,8 +50,9 @@ module.exports = function(pool, router, table, path) {
             'world_has_protection.world_id = ? AND ' +
             'protection.protectiontype_id = ? AND ' +
             'protection.bodypart_id = ? AND ' +
+            'protection.canon = ? AND ' +
             'protection.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, 1]);
     });
 };

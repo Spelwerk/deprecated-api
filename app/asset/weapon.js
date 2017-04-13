@@ -5,10 +5,11 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'weapon.id, ' +
+        'weapon.canon, ' +
+        'weapon.special, ' +
         'weapon.name, ' +
         'weapon.description, ' +
         'weapon.price, ' +
-        'weapon.hidden, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
         'weapontype.name AS weapontype_name, ' +

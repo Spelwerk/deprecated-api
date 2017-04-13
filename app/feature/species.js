@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'species.id, ' +
+        'species.canon, ' +
         'species.name, ' +
         'species.description, ' +
         'species.playable, ' +

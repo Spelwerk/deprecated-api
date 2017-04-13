@@ -4,7 +4,8 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'person_has_disease.disease_id AS id, ' +
+        'disease.id, ' +
+        'disease.canon, ' +
         'disease.name, ' +
         'person_has_disease.heal, ' +
         'person_has_disease.timestwo ' +

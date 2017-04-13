@@ -5,9 +5,10 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'expertise.id, ' +
+        'expertise.canon, ' +
+        'expertise.special, ' +
         'expertise.name, ' +
         'expertise.description, ' +
-        'expertise.hidden, ' +
         'expertise.expertisetype_id, ' +
         'expertisetype.name AS expertisetype_name, ' +
         'expertisetype.maximum, ' +
@@ -40,9 +41,10 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/type/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'expertise.expertisetype_id = ? AND ' +
-            'expertise.hidden = \'0\' AND ' +
+            'expertise.special = ? AND ' +
+            'expertise.canon = ? AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 0, 1]);
     });
 };

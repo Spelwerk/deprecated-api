@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'weaponmod.id, ' +
+        'weaponmod.canon, ' +
         'weaponmod.name, ' +
         'weaponmod.description, ' +
         'weaponmod.short, ' +
@@ -26,17 +27,19 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_weaponmod.world_id = ? AND ' +
+            'weaponmod.canon = ? AND ' +
             'weaponmod.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_weaponmod.world_id = ? AND ' +
             'weaponmod.weapontype_id = ? AND ' +
+            'weaponmod.canon = ? AND ' +
             'weaponmod.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 };

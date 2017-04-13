@@ -18,4 +18,7 @@ module.exports = function(pool, router) {
     require('./person_has_weaponmod')(pool, router, 'person_has_weaponmod', '/person-weaponmod');
     require('./person_has_wound')(pool, router, 'person_has_wound', '/person-wound');
 
+    require('./person_is_creation')(pool, router, 'person_is_creation', '/person-creation');
+    require('./../default')(pool, router, 'person_is_playable', '/person-playable');
+
 };

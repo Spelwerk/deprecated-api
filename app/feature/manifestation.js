@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'manifestation.id, ' +
+        'manifestation.canon, ' +
         'manifestation.name, ' +
         'manifestation.description, ' +
         'manifestation.attributetype_id, ' +

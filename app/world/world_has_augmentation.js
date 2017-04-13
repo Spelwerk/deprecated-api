@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'augmentation.id, ' +
+        'augmentation.canon, ' +
         'augmentation.name, ' +
         'augmentation.description, ' +
         'augmentation.price, ' +
@@ -28,17 +29,19 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_augmentation.world_id = ? AND ' +
+            'augmentation.canon = ? AND ' +
             'augmentation.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/bionic/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_augmentation.world_id = ? AND ' +
             'augmentation.bionic_id = ? AND ' +
+            'augmentation.canon = ? AND ' +
             'augmentation.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 };

@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'milestone.id, ' +
+        'milestone.canon, ' +
         'milestone.name, ' +
         'milestone.description, ' +
         'person_has_milestone.milestone_custom, ' +

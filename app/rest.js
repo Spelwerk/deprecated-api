@@ -125,8 +125,6 @@ exports.INSERT = function(pool, req, res, table) {
     call = mysql.format(call, varr); // format to fix vals
     call = mysql.format(call, varr); // format to fix updt
 
-    console.log(call);
-
     pool.query(call, function(err, result) {
         logger.logCall(file, call, err);
 
@@ -176,7 +174,7 @@ exports.PUT = function(pool, req, res, table, options) {
     }
 
     call = call.slice(0, -2);
-    call += ', updated = CURRENT_TIMESTAMP WHERE ';
+    call += ' WHERE ';
 
     for (var key in options) {
         call += key + ' = \'' + options[key] + '\' AND ';

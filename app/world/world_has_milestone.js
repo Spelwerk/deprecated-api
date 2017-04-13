@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'milestone.id, ' +
+        'milestone.canon, ' +
         'milestone.name, ' +
         'milestone.description, ' +
         'milestone.background_id, ' +
@@ -32,9 +33,10 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_milestone.world_id = ? AND ' +
+            'milestone.canon = ? AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/background/:id2/species/:id3', function(req, res) {
@@ -42,9 +44,10 @@ module.exports = function(pool, router, table, path) {
             'world_has_milestone.world_id = ? AND ' +
             '(milestone.background_id = ? OR milestone.background_id IS NULL) AND ' +
             '(milestone.species_id = ? OR milestone.species_id IS NULL) AND ' +
+            'milestone.canon = ? AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, 1]);
     });
 
     router.get(path + '/id/:id1/background/:id2/species/:id3/manifestation/:id4', function(req, res) {
@@ -53,8 +56,9 @@ module.exports = function(pool, router, table, path) {
             '(milestone.background_id = ? OR milestone.background_id IS NULL) AND ' +
             '(milestone.species_id = ? OR milestone.species_id IS NULL) AND ' +
             '(milestone.manifestation_id = ? OR milestone.manifestation_id IS NULL) AND ' +
+            'milestone.canon = ? AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4, 1]);
     });
 };

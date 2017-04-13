@@ -5,11 +5,12 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'weapon.id, ' +
+        'weapon.canon, ' +
+        'weapon.special, ' +
         'weapon.name, ' +
         'weapon.description, ' +
         'person_has_weapon.weapon_custom, ' +
         'weapon.price, ' +
-        'weapon.hidden, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
         'weapontype.name AS weapontype_name, ' +
@@ -58,7 +59,7 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_weapon.person_id = ? AND ' +
-            'weapon.hidden = ?';
+            'weapon.special = ?';
 
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
     });

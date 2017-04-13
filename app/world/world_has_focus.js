@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'focus.id, ' +
+        'focus.canon, ' +
         'focus.name, ' +
         'focus.description, ' +
         'focus.attribute_id, ' +
@@ -24,17 +25,19 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_focus.world_id = ? AND ' +
+            'focus.canon = ? AND ' +
             'focus.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/manifestation/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_focus.world_id = ? AND ' +
             '(focus.manifestation_id = ? OR focus.manifestation_id IS NULL) AND ' +
+            'focus.canon = ? AND ' +
             'focus.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 };

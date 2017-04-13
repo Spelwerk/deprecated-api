@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'characteristic.id, ' +
+        'characteristic.canon, ' +
         'characteristic.name, ' +
         'characteristic.description, ' +
         'person_has_characteristic.characteristic_custom, ' +

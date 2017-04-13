@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'asset.id, ' +
+        'asset.canon, ' +
         'asset.name, ' +
         'asset.description, ' +
         'asset.price, ' +
@@ -25,17 +26,19 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_asset.world_id = ? AND ' +
+            'asset.canon = ? AND ' +
             'asset.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_asset.world_id = ? AND ' +
             'asset.assettype_id = ? AND ' +
+            'asset.canon = ? AND ' +
             'asset.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 };

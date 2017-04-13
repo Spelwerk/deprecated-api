@@ -12,7 +12,7 @@ module.exports = function(pool, router, table, path) {
         'article.articletype_id, ' +
         'articletype.name AS articletype_name, ' +
         'article.user_id, ' +
-        'user.username AS user_username, ' +
+        'user.displayname AS user_username, ' +
         'article.created ' +
         'FROM article ' +
         'LEFT JOIN articletype ON articletype.id = article.articletype_id ' +

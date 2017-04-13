@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'bionic.id, ' +
+        'bionic.canon, ' +
         'bionic.name, ' +
         'bionic.description, ' +
         'bionic.price, ' +
@@ -28,6 +29,7 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_bionic.world_id = ? AND ' +
+            'bionic.canon = ? AND ' +
             'bionic.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
@@ -37,8 +39,9 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'world_has_bionic.world_id = ? AND ' +
             'bionic.bodypart_id = ? AND ' +
+            'bionic.canon = ? AND ' +
             'bionic.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 };

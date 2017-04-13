@@ -6,7 +6,7 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'user_has_world.user_id, ' +
         'user_has_world.world_id, ' +
-        'user_has_world.hash AS world_hash, ' +
+        'user_has_world.owner, ' +
         'world.name AS world_name, ' +
         'world.created, ' +
         'world.deleted, ' +

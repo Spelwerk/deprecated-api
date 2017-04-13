@@ -5,23 +5,13 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT * FROM world';
 
-    require('./../default-hash')(pool, router, table, path, query);
+    require('./../default')(pool, router, table, path, query);
 
-    router.get(path, function(req, res) {
+    router.get(path + '/canon', function(req, res) {
         var call = query + ' WHERE ' +
-            'world.deleted IS NULL AND ' +
-            'world.template = ? AND ' +
-            'world.hidden = ?';
+            'world.canon = ? AND ' +
+            'world.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [0,0], {"name": "ASC"});
-    });
-
-    router.get(path + '/template', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world.deleted IS NULL AND ' +
-            'world.template = ? AND ' +
-            'world.hidden = ?';
-
-        rest.QUERY(pool, req, res, call, [1,0], {"name": "ASC"});
+        rest.QUERY(pool, req, res, call, [1], {"name": "ASC"});
     });
 };

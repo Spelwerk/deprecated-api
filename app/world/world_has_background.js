@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'background.id, ' +
+        'background.canon, ' +
         'background.name, ' +
         'background.description, ' +
         'background.species_id, ' +
@@ -20,17 +21,19 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_background.world_id = ? AND ' +
+            'background.canon = ? AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/species/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_background.world_id = ? AND ' +
             '(background.species_id = ? OR background.species_id IS NULL) AND ' +
+            'background.canon = ? AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 };

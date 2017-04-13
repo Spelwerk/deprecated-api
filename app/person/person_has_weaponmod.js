@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'weaponmod.id, ' +
+        'weaponmod.canon, ' +
         'weaponmod.name, ' +
         'weaponmod.description, ' +
         'weaponmod.short, ' +

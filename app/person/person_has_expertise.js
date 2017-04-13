@@ -5,11 +5,12 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'expertise.id, ' +
+        'expertise.canon, ' +
+        'expertise.special, ' +
         'expertise.name, ' +
         'expertise.description, ' +
         'person_has_expertise.expertise_custom, ' +
         'person_has_expertise.level, ' +
-        'expertise.hidden, ' +
         'expertise.expertisetype_id, ' +
         'expertisetype.name AS expertisetype_name, ' +
         'expertisetype.maximum, ' +

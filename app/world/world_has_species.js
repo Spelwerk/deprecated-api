@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'species.id, ' +
+        'species.canon, ' +
         'species.name, ' +
         'species.description, ' +
         'species.playable, ' +
@@ -21,17 +22,19 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_species.world_id = ? AND ' +
+            'species.canon = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/playable/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_species.world_id = ? AND ' +
             'species.playable = ? AND ' +
+            'species.canon = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1,req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 };

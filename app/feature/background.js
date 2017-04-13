@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'background.id, ' +
+        'background.canon, ' +
         'background.name, ' +
         'background.description, ' +
         'background.species_id, ' +

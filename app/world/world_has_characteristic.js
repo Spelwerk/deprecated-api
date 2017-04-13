@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'characteristic.id, ' +
+        'characteristic.canon, ' +
         'characteristic.name, ' +
         'characteristic.description, ' +
         'characteristic.gift, ' +
@@ -28,18 +29,20 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_characteristic.world_id = ? AND ' +
+            'characteristic.canon = ? AND ' +
             'characteristic.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/gift/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_characteristic.world_id = ? AND ' +
             'characteristic.gift = ? AND ' +
+            'characteristic.canon = ? AND ' +
             'characteristic.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 
     router.get(path + '/id/:id1/gift/:id2/species/:id3', function(req, res) {
@@ -48,9 +51,10 @@ module.exports = function(pool, router, table, path) {
             'characteristic.gift = ? AND ' +
             '(characteristic.species_id = ? OR characteristic.species_id IS NULL) AND ' +
             'characteristic.manifestation_id IS NULL AND ' +
+            'characteristic.canon = ? AND ' +
             'characteristic.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, 1]);
     });
 
     router.get(path + '/id/:id1/gift/:id2/species/:id3/manifestation/:id4', function(req, res) {
@@ -59,8 +63,9 @@ module.exports = function(pool, router, table, path) {
             'characteristic.gift = ? AND ' +
             '(characteristic.species_id = ? OR characteristic.species_id IS NULL) AND ' +
             '(characteristic.manifestation_id = ? OR characteristic.manifestation_id IS NULL) AND ' +
+            'characteristic.canon = ? AND ' +
             'characteristic.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4]);
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4, 1]);
     });
 };

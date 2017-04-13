@@ -7,7 +7,7 @@ module.exports = function(pool, router, table, path) {
         'comment.id, ' +
         'comment.content, ' +
         'comment.user_id, ' +
-        'user.username AS user_username, ' +
+        'user.displayname AS user_username, ' +
         'comment.created, ' +
         'comment.updated ' +
         'FROM article_has_comment ' +

@@ -3,6 +3,7 @@ exports.port = 3001;
 exports.salt = 12;
 exports.timeoutTTL = 60;
 exports.debugMode = false;
+exports.noreply = 'noreply@email';
 
 var secrets = {
     api: '',
@@ -27,7 +28,7 @@ var pool = {
 };
 
 var superuser = {
-    username: 'admin',
+    displayname: 'admin',
     firstname: 'admin',
     surname: 'admin',
     password: secrets.sus,

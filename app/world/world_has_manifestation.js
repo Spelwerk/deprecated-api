@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'manifestation.id, ' +
+        'manifestation.canon, ' +
         'manifestation.name, ' +
         'manifestation.description, ' +
         'manifestation.attributetype_id, ' +
@@ -25,8 +26,9 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_manifestation.world_id = ? AND ' +
+            'manifestation.canon = ? AND ' +
             'manifestation.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 };
