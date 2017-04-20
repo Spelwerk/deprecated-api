@@ -6,6 +6,7 @@ module.exports = function(pool, router) {
     require('./augmentation')(pool, router, 'augmentation');
     require('./../default')(pool, router, 'augmentationquality');
     require('./bionic')(pool, router, 'bionic');
+    require('./bionic_has_augmentation')(pool, router, 'bionic_has_augmentation', '/bionic-augmentation');
     require('./../default')(pool, router, 'bionicquality');
     require('./protection')(pool, router, 'protection');
     require('./../default')(pool, router, 'protectiontype');

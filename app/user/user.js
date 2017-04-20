@@ -1,5 +1,6 @@
 var rest = require('./../rest'),
     mysql = require('mysql'),
+    async = require('async'),
     bcrypt = require('bcrypt'),
     nodemailer = require('nodemailer'),
     logger = require('./../logger'),

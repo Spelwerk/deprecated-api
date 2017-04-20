@@ -3,7 +3,6 @@ module.exports = function(pool, router) {
     require('./world')(pool, router, 'world');
     require('./world_has_asset')(pool, router, 'world_has_asset', '/world-asset');
     require('./world_has_attribute')(pool, router, 'world_has_attribute', '/world-attribute');
-    require('./world_has_augmentation')(pool, router, 'world_has_augmentation', '/world-augmentation');
     require('./world_has_bionic')(pool, router, 'world_has_bionic', '/world-bionic');
     require('./world_has_background')(pool, router, 'world_has_background', '/world-background');
     require('./world_has_characteristic')(pool, router, 'world_has_characteristic', '/world-characteristic');

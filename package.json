@@ -17,6 +17,7 @@
     "url": "https://github.com/Spelwerk/spelwerk-api/issues"
   },
   "dependencies": {
+    "async": "^2.3.0",
     "bcrypt": "^0.8.7",
     "body-parser": "^1.15.2",
     "chai": "^3.5.0",

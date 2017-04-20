@@ -37,6 +37,14 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    router.get(path + '/id/:id1/bionic/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'person_has_bionic.person_id = ? AND ' +
+            'person_has_bionic.bionic_id = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
+    });
+
     router.get(path + '/id/:id1/bodypart/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_bionic.person_id = ? AND ' +

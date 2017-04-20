@@ -32,7 +32,7 @@ module.exports = function(pool, router, table, path) {
             'bionic.canon = ? AND ' +
             'bionic.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
     router.get(path + '/id/:id1/bodypart/:id2', function(req, res) {
