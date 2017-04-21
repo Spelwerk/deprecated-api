@@ -31,46 +31,35 @@ module.exports = function(pool, router, table, path) {
         'deleted ' +
         'FROM user';
 
-    function loginToken(req, res, result) {
-        var user = result[0];
+    function loginToken(req, userId, callback) {
+        var user = {};
 
-        var perm_call = mysql.format(
-            'SELECT permission.name FROM user_has_permission LEFT JOIN permission ON permission.id = user_has_permission.permission_id WHERE user_has_permission.user_id = ?',
-            [user.id]);
+        user.id = userId;
 
-        pool.query(perm_call, function(err, perm_result) {
-            logger.logCall(file, perm_call, err);
+        async.series([
+            function(callback) {
+                var call = mysql.format('SELECT * FROM user WHERE id = ? AND deleted IS NULL',[user.id]);
 
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err});
-            } else {
-                var permissions = '';
+                pool.query(call,callback);
+            },
+            function(callback) {
+                var call = mysql.format('SELECT permission.name FROM user_has_permission LEFT JOIN permission ON permission.id = user_has_permission.permission_id WHERE user_has_permission.user_id = ?',
+                    [user.id]);
 
-                if(perm_result) {
-                    for (var key in perm_result) {
-                        permissions += perm_result[key].name + ',';
-                    }
+                pool.query(call,callback);
+            },
+            function(callback) {
+                var call = mysql.format('UPDATE user SET login_secret = NULL, login_timeout = NULL WHERE id = ?',[user.id]);
 
-                    permissions = permissions.slice(0, -1);
-                }
-
-                var token = tokens.generate(req, user, permissions);
-
-                var updt_call = mysql.format(
-                    'UPDATE user SET login_hash = NULL, login_timeout = NULL WHERE id = ?',
-                    [user.id]
-                );
-
-                pool.query(updt_call, function(err) {
-                    logger.logCall(file, updt_call, err);
-
-                    if(err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err});
-                    } else {
-                        res.status(200).send({token: token});
-                    }
-                });
+                pool.query(call,callback);
             }
+        ],function(err,results) {
+            user.select = results[0][0][0];
+            user.permissions = results[1][0];
+
+            user.token = tokens.generate(req, user.select, user.permissions);
+
+            callback(err, user.token);
         });
     }
 
@@ -87,11 +76,13 @@ module.exports = function(pool, router, table, path) {
                 if(err) {
                     res.status(500).send({header: 'Email Error', message: err});
                 } else {
-                    res.status(200).send({message: 'Mail has been sent to ' + mail.to + '!'});
+                    res.status(200).send();
                 }
             });
         });
     }
+
+    // GET
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NULL';
@@ -131,414 +122,454 @@ module.exports = function(pool, router, table, path) {
         }
     });
 
+    // USER
+
     router.post(path, function(req, res) {
-        var displayname = req.body.displayname,
-            password = req.body.password,
-            email = req.body.email,
-            admin = 0,
-            verify = 0,
-            verify_hash = hasher(96),
-            verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+        var user = {},
+            insert = {};
 
-        bcrypt.hash(onion.hash(password), saltRounds, function(error, hash) {
-            if(error) {
-                logger.logError(file, error, 'BCRYPT');
+        insert.email = req.body.email;
+        insert.password = req.body.password;
+        insert.displayname = req.body.displayname;
+        insert.firstname = req.body.firstname;
+        insert.surname = req.body.surname;
 
-                res.status(500).send({header: 'Internal Error', message: error});
-            } else {
-                var insertCall = mysql.format(
-                    'INSERT INTO user (displayname, password, email, admin, verify, verify_hash, verify_timeout) VALUES (?,?,?,?,?,?,?)',
-                    [displayname, onion.encrypt(hash), email, admin, verify, verify_hash, verify_timeout]);
+        insert.verify = {};
+        insert.verify.secret = hasher(128);
+        insert.verify.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
-                pool.query(insertCall, function(error, userCreationResult) {
-                    logger.logCall(file, insertCall, error);
+        insert.hashed = onion.hash(insert.password);
 
-                    if(error) {
-                        res.status(500).send({header: 'Internal SQL Error', message: error});
-                    } else {
-                        var userId = userCreationResult.insertId;
+        async.series([
+            function(callback) {
+                bcrypt.hash(insert.hashed, config.salt, function(err,result) {
+                    insert.encrypted = onion.encrypt(result);
 
-                        var mail = {
-                            from: config.superuser.email,
-                            to: email,
-                            subject: 'User Verification',
-                            text: '',
-                            html: '<b>Hello!</b><br><br>This is your verification code: <a href="' + config.links.user_new_verify + verify_hash + '">' + verify_hash + '</a><br><br>'
-                        };
-
-                        var composer = mailcomposer(mail);
-
-                        composer.build(function(err, message) {
-                            var dataToSend = {
-                                to: mail.to,
-                                message: message.toString('ascii')
-                            };
-
-                            mailgun.messages().sendMime(dataToSend, function(err) {
-                                if(err) {
-                                    res.status(500).send({header: 'Email Error', message: err});
-                                } else {
-                                    var selectCall = mysql.format(
-                                        'SELECT * FROM user WHERE id = ? AND deleted IS NULL',
-                                        [userId]);
-
-                                    pool.query(selectCall, function(err, result) {
-                                        logger.logCall(file, selectCall, err);
-
-                                        if(err) {
-                                            res.status(500).send({header: 'Internal SQL Error', message: err});
-                                        } else {
-                                            loginToken(req, res, result);
-                                        }
-                                    });
-                                }
-                            });
-                        });
-                    }
+                    callback(err);
                 });
-            }
-        });
-    });
+            },
+            function(callback) {
+                var call = mysql.format('INSERT INTO user (email,password,displayname,firstname,surname,verify_secret,verify_timeout) VALUES (?,?,?,?,?,?,?)',
+                    [insert.email,insert.encrypted,insert.displayname,insert.firstname,insert.surname,insert.verify.secret,insert.verify.timeout]);
 
-    router.post(path + '/verify', function(req, res) {
-        var verify_hash = req.body.verification,
-            now = Math.floor(Date.now() / 1000);
+                pool.query(call,function(err,result) {
+                    user.id = result.insertId;
 
-        var user_call = mysql.format(
-            'SELECT id, verify_timeout FROM user WHERE verify_hash = ?',
-            [verify_hash]
-        );
+                    console.log(err);
 
-        pool.query(user_call, function(err, user_result) {
-            logger.logCall(file, user_call, err);
-
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else if(!user_result[0]) {
-                res.status(404).send({header: 'User not found', message: 'User not found'});
-            } else if (user_result[0].verify_timeout < now) {
-                res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
-            } else {
-                var user_id = user_result[0].id;
-
-                var updt_call = mysql.format(
-                    'UPDATE user SET verify = ?, verify_hash = NULL, verify_timeout = NULL WHERE id = ?',
-                    [1, user_id]
-                );
-
-                rest.queryMessage(pool, res, updt_call, 200, 'success');
-            }
-        });
-    });
-
-    router.post(path + '/verify/again', function(req, res) {
-        var email = req.body.email,
-            verify_hash = hasher(96),
-            verify_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
-
-        var call = mysql.format(
-            'UPDATE user SET verify_hash = ?, verify_timeout = ? WHERE email = ?',
-            [verify_hash, verify_timeout, email]);
-
-        pool.query(call, function(error) {
-            logger.logCall(file, call, error);
-
-            if(error) {
-                res.status(500).send({header: 'Internal SQL Error', message: error});
-            } else {
+                    callback(err);
+                });
+            },
+            function(callback) {
                 var mail = {
                     from: config.superuser.email,
-                    to: email,
+                    to: insert.email,
                     subject: 'User Verification',
                     text: '',
-                    html: '<b>Hello!</b><br><br>This is your verification code: <a href="' + config.links.user_new_verify + verify_hash + '">' + verify_hash + '</a><br><br>'
+                    html: '<b>Hello!</b><br><br>Use the following verification code to verify your account creation: <a href="' + config.links.user.verify.new + insert.verify.secret + '">' + insert.verify.secret + '</a><br><br>'
                 };
 
-                sendMail(res, mail);
-            }
-        });
-    });
+                var composer = mailcomposer(mail);
 
-    router.post(path + '/login/password', function(req, res) {
-        var req_user = req.body.email,
-            req_pass = req.body.password;
+                composer.build(function(err,message) {
+                    var dataToSend = {
+                        to: mail.to,
+                        message: message.toString('ascii')
+                    };
 
-        var call = mysql.format(
-            'SELECT * FROM user WHERE email = ? AND deleted IS NULL',
-            [req_user]);
+                    mailgun.messages().sendMime(dataToSend,callback);
+                });
+            },
+            function(callback) {
+                loginToken(req, user.id, function(err,result) {
+                    user.token = result;
 
-        pool.query(call, function(err, result) {
-            logger.logCall(file, call, err);
-
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err});
-            } else if(!result[0]) {
-                res.status(404).send({header: 'Email Not Found', message: 'email not found'});
-            } else {
-                var user = result[0];
-
-                bcrypt.compare(onion.hash(req_pass), onion.decrypt(user.password), function(err, response) {
-                    if(err) {
-                        logger.logError(file, err, 'BCRYPT');
-
-                        res.status(500).send({header: 'Internal Server Error', message: err});
-                    } else if(!response) {
-                        res.status(403).send({header: 'Wrong Password', message: 'wrong password'});
-                    } else {
-                        loginToken(req, res, result)
-                    }
+                    callback(err);
                 });
             }
-        });
-    });
-
-    router.post(path + '/login/mail/start', function(req, res) {
-        var email = req.body.email,
-            login_hash = hasher(96),
-            login_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
-
-        var call = mysql.format(
-            'UPDATE user SET login_hash = ?, login_timeout = ? WHERE email = ? AND deleted IS NULL',
-            [login_hash, login_timeout, email]
-        );
-
-        pool.query(call, function(err) {
-            logger.logCall(file, call, err);
-
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+        ],function(err) {
+            if(!err) {
+                res.status(200).send({token: user.token});
             } else {
-                var mail = {
-                    from: config.superuser.email,
-                    to: email,
-                    subject: 'Login Request',
-                    text: '',
-                    html: '<b>Hello!</b><br><br>Use <a href="' + config.links.user_login_with_hash + login_hash + '">THIS LINK</a> to login to your account<br><br>'
-                };
-
-                sendMail(res, mail);
-            }
-        });
-    });
-
-    router.post(path + '/login/mail/verify', function(req, res) {
-        var login_hash = req.body.verification,
-            now = Math.floor(Date.now() / 1000);
-
-        var call = mysql.format(
-            'SELECT * FROM user WHERE login_hash = ? AND deleted IS NULL',
-            [login_hash]);
-
-        pool.query(call, function(err, result) {
-            logger.logCall(file, call, err);
-
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err});
-            } else if(!result[0]) {
-                res.status(404).send({header: 'User Not Found', message: 'user not found'});
-            } else if(result[0].login_timeout < now) {
-                res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
-            } else {
-                loginToken(req, res, result)
-            }
-        });
-    });
-
-    router.put(path + '/password', function(req, res) {
-        var orig_password = req.body.original_password,
-            new_password = req.body.new_password;
-
-        if(!req.headers.token) {
-            res.status(404).send({header: 'Missing Token', message: 'missing token'});
-        } else {
-            var token = tokens.decode(req),
-                validity = tokens.validate(req, token),
-                user_id = token.sub.id;
-
-            if(!validity) {
-                res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
-            } else {
-                var user_call = mysql.format(
-                    'SELECT * FROM user WHERE user.id = ? AND user.deleted IS NULL',
-                    [user_id]);
-
-                pool.query(user_call, function(error, user_result) {
-                    logger.logCall(file, user_call, error);
-
-                    if(error) {
-                        res.status(500).send({header: 'Internal SQL Error', message: error});
-                    } else {
-                        if(!user_result[0]) {
-                            res.status(404).send({header: 'User ID Not Found', message: 'user ID not found'});
-                        } else {
-                            var user_password = user_result[0].password;
-
-                            bcrypt.compare(onion.hash(orig_password), onion.decrypt(user_password), function(error, response) {
-                                if (error) {
-                                    logger.logError(file, error, 'BCRYPT');
-
-                                    res.status(500).send({header: 'Internal Server Error', message: error});
-                                } else {
-                                    if (!response) {
-                                        res.status(403).send({header: 'Wrong Password', message: 'wrong password'});
-                                    } else {
-                                        bcrypt.hash(onion.hash(new_password), saltRounds, function(error, hash) {
-                                            if(error) {
-                                                logger.logError(file, error, 'BCRYPT');
-
-                                                res.status(500).send({header: 'Internal Server Error', message: error});
-                                            } else {
-                                                var call = mysql.format(
-                                                    'UPDATE user SET password = ? WHERE user.id = ?',
-                                                    [onion.encrypt(hash),user_id]);
-
-                                                rest.queryMessage(pool, res, call);
-                                            }
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                    }
-                });
-            }
-        }
-    });
-
-    router.put(path + '/password/start', function(req, res) {
-        var email = req.body.email,
-            reset_hash = hasher(96),
-            reset_timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
-
-        var call = mysql.format(
-            'UPDATE user SET reset_hash = ?, reset_timeout = ? WHERE email = ?',
-            [reset_hash, reset_timeout, email]
-        );
-
-        pool.query(call, function(err) {
-            logger.logCall(file, call, err);
-
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else {
-                var mail = {
-                    from: config.superuser.email,
-                    to: email,
-                    subject: 'Password Reset',
-                    text: '',
-                    html: '<b>Hello!</b><br><br>Use <a href="' + config.links.user_password_reset + reset_hash + '">THIS LINK</a> to reset your password<br><br>'
-                };
-
-                sendMail(res, mail);
-            }
-        });
-    });
-
-    router.put(path + '/password/set', function(req, res) {
-        var reset_hash = req.body.verification,
-            password = req.body.password,
-            now = Math.floor(Date.now() / 1000);
-
-        var user_call = mysql.format(
-            'SELECT id, reset_timeout FROM user WHERE reset_hash = ?',
-            [reset_hash]);
-
-        pool.query(user_call, function(err, user_result) {
-            logger.logCall(file, user_call, err);
-
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else if (!user_result[0]) {
-                res.status(404).send({header: 'User Not Found', message: 'user not found'});
-            } else if (user_result[0].reset_timeout < now) {
-                res.status(403).send({header: 'Forbidden', message: 'timeout reached.'});
-            } else {
-                var user_id = user_result[0].id;
-
-                bcrypt.hash(onion.hash(password), saltRounds, function(err, hash) {
-                    if(err) {
-                        logger.logError(file, err, 'BCRYPT');
-
-                        res.status(500).send({header: 'Internal Server Error', message: err});
-                    } else {
-                        var updt_call = mysql.format(
-                            'UPDATE user SET password = ?, reset_hash = NULL, reset_timeout = NULL WHERE id = ?',
-                            [onion.encrypt(hash), user_id]);
-
-                        rest.queryMessage(pool, res, updt_call, 200, 'success');
-                    }
-                });
+                res.status(500).send(err);
             }
         });
     });
 
     router.put(path + '/id/:id', function(req, res) {
-        if(!req.headers.token) {
-            res.status(403).send({header: 'Missing Token', message: 'missing token'});
-        } else {
-            var token = tokens.decode(req),
-                validity = tokens.validate(req, token);
+        var user = {},
+            insert = {};
 
-            if (!validity) {
-                res.status(403).send({header: 'Invalid Token', message: 'An invalid token has been provided.'});
-            } else {
-                if(!token.sub.admin || token.sub.id == req.params.id) {
-                    res.status(403).send({header: 'Not Allowed', message: 'you are not admin, nor are you the user editing this profile'});
+        user.token = tokens.decode(req);
+        user.valid = tokens.validate(req, user.token);
+
+        insert.id = req.params.id;
+        insert.displayname = req.body.displayname;
+        insert.firstname = req.body.firstname;
+        insert.surname = req.body.surname;
+
+        if(user.valid && (user.token.sub.admin || user.token.sub.id === insert.id)) {
+            var call = mysql.format('INSERT INTO user (displayname,firstname,surname) VALUES (?,?,?) WHERE id = ?'
+                [insert.displayname,insert.firstname,insert.surname,insert.id]);
+
+            pool.query(call,function(err) {
+                if(!err) {
+                    res.status(200).send();
                 } else {
-                    rest.PUT(pool, req, res, table);
+                    res.status(500).send(err);
                 }
-            }
+            });
+        } else {
+            res.status(403).send({header: 'Not Allowed', message: 'You are either not an administrator, or the current user deleting this profile.'});
         }
     });
 
-    router.put(path + '/admin', function(req, res) {
-        if(!req.headers.token) {
-            res.status(403).send({header: 'Missing Token', message: 'missing token'});
-        } else {
-            var token = tokens.decode(req),
-                validity = tokens.validate(req, token);
+    router.put(path + '/id/:id/admin', function(req, res) {
+        var admin = {},
+            insert = {};
 
-            if(!validity) {
-                res.status(403).send({header: 'Invalid Token', message: 'An invalid token has been provided.'});
-            } else {
-                if(!token.sub.admin) {
-                    res.status(403).send({header: 'Not Admin', message: 'you are not admin'});
+        insert.id = req.params.id;
+        insert.admin = req.body.admin;
+
+        admin.token = tokens.decode(req);
+        admin.valid = tokens.validate(req, admin.token);
+
+        if(admin.valid) {
+            var call = mysql.format('UPDATE user SET admin = ? WHERE id = ?',[insert.admin,insert.id]);
+
+            pool.query(call,function(err) {
+                if(err) {
+                    res.status(500).send(err);
                 } else {
-                    var admin = req.body.admin,
-                        user = req.body.user;
-
-                    var call = 'UPDATE user SET admin = \'' + admin + '\' WHERE user.id = \'' + user + '\'';
-
-                    pool.query(call, function(error, result) {
-                        logger.logCall(file, call, error);
-
-                        if(error) {
-                            res.status(500).send({header: 'Internal SQL Error', message: error});
-                        } else {
-                            res.status(200).send({message: 'success', data: result});
-                        }
-                    });
+                    res.status(200).send();
                 }
-            }
+            });
+        } else {
+            res.status(400).send('Invalid Administrator Token');
         }
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        if(!req.headers.token) {
-            res.status(403).send({header: 'Missing Token', message: 'missing token'});
-        } else {
-            var token = tokens.decode(req),
-                validity = tokens.validate(req, token);
+        var user = {},
+            insert = {};
 
-            if (!validity) {
-                res.status(403).send({header: 'Invalid Token', message: 'An invalid token has been provided.'});
-            } else {
-                if(!token.sub.admin || token.sub.id == req.params.id) {
-                    res.status(403).send({header: 'Not Allowed', message: 'you are not admin, nor are you the user deleting this profile'});
-                } else {
-                    rest.DELETE(pool, req, res, table);
-                }
-            }
+        insert.id = req.params.id;
+
+        user.token = tokens.decode(req);
+        user.valid = tokens.validate(req, user.token);
+
+        if(user.valid && (user.token.sub.admin || user.token.sub.id === insert.id)) {
+            rest.DELETE(pool, req, res, table);
+        } else {
+            res.status(403).send({header: 'Not Allowed', message: 'You are either not an administrator, or the current user deleting this profile.'});
         }
+    });
+
+    // VERIFY
+
+    router.post(path + '/verify', function(req, res) {
+        var user = {},
+            insert = {};
+
+        user.now = Math.floor(Date.now() / 1000);
+
+        insert.secret = req.body.secret;
+
+        async.series([
+            function(callback) {
+                var call = mysql.format('SELECT id, verify_timeout AS timeout FROM user WHERE verify_secret = ?',
+                    [insert.secret]);
+
+                pool.query(call,function(err,result) {
+                    user.id = result[0].id;
+                    user.timeout = result[0].timeout;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                user.accepted = user.now < user.timeout;
+
+                if(user.accepted) {
+                    callback();
+                } else { callback('Timeout Expired'); }
+            },
+            function(callback) {
+                if(user.accepted) {
+                    var call = mysql.format('UPDATE user SET verify = ?, verify_secret = NULL, verify_timeout = NULL WHERE id = ?',
+                        [1, user.id]);
+
+                    pool.query(call,callback);
+                } else { callback('Timeout Expired'); }
+            },
+            function(callback) {
+                loginToken(req, user.id, function(err,result) {
+                    user.token = result;
+
+                    callback(err);
+                });
+            }
+        ],function(err) {
+            if(!err) {
+                res.status(200).send({token: user.token});
+            } else {
+                res.status(500).send(err);
+            }
+        });
+    });
+
+    router.post(path + '/verify/again', function(req, res) {
+        var user = {},
+            insert = {};
+
+        insert.email = req.body.email;
+
+        insert.verify = {};
+        insert.verify.secret = hasher(128);
+        insert.verify.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+
+        var call = mysql.format('UPDATE user SET verify_secret = ?, verify_timeout = ? WHERE email = ?',
+            [insert.verify.secret,insert.verify.timeout,insert.email]);
+
+        pool.query(call,function(err) {
+            if(!err) {
+                var mail = {
+                    from: config.superuser.email,
+                    to: insert.email,
+                    subject: 'User Verification',
+                    text: '',
+                    html: '<b>Hello!</b><br><br>Use the following verification code to verify your account creation: <a href="' + config.links.user.verify.new + insert.verify.secret + '">' + insert.verify.secret + '</a><br><br>'
+                };
+
+                sendMail(res, mail);
+            } else {
+                res.status(500).send({header: 'Internal SQL Error', message: error});
+            }
+        });
+    });
+
+    // LOGIN
+
+    router.post(path + '/login/password', function(req, res) {
+        var user = {},
+            insert = {};
+
+        insert.email = req.body.email;
+        insert.password = req.body.password;
+
+        async.series([
+            function(callback) {
+                var call = mysql.format('SELECT id,password FROM user WHERE email = ? AND deleted IS NULL',
+                    [insert.email]);
+
+                pool.query(call,function(err,result) {
+                    user.id = result[0].id;
+                    user.password = result[0].password;
+
+                    insert.encrypted = onion.hash(insert.password);
+                    user.encrypted = onion.decrypt(user.password);
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                bcrypt.compare(insert.encrypted, user.encrypted, function(err,result) {
+                    user.accepted = result;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                if(user.accepted) {
+                    loginToken(req, user.id, function(err,result) {
+                        user.token = result;
+
+                        callback(err);
+                    });
+                } else { callback(); }
+            }
+        ],function(err) {
+            if(!err) {
+                res.status(200).send({token: user.token});
+            } else {
+                res.status(500).send(err);
+            }
+        });
+    });
+
+    router.post(path + '/login/email', function(req, res) {
+        var user = {},
+            insert = {};
+
+        insert.email = req.body.email;
+
+        insert.login = {};
+        insert.login.secret = hasher(128);
+        insert.login.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+
+        var call = mysql.format('UPDATE user SET login_secret = ?, login_timeout = ? WHERE email = ? AND deleted IS NULL',
+            [insert.login.secret,insert.login.timeout,insert.email]);
+
+        pool.query(call, function(err) {
+            if(!err) {
+                var mail = {
+                    from: config.superuser.email,
+                    to: insert.email,
+                    subject: 'Login Request',
+                    text: '',
+                    html: '<b>Hello!</b><br><br>Use the following verification code to login to your account: <a href="' + config.links.user.verify.login + insert.login.secret + '">' + insert.login.secret + '</a><br><br>'
+                };
+
+                sendMail(res, mail);
+            } else {
+                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            }
+        });
+    });
+
+    router.post(path + '/login/verify', function(req, res) {
+        var user = {},
+            insert = {};
+
+        user.now = Math.floor(Date.now() / 1000);
+
+        insert.secret = req.body.secret;
+
+        async.series([
+            function(callback) {
+                var call = mysql.format('SELECT id, login_timeout AS timeout FROM user WHERE login_secret = ?',
+                    [insert.secret]);
+
+                pool.query(call,function(err,result) {
+                    user.id = result[0].id;
+                    user.timeout = result[0].timeout;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                user.accepted = user.now < user.timeout;
+
+                if(user.accepted) {
+                    callback();
+                } else { callback('Timeout Expired'); }
+            },
+            function(callback) {
+                if(user.accepted) {
+                    var call = mysql.format('UPDATE user SET login_secret = NULL, login_timeout = NULL WHERE id = ?',
+                        [user.id]);
+
+                    pool.query(call,callback);
+                } else { callback('Timeout Expired'); }
+            },
+            function(callback) {
+                loginToken(req, user.id, function(err,result) {
+                    user.token = result;
+
+                    callback(err);
+                });
+            }
+        ],function(err) {
+            if(!err) {
+                res.status(200).send({token: user.token});
+            } else {
+                res.status(500).send(err);
+            }
+        });
+    });
+
+    // PASSWORD
+
+    router.post(path + '/reset/email', function(req, res) {
+        var user = {},
+            insert = {};
+
+        insert.email = req.body.email;
+
+        insert.reset = {};
+        insert.reset.secret = hasher(128);
+        insert.reset.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+
+        var call = mysql.format('UPDATE user SET reset_secret = ?, reset_timeout = ? WHERE email = ? AND deleted IS NULL',
+            [insert.reset.secret,insert.reset.timeout,insert.email]);
+
+        pool.query(call, function(err) {
+            if(!err) {
+                var mail = {
+                    from: config.superuser.email,
+                    to: insert.email,
+                    subject: 'Password Reset',
+                    text: '',
+                    html: '<b>Hello!</b><br><br>Use the following verification code to reset your password: <a href="' + config.links.user.verify.reset + insert.reset.secret + '">' + insert.reset.secret + '</a><br><br>'
+                };
+
+                sendMail(res, mail);
+            } else {
+                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            }
+        });
+    });
+
+    router.post(path + '/reset/verify', function(req, res) {
+        var user = {},
+            insert = {};
+
+        user.now = Math.floor(Date.now() / 1000);
+
+        insert.secret = req.body.secret;
+        insert.password = req.body.password;
+
+        insert.hashed = onion.hash(insert.password);
+
+        async.series([
+            function(callback) {
+                var call = mysql.format('SELECT id, reset_timeout AS timeout FROM user WHERE reset_secret = ?',
+                    [insert.secret]);
+
+                pool.query(call,function(err,result) {
+                    user.id = result[0].id;
+                    user.timeout = result[0].timeout;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                user.accepted = user.now < user.timeout;
+
+                if(user.accepted) {
+                    callback();
+                } else { callback('Timeout Expired'); }
+            },
+            function(callback) {
+                if(user.accepted) {
+                    bcrypt.hash(insert.hashed, config.salt, function(err,result) {
+                        insert.encrypted = onion.encrypt(result);
+
+                        callback(err);
+                    });
+                } else { callback('Timeout Expired'); }
+            },
+            function(callback) {
+                if(user.accepted) {
+                    var call = mysql.format('UPDATE user SET password = ?, reset_secret = NULL, reset_timeout = NULL WHERE id = ?',
+                        [insert.encrypted,user.id]);
+
+                    pool.query(call,callback);
+                } else { callback('Timeout Expired'); }
+            },
+            function(callback) {
+                loginToken(req, user.id, function(err,result) {
+                    user.token = result;
+
+                    callback(err);
+                });
+            }
+        ],function(err) {
+            if(!err) {
+                res.status(200).send({token: user.token});
+            } else {
+                res.status(500).send(err);
+            }
+        });
     });
 };

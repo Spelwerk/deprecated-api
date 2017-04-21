@@ -2,7 +2,7 @@ var jwt = require('jsonwebtoken'),
     secret = require('./config').secrets.jwt,
     base = require('./config').base;
 
-function generate(req, jsonData, permissions) {
+function generate(req, user, permissions) {
     permissions = permissions || null;
 
     var ip = req.headers['x-forwarded-for'] ||
@@ -19,13 +19,11 @@ function generate(req, jsonData, permissions) {
         iss: base,
         oip: ip,
         sub: {
-            id: jsonData.id,
-            displayname: jsonData.displayname,
-            email: jsonData.email,
-            firstname: jsonData.firstname,
-            surname: jsonData.surname,
-            admin: jsonData.admin,
-            verified: jsonData.verify,
+            id: user.id,
+            email: user.email,
+            displayname: user.displayname,
+            admin: user.admin,
+            verified: user.verify,
             permissions: permissions
         },
         agent: req.headers['user-agent']

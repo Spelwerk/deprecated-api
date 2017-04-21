@@ -5,32 +5,27 @@ var mysql = require('mysql'),
     onion = require('./../app/onion');
 
 var email = superuser.email,
-    password = superuser.password,
-    displayname = superuser.displayname,
-    first = superuser.firstname,
-    last = superuser.surname;
+    password = superuser.password;
 
 bcrypt.hash(onion.hash(password), require('./../app/config').salt, function(error, hash) {
     if(error) {
         console.log(error);
         process.exit(1);
     } else {
-        var pass = onion.encrypt(hash);
+        password = onion.encrypt(hash);
 
-        var query = 'INSERT INTO user (id, displayname, password, email, admin, firstname, surname, verify, twofactor) VALUES ' +
-            '(?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = ?, displayname = ?, password = ?, email = ?, admin = ?, firstname = ?, surname = ?, verify = ?, twofactor = ?';
+        var query = 'INSERT INTO user (id,email,password,displayname,admin,verify) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = ?, email = ?, password = ?, displayname = ?, admin = ?, verify = ?';
+        var array = [1, email, password, 'administrator', 1, 1];
 
-        var array = [1, displayname, pass, email, 1, first, last, 1, 0];
+        query = mysql.format(query,array);
+        query = mysql.format(query,array);
 
-        var call = mysql.format(query,array);
-            call = mysql.format(call,array);
-
-        pool.query(call, function(error, result) {
+        pool.query(query, function(error, result) {
             if(error) {
                 console.log(error);
                 process.exit(1);
             } else {
-                console.log("Created Super User account with ID: " + result.insertId + ". Login: " + displayname + " // " + password);
+                console.log("Created Super User account with...\nemail: " + superuser.email + "\npassword: " + superuser.password);
                 process.exit(0);
             }
         });

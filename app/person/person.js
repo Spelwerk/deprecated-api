@@ -925,6 +925,8 @@ module.exports = function(pool, router, table, path) {
 
     // Expertise
 
+
+
     router.post(path + '/id/:id/expertise', function(req, res) {
         var person = {},
             insert = {},
