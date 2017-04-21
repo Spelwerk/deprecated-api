@@ -567,7 +567,10 @@ module.exports = function(pool, router, table, path) {
             person.auth = !!results[0][0][0];
 
             if(person.auth) {
-                current.value = parseInt(results[1][0][0].value);
+                current.value = results[1][0][0] !== undefined
+                    ? parseInt(results[1][0][0].value)
+                    : 0;
+
                 insert.value = insert.value + current.value;
 
                 pool.query(mysql.format('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)',[person.id,insert.id,insert.value]),function(err) {
@@ -1176,7 +1179,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.weapon_id;
+        insert.id = req.body.manifestation_id;
 
         pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
             person.auth = !!result[0];
