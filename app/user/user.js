@@ -74,7 +74,7 @@ module.exports = function(pool, router, table, path) {
 
             mailgun.messages().sendMime(dataToSend, function(err) {
                 if(err) {
-                    res.status(500).send({header: 'Email Error', message: err});
+                    res.status(500).send(err);
                 } else {
                     res.status(200).send();
                 }
