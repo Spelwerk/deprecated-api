@@ -1,4 +1,8 @@
-var rest = require('./../rest');
+var mysql = require('mysql'),
+    async = require('async'),
+    logger = require('./../logger'),
+    rest = require('./../rest'),
+    hasher = require('./../hasher');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -24,8 +28,6 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id ' +
         'LEFT JOIN icon ON icon.id = assettype.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["person_id","asset_id"]);
-
     router.get(path + '/id/:id1/equipped/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'person_has_asset.person_id = ? AND ' +
@@ -33,4 +35,6 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2]);
     });
+
+    //todo post/put/delete
 };
