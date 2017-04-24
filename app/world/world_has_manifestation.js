@@ -21,14 +21,20 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN expertisetype ON expertisetype.id = manifestation.expertisetype_id ' +
         'LEFT JOIN icon ON icon.id = manifestation.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","manifestation_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/manifestation', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_manifestation.world_id = ? AND ' +
             'manifestation.canon = ? AND ' +
             'manifestation.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
+    });
+
+    router.post(path + '/id/:id/manifestation', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'manifestation');
+    });
+
+    router.delete(path + '/id/:id/manifestation/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'manifestation');
     });
 };

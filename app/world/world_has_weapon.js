@@ -38,9 +38,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id ' +
         'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","weapon_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/weapon', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_weapon.world_id = ? AND ' +
             'weapon.special = ? AND ' +
@@ -50,7 +48,7 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 0, 1]);
     });
 
-    router.get(path + '/id/:id1/type/:id2', function(req, res) {
+    router.get(path + '/id/:id/weapon/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_weapon.world_id = ? AND ' +
             'weapon.weapontype_id = ? AND ' +
@@ -58,10 +56,10 @@ module.exports = function(pool, router, table, path) {
             'weapon.canon = ? AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 0, 1]);
     });
 
-    router.get(path + '/id/:id1/group/:id2', function(req, res) {
+    router.get(path + '/id/:id/weapon/group/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_weapon.world_id = ? AND ' +
             'weapontype.weapongroup_id = ? AND ' +
@@ -69,6 +67,14 @@ module.exports = function(pool, router, table, path) {
             'weapon.canon = ? AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 0, 1]);
+    });
+
+    router.post(path + '/id/:id/weapon', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'weapon');
+    });
+
+    router.delete(path + '/id/:id/weapon/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'weapon');
     });
 };

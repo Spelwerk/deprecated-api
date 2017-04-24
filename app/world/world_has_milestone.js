@@ -28,9 +28,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = milestone.attribute_id ' +
         'LEFT JOIN loyalty ON loyalty.id = milestone.loyalty_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","milestone_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/milestone', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_milestone.world_id = ? AND ' +
             'milestone.canon = ? AND ' +
@@ -39,7 +37,7 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
-    router.get(path + '/id/:id1/background/:id2/species/:id3', function(req, res) {
+    router.get(path + '/id/:id/milestone/background/:id2/species/:id3', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_milestone.world_id = ? AND ' +
             '(milestone.background_id = ? OR milestone.background_id IS NULL) AND ' +
@@ -47,10 +45,10 @@ module.exports = function(pool, router, table, path) {
             'milestone.canon = ? AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, 1]);
     });
 
-    router.get(path + '/id/:id1/background/:id2/species/:id3/manifestation/:id4', function(req, res) {
+    router.get(path + '/id/:id/milestone/background/:id2/species/:id3/manifestation/:id4', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_milestone.world_id = ? AND ' +
             '(milestone.background_id = ? OR milestone.background_id IS NULL) AND ' +
@@ -59,6 +57,14 @@ module.exports = function(pool, router, table, path) {
             'milestone.canon = ? AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4, 1]);
+    });
+
+    router.post(path + '/id/:id/manifestation', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'manifestation');
+    });
+
+    router.delete(path + '/id/:id/manifestation/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'manifestation');
     });
 };

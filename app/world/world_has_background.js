@@ -16,9 +16,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN species ON species.id = background.species_id ' +
         'LEFT JOIN icon ON icon.id = background.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","background_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/background', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_background.world_id = ? AND ' +
             'background.canon = ? AND ' +
@@ -27,13 +25,21 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
-    router.get(path + '/id/:id1/species/:id2', function(req, res) {
+    router.get(path + '/id/:id/background/species/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_background.world_id = ? AND ' +
             '(background.species_id = ? OR background.species_id IS NULL) AND ' +
             'background.canon = ? AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
+    });
+
+    router.post(path + '/id/:id/background', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'background');
+    });
+
+    router.delete(path + '/id/:id/background/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'background');
     });
 };

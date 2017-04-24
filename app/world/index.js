@@ -17,8 +17,6 @@ module.exports = function(pool, router) {
     require('./world_has_species')(pool, router, 'world_has_species', '/world-species');
     require('./world_has_weapon')(pool, router, 'world_has_weapon', '/world-weapon');
     require('./world_has_weaponmod')(pool, router, 'world_has_weaponmod', '/world-weaponmod');
-    require('./world_has_gift')(pool, router, 'world_has_gift', '/world-gift');
-    require('./world_has_imperfection')(pool, router, 'world_has_imperfection', '/world-imperfection');
     require('./country')(pool, router, 'country');
     require('./../default')(pool, router, 'language');
     require('./../default')(pool, router, 'firstname');

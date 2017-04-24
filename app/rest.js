@@ -1,6 +1,7 @@
 var mysql = require('mysql'),
     logger = require('./logger'),
-    config = require('./config');
+    config = require('./config'),
+    tokens = require('./tokens');
 
 var file = 'rest.js';
 
@@ -352,4 +353,100 @@ exports.personDeleteRelation = function(pool, req, res, tableName) {
             });
         }
     });
+};
+
+// WORLD
+
+exports.worldPostHas = function(pool, req, res, worldId, tableName) {
+    var world = {},
+        insert = {},
+        user = {};
+
+    world.id = worldId;
+    insert.id = req.body.insert_id;
+
+    user.token = tokens.decode(req);
+    user.valid = tokens.validate(req, user.token);
+
+    user.id = user.valid && user.token.sub.verified
+        ? user.token.sub.id
+        : null;
+
+    user.admin = user.valid && user.token.sub.verified
+        ? user.token.sub.admin
+        : null;
+
+    if(!user.id) {
+        res.status(400).send('User not logged in.');
+    } else {
+        pool.query(mysql.format('SELECT owner FROM user_has_world WHERE user_id = ? AND world_id = ?',[user.id,world.id]),function(err,result) {
+            if(err) {
+                res.status(500).send(err);
+            } else {
+                user.owner = !!result[0];
+
+                if(!user.owner && !user.admin) {
+                    res.status(400).send('Not user, nor admin.');
+                } else {
+                    var table = 'world_has_' + tableName,
+                        tableId = tableName + '_id';
+
+                    pool.query(mysql.format('INSERT INTO ' + table + ' (world_id,' + tableId + ') VALUES (?,?)',[world.id,insert.id]),function(err) {
+                        if(err) {
+                            res.status(500).send(err);
+                        } else {
+                            res.status(200).send();
+                        }
+                    })
+                }
+            }
+        });
+    }
+};
+
+exports.worldDeleteHas = function(pool, req, res, worldId, hasId, tableName) {
+    var world = {},
+        insert = {},
+        user = {};
+
+    world.id = worldId;
+    insert.id = hasId;
+
+    user.token = tokens.decode(req);
+    user.valid = tokens.validate(req, user.token);
+
+    user.id = user.valid && user.token.sub.verified
+        ? user.token.sub.id
+        : null;
+
+    user.admin = user.valid && user.token.sub.verified
+        ? user.token.sub.admin
+        : null;
+
+    if(!user.id) {
+        res.status(400).send('User not logged in.');
+    } else {
+        pool.query(mysql.format('SELECT owner FROM user_has_world WHERE user_id = ? AND world_id = ?',[user.id,world.id]),function(err,result) {
+            if(err) {
+                res.status(500).send(err);
+            } else {
+                user.owner = !!result[0];
+
+                if(!user.owner && !user.admin) {
+                    res.status(400).send('Not user, nor admin.');
+                } else {
+                    var table = 'world_has_' + tableName,
+                        tableId = tableName + '_id';
+
+                    pool.query(mysql.format('DELETE FROM ' + table + ' WHERE world_id = ? AND ' + tableId + ' = ?',[world.id,insert.id]),function(err) {
+                        if(err) {
+                            res.status(500).send(err);
+                        } else {
+                            res.status(202).send();
+                        }
+                    })
+                }
+            }
+        });
+    }
 };

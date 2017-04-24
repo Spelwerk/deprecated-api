@@ -296,6 +296,7 @@ module.exports = function(pool, router, table, path) {
         description.pride = req.body.pride;
         description.problem = req.body.problem;
         description.shame = req.body.shame;
+        description.picture_path = req.body.picture_path;
 
         pool.query(mysql.format('SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
             person.auth = !!result[0].secret;
@@ -434,7 +435,7 @@ module.exports = function(pool, router, table, path) {
             } else if(!person.auth || (!person.auth && user.valid && !user.token.sub.admin)) {
                 res.status(500).send('Wrong secret, or not administrator.');
             } else {
-                pool.query(mysql.format('UPDATE person SET deleted = NULL WHERE id = ',[person.id]),function(err) {
+                pool.query(mysql.format('UPDATE person SET deleted = NULL, updated = CURRENT_TIMESTAMP WHERE id = ',[person.id]),function(err) {
                     if (err) {
                         res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
                     } else {
@@ -465,9 +466,9 @@ module.exports = function(pool, router, table, path) {
             } else {
                 pool.query(mysql.format('UPDATE person SET deleted = CURRENT_TIMESTAMP WHERE id = ',[person.id]),function(err) {
                     if (err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                        res.status(500).send(err);
                     } else {
-                        res.status(200).send();
+                        res.status(202).send();
                     }
                 });
             }

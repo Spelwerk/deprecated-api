@@ -33,9 +33,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id ' +
         'LEFT JOIN icon ON icon.id = a1.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","expertise_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/expertise', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.special = ? AND ' +
@@ -45,7 +43,7 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 0, 1]);
     });
 
-    router.get(path + '/id/:id1/type/:id2', function(req, res) {
+    router.get(path + '/id/:id/expertise/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.expertisetype_id = ? AND ' +
@@ -53,10 +51,10 @@ module.exports = function(pool, router, table, path) {
             'expertise.canon = ? AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 0, 1]);
     });
 
-    router.get(path + '/id/:id1/type/:id2/skill/:id3', function(req, res) {
+    router.get(path + '/id/:id/expertise/type/:id2/skill/:id3', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.expertisetype_id = ? AND ' +
@@ -65,10 +63,10 @@ module.exports = function(pool, router, table, path) {
             'expertise.canon = ? AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, 0, 1]);
     });
 
-    router.get(path + '/id/:id1/type/:id2/skill/:id3/species/:id4', function(req, res) {
+    router.get(path + '/id/:id/expertise/type/:id2/skill/:id3/species/:id4', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.expertisetype_id = ? AND ' +
@@ -79,10 +77,10 @@ module.exports = function(pool, router, table, path) {
             'expertise.canon = ? AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4, 0, 1]);
     });
 
-    router.get(path + '/id/:id1/type/:id2/skill/:id3/species/:id4/manifestation/:id5', function(req, res) {
+    router.get(path + '/id/:id/expertise/type/:id2/skill/:id3/species/:id4/manifestation/:id5', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.expertisetype_id = ? AND ' +
@@ -93,6 +91,14 @@ module.exports = function(pool, router, table, path) {
             'expertise.canon = ? AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, req.params.id4, req.params.id5, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4, req.params.id5, 0, 1]);
+    });
+
+    router.post(path + '/id/:id/expertise', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'expertise');
+    });
+
+    router.delete(path + '/id/:id/expertise/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'expertise');
     });
 };

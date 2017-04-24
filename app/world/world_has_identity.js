@@ -16,13 +16,19 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = identity.attribute_id ' +
         'LEFT JOIN icon ON icon.id = identity.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","identity_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/identity', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_identity.world_id = ? AND ' +
             'identity.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.post(path + '/id/:id/identity', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'identity');
+    });
+
+    router.delete(path + '/id/:id/identity/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'identity');
     });
 };

@@ -17,9 +17,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN species ON species.id = world_has_species.species_id ' +
         'LEFT JOIN icon ON icon.id = species.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","species_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/species', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_species.world_id = ? AND ' +
             'species.canon = ? AND ' +
@@ -28,13 +26,21 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
-    router.get(path + '/id/:id1/playable/:id2', function(req, res) {
+    router.get(path + '/id/:id/species/playable/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_species.world_id = ? AND ' +
             'species.playable = ? AND ' +
             'species.canon = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
+    });
+
+    router.post(path + '/id/:id/species', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'species');
+    });
+
+    router.delete(path + '/id/:id/species/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'species');
     });
 };

@@ -23,9 +23,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = gift.attribute_id ' +
         'LEFT JOIN icon ON icon.id = gift.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","gift_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/gift', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_gift.world_id = ? AND ' +
             'gift.canon = ? AND ' +
@@ -34,7 +32,7 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
-    router.get(path + '/id/:id1/species/:id2', function(req, res) {
+    router.get(path + '/id/:id/gift/species/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_gift.world_id = ? AND ' +
             '(gift.species_id = ? OR gift.species_id IS NULL) AND ' +
@@ -42,10 +40,10 @@ module.exports = function(pool, router, table, path) {
             'gift.canon = ? AND ' +
             'gift.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
     });
 
-    router.get(path + '/id/:id1/species/:id2/manifestation/:id3', function(req, res) {
+    router.get(path + '/id/:id/gift/species/:id2/manifestation/:id3', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_gift.world_id = ? AND ' +
             '(gift.species_id = ? OR gift.species_id IS NULL) AND ' +
@@ -53,6 +51,14 @@ module.exports = function(pool, router, table, path) {
             'gift.canon = ? AND ' +
             'gift.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, 1]);
+    });
+
+    router.post(path + '/id/:id/gift', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'gift');
+    });
+
+    router.delete(path + '/id/:id/gift/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'gift');
     });
 };

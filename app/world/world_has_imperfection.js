@@ -19,9 +19,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN manifestation ON manifestation.id = imperfection.manifestation_id ' +
         'LEFT JOIN icon ON icon.id = imperfection.icon_id';
 
-    require('../default-has')(pool, router, table, path, ["world_id","imperfection_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/imperfection', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_imperfection.world_id = ? AND ' +
             'imperfection.canon = ? AND ' +
@@ -30,7 +28,7 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
-    router.get(path + '/id/:id1/species/:id2', function(req, res) {
+    router.get(path + '/id/:id/imperfection/species/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_imperfection.world_id = ? AND ' +
             '(imperfection.species_id = ? OR imperfection.species_id IS NULL) AND ' +
@@ -38,10 +36,10 @@ module.exports = function(pool, router, table, path) {
             'imperfection.canon = ? AND ' +
             'imperfection.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
     });
 
-    router.get(path + '/id/:id1/species/:id2/manifestation/:id3', function(req, res) {
+    router.get(path + '/id/:id/imperfection/species/:id2/manifestation/:id3', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_imperfection.world_id = ? AND ' +
             '(imperfection.species_id = ? OR imperfection.species_id IS NULL) AND ' +
@@ -49,6 +47,14 @@ module.exports = function(pool, router, table, path) {
             'imperfection.canon = ? AND ' +
             'imperfection.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, req.params.id3, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, 1]);
+    });
+
+    router.post(path + '/id/:id/imperfection', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'imperfection');
+    });
+
+    router.delete(path + '/id/:id/imperfection/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'gift');
     });
 };
