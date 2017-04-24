@@ -474,6 +474,10 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
+    // Asset
+
+    require('./person_has_asset')(pool, router, table, path);
+
     // Attribute
 
     require('./person_has_attribute')(pool, router, table, path);
@@ -723,8 +727,6 @@ module.exports = function(pool, router, table, path) {
             }
         });
     });
-
-    // Language
 
     // Manifestation
 

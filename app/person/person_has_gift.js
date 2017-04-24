@@ -107,7 +107,7 @@ module.exports = function(pool, router, table, path) {
                 res.status(200).send();
             }
         });
-    }); // todo
+    });
 
     router.put(path + '/id/:id/gift/:id2', function(req, res) {
         rest.personCustomDescription(pool, req, res, 'gift');

@@ -43,7 +43,7 @@ module.exports = function(pool, router, table, path) {
                 });
             }
         });
-    }); //todo
+    });
 
     router.put(path + '/id/:id/species/:id2', function(req, res) {
         rest.personCustomDescription(pool, req, res, 'species');
