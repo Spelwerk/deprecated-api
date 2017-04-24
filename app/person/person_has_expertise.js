@@ -13,7 +13,7 @@ module.exports = function(pool, router, table, path) {
         'expertise.special, ' +
         'expertise.name, ' +
         'expertise.description, ' +
-        'person_has_expertise.expertise_custom, ' +
+        'person_has_expertise.custom, ' +
         'person_has_expertise.level, ' +
         'expertise.expertisetype_id, ' +
         'expertisetype.name AS expertisetype_name, ' +
@@ -97,8 +97,8 @@ module.exports = function(pool, router, table, path) {
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
-                    person.atr = results[1][0];
-                    insert.atr = results[2][0];
+                    person.attribute = results[1][0];
+                    insert.attribute = results[2][0];
                     insert.max = results[3][0][0].maximum;
 
                     current.lvl = results[4][0][0] !== undefined
@@ -117,28 +117,28 @@ module.exports = function(pool, router, table, path) {
                             } else { callback(); }
                         },
                         function(callback) {
-                            if(insert.atr[0].attribute_id !== null && insert.lvl <= insert.max && insert.lvl > current.lvl) {
+                            if(insert.attribute[0].attribute_id !== null && insert.lvl <= insert.max && insert.lvl > current.lvl) {
                                 var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
-                                insert.atr[0].value = insert.lvl - current.lvl;
+                                insert.attribute[0].value = insert.lvl - current.lvl;
 
-                                for(var i in person.atr) {
-                                    for(var j in insert.atr) {
-                                        if(person.atr[i].attribute_id === insert.atr[j].attribute_id) {
-                                            person.atr[i].value += insert.atr[j].value;
-                                            person.atr[i].changed = true;
-                                            insert.atr[j].updated = true;
+                                for(var i in person.attribute) {
+                                    for(var j in insert.attribute) {
+                                        if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
+                                            person.attribute[i].value += insert.attribute[j].value;
+                                            person.attribute[i].changed = true;
+                                            insert.attribute[j].updated = true;
                                         }
                                     }
 
-                                    if(person.atr[i].changed === true) {
-                                        call += '(' + person.id + ',' + person.atr[i].attribute_id + ',' + person.atr[i].value + '),';
+                                    if(person.attribute[i].changed === true) {
+                                        call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
                                     }
                                 }
 
-                                for(var m in insert.atr) {
-                                    if(insert.atr[m].updated !== true) {
-                                        call += '(' + person.id + ',' + insert.atr[m].attribute_id + ',' + insert.atr[m].value + '),';
+                                for(var m in insert.attribute) {
+                                    if(insert.attribute[m].updated !== true) {
+                                        call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
                                     }
                                 }
 
@@ -164,6 +164,6 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/expertise/:id2', function(req, res) {
-        rest.personCustomDescription(req, res, 'expertise');
+        rest.personCustomDescription(pool, req, res, 'expertise');
     });
 };

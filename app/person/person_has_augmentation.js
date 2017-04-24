@@ -68,8 +68,8 @@ module.exports = function(pool, router, table, path) {
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
-                    person.atr = results[1][0];
-                    insert.atr = results[2][0];
+                    person.attribute = results[1][0];
+                    insert.attribute = results[2][0];
                     insert.wpn = results[3][0][0];
 
                     callback(err,person,insert);
@@ -82,26 +82,26 @@ module.exports = function(pool, router, table, path) {
                             pool.query(mysql.format('INSERT INTO person_has_augmentation (person_id,bionic_id,augmentation_id) VALUES (?,?,?)',[person.id,insert.bionic,insert.id]),callback);
                         },
                         function(callback) {
-                            if(insert.atr[0] !== undefined) {
+                            if(insert.attribute[0] !== undefined) {
                                 var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
-                                for(var i in person.atr) {
-                                    for(var j in insert.atr) {
-                                        if(person.atr[i].attribute_id === insert.atr[j].attribute_id) {
-                                            person.atr[i].value += insert.atr[j].value;
-                                            person.atr[i].changed = true;
-                                            insert.atr[j].updated = true;
+                                for(var i in person.attribute) {
+                                    for(var j in insert.attribute) {
+                                        if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
+                                            person.attribute[i].value += insert.attribute[j].value;
+                                            person.attribute[i].changed = true;
+                                            insert.attribute[j].updated = true;
                                         }
                                     }
 
-                                    if(person.atr[i].changed === true) {
-                                        call += '(' + person.id + ',' + person.atr[i].attribute_id + ',' + person.atr[i].value + '),';
+                                    if(person.attribute[i].changed === true) {
+                                        call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
                                     }
                                 }
 
-                                for(var m in insert.atr) {
-                                    if(insert.atr[m].updated !== true) {
-                                        call += '(' + person.id + ',' + insert.atr[m].attribute_id + ',' + insert.atr[m].value + '),';
+                                for(var m in insert.attribute) {
+                                    if(insert.attribute[m].updated !== true) {
+                                        call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
                                     }
                                 }
 

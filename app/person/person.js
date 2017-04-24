@@ -2,12 +2,15 @@ var mysql = require('mysql'),
     async = require('async'),
     logger = require('./../logger'),
     rest = require('./../rest'),
-    hasher = require('./../hasher');
+    hasher = require('./../hasher'),
+    tokens = require('./../tokens');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
-    var query = 'SELECT * FROM person LEFT JOIN person_is_playable ON person_is_playable.id = person.id';
+    var query = 'SELECT * FROM person ' +
+        'LEFT JOIN person_playable ON person_playable.id = person.id ' +
+        'LEFT JOIN person_has_species ON (person_has_species.person_id = person.id AND person_has_species.first = 1)';
 
     // Get
 
@@ -22,7 +25,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path + '/id/:id/creation', function(req, res) {
-        rest.QUERY(pool, req, res, 'SELECT * FROM person_is_creation WHERE ID = ?', [req.params.id], {"id":"ASC"});
+        rest.QUERY(pool, req, res, 'SELECT * FROM person_creation WHERE ID = ?', [req.params.id], {"id":"ASC"});
     });
 
     router.get(path + '/id/:id/short', function(req, res) {
@@ -31,7 +34,7 @@ module.exports = function(pool, router, table, path) {
             'playable = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, 1], {"id":"ASC"});
+        rest.QUERY(pool, req, res, call, [req.params.id, 1], {"id":"DESC"});
     });
 
     router.get(path + '/popular', function(req, res) {
@@ -84,9 +87,6 @@ module.exports = function(pool, router, table, path) {
                     },
                     function (callback) {
                         pool.query(mysql.format('SELECT weapon_id FROM species_has_weapon WHERE species_id = ?', [species.id]), callback);
-                    },
-                    function (callback) {
-                        pool.query(mysql.format('SELECT characteristic_id FROM species_has_characteristic WHERE species_id = ?', [species.id]), callback);
                     }
                 ], function (err, results) {
                     world.select = results[0][0][0];
@@ -94,7 +94,6 @@ module.exports = function(pool, router, table, path) {
                     species.select = results[1][0][0];
                     species.attribute = results[2][0];
                     species.weapon = results[3][0];
-                    species.characteristic = results[4][0];
 
                     points.expertise = 1;
                     points.gift = world.select.max_gift;
@@ -184,11 +183,15 @@ module.exports = function(pool, router, table, path) {
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        pool.query(mysql.format('INSERT INTO person_is_playable (id,supernatural,age,species_id) VALUES (?,?,?,?)',
-                            [person.id, insert.supernatural, insert.age, species.id]),callback);
+                        pool.query(mysql.format('INSERT INTO person_playable (id, supernatural, age) VALUES (?,?,?)',
+                            [person.id, insert.supernatural, insert.age]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('INSERT INTO person_is_creation (id,point_expertise,point_gift,point_imperfection,' +
+                        pool.query(mysql.format('INSERT INTO person_has_species (person_id, species_id, first) VALUES (?,?,?)',
+                            [person.id, species.id, 1]),callback);
+                    },
+                    function(callback) {
+                        pool.query(mysql.format('INSERT INTO person_creation (id,point_expertise,point_gift,point_imperfection,' +
                             'point_milestone,point_money,point_power,point_relationship,point_skill,point_supernatural) VALUES (?,?,?,?,?,?,?,?,?,?)',
                             [person.id, points.expertise, points.gift, points.imperfection, points.milestone, points.money, points.power,
                                 points.relationship, points.skill, points.supernatural]),callback);
@@ -201,11 +204,20 @@ module.exports = function(pool, router, table, path) {
                                 for(var j in species.attribute) {
                                     if(world.attribute[i].attribute_id === species.attribute[j].attribute_id) {
                                         world.attribute[i].value += species.attribute[j].value;
+                                        species.attribute[j].updated = true;
                                     }
                                 }
                             }
 
                             call += '(' + person.id + ',' + world.attribute[i].attribute_id + ',' + world.attribute[i].value + '),';
+                        }
+
+                        if(species.attribute[0]) {
+                            for (var m in species.attribute) {
+                                if (species.attribute[m].updated !== true) {
+                                    call += '(' + person.id + ',' + species.attribute[m].attribute_id + ',' + species.attribute[m].value + '),';
+                                }
+                            }
                         }
 
                         call = call.slice(0, -1);
@@ -226,21 +238,6 @@ module.exports = function(pool, router, table, path) {
                         } else {
                             callback();
                         }
-                    },
-                    function(callback) {
-                        if(species.characteristic[0] !== undefined) {
-                            var call = 'INSERT INTO person_has_characteristic (person_id,characteristic_id,species) VALUES ';
-
-                            for(var i in species.characteristic) {
-                                call += '(' + person.id + ',' + species.characteristic[i].characteristic_id + ',1),';
-                            }
-
-                            call = call.slice(0, -1);
-
-                            pool.query(call,callback);
-                        } else {
-                            callback();
-                        }
                     }
                 ],function(err) {
                     callback(err);
@@ -249,7 +246,7 @@ module.exports = function(pool, router, table, path) {
         ],function(err) {
             if(err) {
                 console.log(err);
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                res.status(500).send(err);
             } else {
                 res.status(200).send({id: person.id, secret: person.secret});
             }
@@ -260,7 +257,8 @@ module.exports = function(pool, router, table, path) {
         var person = {},
             insert = {},
             creation = {},
-            playable = {};
+            playable = {},
+            description = {};
 
         person.id = req.params.id;
         person.secret = req.body.secret;
@@ -271,11 +269,7 @@ module.exports = function(pool, router, table, path) {
         insert.thumbsup = req.body.thumbsup;
         insert.thumbsdown = req.body.thumbsdown;
         insert.nickname = req.body.nickname;
-        insert.firstname = req.body.firstname;
-        insert.surname = req.body.surname;
         insert.occupation = req.body.occupation;
-        insert.gender = req.body.gender;
-        insert.description = req.body.description;
 
         creation.point_expertise = req.body.point_expertise;
         creation.point_gift = req.body.point_gift;
@@ -290,22 +284,27 @@ module.exports = function(pool, router, table, path) {
         playable.cheated = req.body.cheated;
         playable.supernatural = req.body.supernatural;
         playable.age = req.body.age;
-        playable.personality = req.body.personality;
-        playable.appearance = req.body.appearance;
-        playable.drive = req.body.drive;
-        playable.pride = req.body.pride;
-        playable.problem = req.body.problem;
-        playable.species_custom = req.body.species_custom;
-        playable.background_custom = req.body.background_custom;
+
+        description.firstname = req.body.firstname;
+        description.surname = req.body.surname;
+        description.gender = req.body.gender;
+        description.description = req.body.description;
+        description.personality = req.body.personality;
+        description.appearance = req.body.appearance;
+        description.background = req.body.background;
+        description.drive = req.body.drive;
+        description.pride = req.body.pride;
+        description.problem = req.body.problem;
+        description.shame = req.body.shame;
 
         pool.query(mysql.format('SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-            var is_secret = result[0].secret,
-                is_playable = result[0].playable,
-                is_calculated = result[0].calculated;
+            person.auth = !!result[0].secret;
+            person.playable = !!result[0].playable;
+            person.calculated = !!result[0].calculated;
 
             if(err) {
                 res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else if(!is_secret) {
+            } else if(!person.auth) {
                 res.status(500).send({header: 'Wrong Secret', message: 'You provided the wrong secret', code: 0});
             } else {
                 async.parallel([
@@ -323,7 +322,7 @@ module.exports = function(pool, router, table, path) {
                         }
 
                         if(query_amount > 0) {
-                            call = call.slice(0, -2) + ' WHERE id = ?';
+                            call = call.slice(0, -2) + ', updated = CURRENT_TIMESTAMP WHERE id = ?';
                             values_array.push(person.id);
 
                             pool.query(mysql.format(call,values_array),callback);
@@ -332,8 +331,8 @@ module.exports = function(pool, router, table, path) {
                         }
                     },
                     function(callback) {
-                        if(is_playable && !is_calculated) {
-                            var call = 'UPDATE person_is_creation SET ',
+                        if(person.playable && !person.calculated) {
+                            var call = 'UPDATE person_creation SET ',
                                 values_array = [],
                                 query_amount = 0;
 
@@ -358,8 +357,8 @@ module.exports = function(pool, router, table, path) {
                         }
                     },
                     function(callback) {
-                        if(is_playable) {
-                            var call = 'UPDATE person_is_playable SET ',
+                        if(person.playable) {
+                            var call = 'UPDATE person_playable SET ',
                                 values_array = [],
                                 query_amount = 0;
 
@@ -382,6 +381,28 @@ module.exports = function(pool, router, table, path) {
                         } else {
                             callback();
                         }
+                    },
+                    function(callback) {
+                        var call = 'UPDATE person_description SET ',
+                            values_array = [],
+                            query_amount = 0;
+
+                        for (var i in playable) {
+                            if(description[i] !== undefined) {
+                                call += i + ' = ?, ';
+                                values_array.push(description[i]);
+                                query_amount++;
+                            }
+                        }
+
+                        if(query_amount > 0) {
+                            call = call.slice(0, -2) + ' WHERE id = ?';
+                            values_array.push(person.id);
+
+                            pool.query(mysql.format(call,values_array),callback);
+                        } else {
+                            callback();
+                        }
                     }
                 ],function(err) {
                     if(err) {
@@ -396,12 +417,62 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(pool, req, res, table);
-    }); // todo with secret/admin
+        var user = {},
+            person = {};
+
+        person.id = req.params.id;
+        person.secret = req.body.secret;
+
+        user.token = tokens.decode(req);
+        user.valid = tokens.validate(req, user.token);
+
+        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
+            person.auth = !!result[0];
+
+            if(err) {
+                res.status(500).send(err);
+            } else if(!person.auth || (!person.auth && user.valid && !user.token.sub.admin)) {
+                res.status(500).send('Wrong secret, or not administrator.');
+            } else {
+                pool.query(mysql.format('UPDATE person SET deleted = NULL WHERE id = ',[person.id]),function(err) {
+                    if (err) {
+                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                    } else {
+                        res.status(200).send();
+                    }
+                });
+            }
+        });
+    });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
-    }); // todo with secret/admin
+        var user = {},
+            person = {};
+
+        person.id = req.params.id;
+        person.secret = req.body.secret;
+
+        user.token = tokens.decode(req);
+        user.valid = tokens.validate(req, user.token);
+
+        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
+            person.auth = !!result[0];
+
+            if(err) {
+                res.status(500).send(err);
+            } else if(!person.auth || (!person.auth && user.valid && !user.token.sub.admin)) {
+                res.status(500).send('Wrong secret, or not administrator.');
+            } else {
+                pool.query(mysql.format('UPDATE person SET deleted = CURRENT_TIMESTAMP WHERE id = ',[person.id]),function(err) {
+                    if (err) {
+                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                    } else {
+                        res.status(200).send();
+                    }
+                });
+            }
+        });
+    });
 
     // Attribute
 
@@ -423,7 +494,7 @@ module.exports = function(pool, router, table, path) {
 
         insert.id = req.body.background_id;
 
-        async.waterfall([
+        async.series([
             function(callback) {
                 async.parallel([
                     function(callback) {
@@ -436,35 +507,35 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?',[insert.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT background_id FROM person_is_playable WHERE id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT background_id FROM person_playable WHERE id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
-                    person.atr = results[1][0];
-                    insert.atr = results[2][0];
+                    person.attribute = results[1][0];
+                    insert.attribute = results[2][0];
                     current.id = results[3][0][0].background_id;
 
-                    callback(err,person,insert,current);
+                    callback(err);
                 });
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth) {
                     if(current.id !== undefined) {
                         pool.query(mysql.format('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?',[current.id]),function(err,result) {
-                            current.atr = result;
+                            current.attribute = result;
 
-                            callback(err,person,insert,current);
+                            callback(err);
                         });
                     } else {
                         callback();
                     }
                 } else { callback(); }
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth && insert.id != current.id) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('UPDATE person_is_playable SET background_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                            pool.query(mysql.format('UPDATE person_playable SET background_id = ? WHERE id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
                             rest.personInsertAttribute(pool, person, insert, current, callback);
@@ -503,6 +574,14 @@ module.exports = function(pool, router, table, path) {
 
     require('./person_has_expertise')(pool, router, table, path);
 
+    // Gift
+
+    require('./person_has_gift')(pool, router, table, path);
+
+    // Imperfection
+
+    require('./person_has_imperfection')(pool, router, table, path);
+
     // Language
 
     require('./person_has_language')(pool, router, table, path);
@@ -519,7 +598,7 @@ module.exports = function(pool, router, table, path) {
 
         insert.id = req.body.focus_id;
 
-        async.waterfall([
+        async.series([
             function(callback) {
                 async.parallel([
                     function(callback) {
@@ -532,31 +611,31 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?',[insert.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT focus_id FROM person_is_playable WHERE id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT focus_id FROM person_playable WHERE id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
-                    person.atr = results[1][0];
-                    insert.atr = results[2][0];
+                    person.attribute = results[1][0];
+                    insert.attribute = results[2][0];
                     current.id = results[3][0][0].focus_id;
 
-                    callback(err,person,insert,current);
+                    callback(err);
                 });
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth && current.id !== undefined) {
                     pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?',[current.id]),function(err,result) {
-                        current.atr = result;
+                        current.attribute = result;
 
-                        callback(err,person,insert,current);
+                        callback(err);
                     });
                 } else { callback(); }
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth && insert.id != current.id) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('UPDATE person_is_playable SET focus_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                            pool.query(mysql.format('UPDATE person_playable SET focus_id = ? WHERE id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
                             rest.personInsertAttribute(pool, person, insert, current, callback);
@@ -588,7 +667,7 @@ module.exports = function(pool, router, table, path) {
 
         insert.id = req.body.identity_id;
 
-        async.waterfall([
+        async.series([
             function(callback) {
                 async.parallel([
                     function(callback) {
@@ -601,31 +680,31 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?',[insert.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT identity_id FROM person_is_playable WHERE id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT identity_id FROM person_playable WHERE id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
-                    person.atr = results[1][0];
-                    insert.atr = results[2][0];
+                    person.attribute = results[1][0];
+                    insert.attribute = results[2][0];
                     current.id = results[3][0][0].identity_id;
 
-                    callback(err,person,insert,current);
+                    callback(err);
                 });
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth && current.id !== undefined) {
                     pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?',[current.id]),function(err,result) {
-                        current.atr = result;
+                        current.attribute = result;
 
-                        callback(err,person,insert,current);
+                        callback(err);
                     });
                 } else { callback(); }
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth && insert.id != current.id) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('UPDATE person_is_playable SET identity_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                            pool.query(mysql.format('UPDATE person_playable SET identity_id = ? WHERE id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
                             rest.personInsertAttribute(pool, person, insert, current, callback);
@@ -645,9 +724,11 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
+    // Language
+
     // Manifestation
 
-    router.put(path + '/id/:id/manifestation', function(req, res) {
+    router.post(path + '/id/:id/manifestation', function(req, res) {
         var person = {},
             insert = {};
 
@@ -660,13 +741,13 @@ module.exports = function(pool, router, table, path) {
             person.auth = !!result[0];
 
             if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                res.status(500).send(err);
             } else if(!person.auth) {
-                res.status(500).send({header: 'Wrong Secret', message: 'You provided the wrong secret', code: 0});
+                res.status(400).send('Wrong Secret');
             } else {
-                pool.query(mysql.format('UPDATE person_is_playable SET manifestation_id = ? WHERE id = ?',[insert.id,person.id]),function(err) {
+                pool.query(mysql.format('UPDATE person_playable SET manifestation_id = ? WHERE id = ?',[insert.id,person.id]),function(err) {
                     if (err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                        res.status(500).send(err);
                     } else {
                         res.status(200).send();
                     }
@@ -691,7 +772,7 @@ module.exports = function(pool, router, table, path) {
 
         insert.id = req.body.nature_id;
 
-        async.waterfall([
+        async.series([
             function(callback) {
                 async.parallel([
                     function(callback) {
@@ -704,62 +785,62 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?',[insert.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT nature_id FROM person_is_playable WHERE id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT nature_id FROM person_playable WHERE id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
-                    person.atr = results[1][0];
-                    insert.atr = results[2][0];
+                    person.attribute = results[1][0];
+                    insert.attribute = results[2][0];
                     current.id = results[3][0][0].nature_id;
 
-                    callback(err,person,insert,current);
+                    callback(err);
                 });
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth && current.id !== undefined) {
                     pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?',[current.id]),function(err,result) {
-                        current.atr = result;
+                        current.attribute = result;
 
-                        callback(err,person,insert,current);
+                        callback(err);
                     });
                 } else { callback(); }
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth && insert.id != current.id) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('UPDATE person_is_playable SET nature_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                            pool.query(mysql.format('UPDATE person_playable SET nature_id = ? WHERE id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
-                            if(insert.atr[0] !== undefined) {
+                            if(insert.attribute[0] !== undefined) {
                                 var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
-                                for(var i in person.atr) {
-                                    for(var j in insert.atr) {
-                                        if(person.atr[i].attribute_id === insert.atr[j].attribute_id) {
-                                            person.atr[i].value += insert.atr[j].value;
-                                            person.atr[i].changed = true;
-                                            insert.atr[j].updated = true;
+                                for(var i in person.attribute) {
+                                    for(var j in insert.attribute) {
+                                        if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
+                                            person.attribute[i].value += insert.attribute[j].value;
+                                            person.attribute[i].changed = true;
+                                            insert.attribute[j].updated = true;
                                         }
                                     }
 
-                                    if(current.atr[0]) {
-                                        for(var k in current.atr) {
-                                            if(person.atr[i].attribute_id === current.atr[k].attribute_id) {
-                                                person.atr[i].value -= current.atr[k].value;
-                                                person.atr[i].changed = true;
+                                    if(current.attribute[0]) {
+                                        for(var k in current.attribute) {
+                                            if(person.attribute[i].attribute_id === current.attribute[k].attribute_id) {
+                                                person.attribute[i].value -= current.attribute[k].value;
+                                                person.attribute[i].changed = true;
                                             }
                                         }
                                     }
 
-                                    if(person.atr[i].changed === true) {
-                                        call += '(' + person.id + ',' + person.atr[i].attribute_id + ',' + person.atr[i].value + '),';
+                                    if(person.attribute[i].changed === true) {
+                                        call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
                                     }
                                 }
 
-                                for(var m in insert.atr) {
-                                    if(insert.atr[m].updated !== true) {
-                                        call += '(' + person.id + ',' + insert.atr[m].attribute_id + ',' + insert.atr[m].value + '),';
+                                for(var m in insert.attribute) {
+                                    if(insert.attribute[m].updated !== true) {
+                                        call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
                                     }
                                 }
 
@@ -799,167 +880,7 @@ module.exports = function(pool, router, table, path) {
 
     // Species
 
-    router.put(path + '/id/:id/species', function(req, res) {
-        var person = {},
-            insert = {},
-            current = {};
-
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
-        insert.id = req.body.species_id;
-
-        async.waterfall([
-            function(callback) {
-                async.parallel([
-                    function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM species_has_attribute WHERE species_id = ?',[insert.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT species_id FROM person_is_playable WHERE id = ?',[person.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT weapon_id FROM species_has_weapon WHERE species_id = ?',[insert.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT characteristic_id FROM species_has_characteristic WHERE species_id = ?',[insert.id]),callback);
-                    }
-                ],function(err,results) {
-                    person.auth = !!results[0][0][0];
-                    person.atr = results[1][0];
-                    insert.atr = results[2][0];
-                    current.id = results[3][0][0].species_id;
-                    insert.wpn = results[4][0];
-                    insert.cha = results[5][0];
-
-                    callback(err,person,insert,current);
-                });
-            },
-            function(person,insert,current,callback) {
-                if(person.auth && current.id !== undefined && insert.id != current.id) {
-                    async.parallel([
-                        function(callback) {
-                            pool.query(mysql.format('SELECT attribute_id, value FROM species_has_attribute WHERE species_id = ?',[current.id]),callback);
-                        },
-                        function(callback) {
-                            pool.query(mysql.format('SELECT weapon_id FROM species_has_weapon WHERE species_id = ?',[current.id]),callback);
-                        },
-                        function(callback) {
-                            pool.query(mysql.format('SELECT characteristic_id FROM species_has_characteristic WHERE species_id = ?',[current.id]),callback);
-                        }
-                    ],function(err,results) {
-                        current.atr = results[0][0];
-                        current.wpn = results[1][0];
-                        current.cha = results[2][0];
-
-                        callback(err,person,insert,current);
-                    });
-                } else { callback(); }
-            },
-            function(person,insert,current,callback) {
-                if(person.auth && insert.id != current.id) {
-                    async.series([
-                        function(callback) {
-                            pool.query(mysql.format('UPDATE person_is_playable SET species_id = ? WHERE id = ?',[insert.id,person.id]),callback);
-                        },
-                        function(callback) {
-                            pool.query(mysql.format('DELETE FROM person_has_weapon WHERE person_id = ? AND species = ?',[person.id,1]),callback);
-                        },
-                        function(callback) {
-                            pool.query(mysql.format('DELETE FROM person_has_characteristic WHERE person_id = ? AND species = ?',[person.id,1]),callback);
-                        },
-                        function(callback) {
-                            if(insert.atr[0] !== undefined) {
-                                var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
-
-                                for(var i in person.atr) {
-                                    for(var j in insert.atr) {
-                                        if(person.atr[i].attribute_id === insert.atr[j].attribute_id) {
-                                            person.atr[i].value += insert.atr[j].value;
-                                            person.atr[i].changed = true;
-                                            insert.atr[j].updated = true;
-                                        }
-                                    }
-
-                                    if(current.atr[0]) {
-                                        for(var k in current.atr) {
-                                            if(person.atr[i].attribute_id === current.atr[k].attribute_id) {
-                                                person.atr[i].value -= current.atr[k].value;
-                                                person.atr[i].changed = true;
-                                            }
-                                        }
-                                    }
-
-                                    if(person.atr[i].changed === true) {
-                                        call += '(' + person.id + ',' + person.atr[i].attribute_id + ',' + person.atr[i].value + '),';
-                                    }
-                                }
-
-                                for(var m in insert.atr) {
-                                    if(insert.atr[m].updated !== true) {
-                                        call += '(' + person.id + ',' + insert.atr[m].attribute_id + ',' + insert.atr[m].value + '),';
-                                    }
-                                }
-
-                                call = call.slice(0, -1);
-
-                                call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
-
-                                console.log(call);
-
-                                pool.query(call,callback);
-                            } else { callback(); }
-                        },
-                        function(callback) {
-                            if(insert.wpn[0] !== undefined) {
-                                var call = 'INSERT INTO person_has_weapon (person_id,weapon_id,species) VALUES ';
-
-                                for(var i in insert.wpn) {
-                                    call += '(' + person.id + ',' + insert.wpn[i].weapon_id + ',1),';
-                                }
-
-                                call = call.slice(0, -1);
-
-                                console.log(call);
-
-                                pool.query(call,callback);
-                            } else { callback(); }
-                        },
-                        function(callback) {
-                            if(insert.cha[0] !== undefined) {
-                                var call = 'INSERT INTO person_has_characteristic (person_id,characteristic_id,species) VALUES ';
-
-                                for(var i in insert.cha) {
-                                    call += '(' + person.id + ',' + insert.cha[i].characteristic_id + ',1),';
-                                }
-
-                                call = call.slice(0, -1);
-
-                                console.log(call);
-
-                                pool.query(call,callback);
-                            } else { callback(); }
-                        }
-                    ],function(err) {
-                        callback(err);
-                    });
-                } else { callback(); }
-            }
-        ],function(err) {
-            if(err) {
-                console.log(err);
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else {
-                res.status(200).send();
-            }
-        });
-    });
+    require('./person_has_species')(pool, router, table, path);
 
     // Software
 

@@ -8,44 +8,35 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
-        'characteristic.id, ' +
-        'characteristic.canon, ' +
-        'characteristic.name, ' +
-        'characteristic.description, ' +
-        'person_has_characteristic.characteristic_custom, ' +
-        'characteristic.gift, ' +
-        'characteristic.attribute_id, ' +
+        'gift.id, ' +
+        'gift.canon, ' +
+        'gift.name, ' +
+        'gift.description, ' +
+        'person_has_gift.custom, ' +
+        'gift.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
-        'characteristic.attribute_value, ' +
+        'gift.attribute_value, ' +
         'icon.path AS icon_path ' +
-        'FROM person_has_characteristic ' +
-        'LEFT JOIN characteristic ON characteristic.id = person_has_characteristic.characteristic_id ' +
-        'LEFT JOIN attribute ON attribute.id = characteristic.attribute_id ' +
-        'LEFT JOIN icon ON icon.id = characteristic.icon_id';
+        'FROM person_has_gift ' +
+        'LEFT JOIN gift ON gift.id = person_has_gift.gift_id ' +
+        'LEFT JOIN attribute ON attribute.id = gift.attribute_id ' +
+        'LEFT JOIN icon ON icon.id = gift.icon_id';
 
-    router.get(path + '/id/:id/characteristic', function(req, res) {
+    router.get(path + '/id/:id/gift', function(req, res) {
         var call = query + ' WHERE ' +
-            'person_has_characteristic.person_id = ?';
+            'person_has_gift.person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"gift": "DESC", "name": "ASC"});
+        rest.QUERY(pool, req, res, call, [req.params.id], {"name": "ASC"});
     });
 
-    router.get(path + '/id/:id/characteristic/gift/:id2', function(req, res) {
-        var call = query + ' WHERE ' +
-            'person_has_characteristic.person_id = ? AND ' +
-            'characteristic.gift = ?';
-
-        rest.QUERY(pool, req, res, call, [req.params.id,req.params.id2], {"gift": "DESC", "name": "ASC"});
-    });
-
-    router.post(path + '/id/:id/characteristic', function(req, res) {
+    router.post(path + '/id/:id/gift', function(req, res) {
         var person = {},
             insert = {};
 
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.characteristic_id;
+        insert.id = req.body.gift_id;
 
         async.waterfall([
             function(callback) {
@@ -57,7 +48,7 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM characteristic WHERE id = ?',[insert.id]),callback);
+                        pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM gift WHERE id = ?',[insert.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
@@ -71,7 +62,7 @@ module.exports = function(pool, router, table, path) {
                 if(person.auth) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('INSERT INTO person_has_characteristic (person_id,characteristic_id) VALUES (?,?)',[person.id,insert.id]),callback);
+                            pool.query(mysql.format('INSERT INTO person_has_gift (person_id,gift_id) VALUES (?,?)',[person.id,insert.id]),callback);
                         },
                         function(callback) {
                             if(insert.attribute[0].attribute_id !== null) {
@@ -116,13 +107,13 @@ module.exports = function(pool, router, table, path) {
                 res.status(200).send();
             }
         });
+    }); // todo
+
+    router.put(path + '/id/:id/gift/:id2', function(req, res) {
+        rest.personCustomDescription(pool, req, res, 'gift');
     });
 
-    router.put(path + '/id/:id/characteristic/:id2', function(req, res) {
-        rest.personCustomDescription(pool, req, res, 'characteristic');
-    });
-
-    router.delete(path + '/id/:id/characteristic/:id2', function(req, res) {
-        rest.personDeleteRelation(req, res, 'characteristic');
+    router.delete(path + '/id/:id/gift/:id2', function(req, res) {
+        rest.personDeleteRelation(req, res, 'gift');
     });
 };

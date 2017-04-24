@@ -12,7 +12,7 @@ module.exports = function(pool, router, table, path) {
         'milestone.canon, ' +
         'milestone.name, ' +
         'milestone.description, ' +
-        'person_has_milestone.milestone_custom, ' +
+        'person_has_milestone.custom, ' +
         'milestone.background_id, ' +
         'background.name AS background_name, ' +
         'milestone.species_id, ' +
@@ -64,8 +64,8 @@ module.exports = function(pool, router, table, path) {
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
-                    person.atr = results[1][0];
-                    insert.atr = results[2][0];
+                    person.attribute = results[1][0];
+                    insert.attribute = results[2][0];
 
                     callback(err,person,insert);
                 });
@@ -95,7 +95,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/milestone/:id2', function(req, res) {
-        rest.personCustomDescription(req, res, 'milestone');
+        rest.personCustomDescription(pool, req, res, 'milestone');
     });
 
     router.delete(path + '/id/:id/milestone/:id2', function(req, res) {

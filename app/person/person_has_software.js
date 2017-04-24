@@ -12,7 +12,7 @@ module.exports = function(pool, router, table, path) {
         'software.canon, ' +
         'software.name, ' +
         'software.description, ' +
-        'person_has_software.software_custom, ' +
+        'person_has_software.custom, ' +
         'software.price, ' +
         'software.hacking, ' +
         'software.hacking_bonus, ' +

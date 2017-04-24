@@ -12,7 +12,7 @@ module.exports = function(pool, router, table, path) {
         'protection.canon, ' +
         'protection.name, ' +
         'protection.description, ' +
-        'person_has_protection.protection_custom, ' +
+        'person_has_protection.custom, ' +
         'protection.price, ' +
         'protection.protectiontype_id, ' +
         'protectiontype.name AS protectiontype_name, ' +
@@ -79,7 +79,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/protection/:id2', function(req, res) {
-        rest.personCustomDescription(req, res, 'protection');
+        rest.personCustomDescription(pool, req, res, 'protection');
     });
 
     router.put(path + '/id/:id/protection/:id2/equip/:equip', function(req, res) {

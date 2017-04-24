@@ -11,7 +11,9 @@ module.exports = function(pool, router) {
     require('./expertise')(pool, router, 'expertise');
     require('./../default')(pool, router, 'expertisetype');
     require('./focus')(pool, router, 'focus');
+    require('./gift')(pool, router, 'gift');
     require('./identity')(pool, router, 'identity');
+    require('./imperfection')(pool, router, 'imperfection');
     require('./loyalty')(pool, router, 'loyalty');
     require('./manifestation')(pool, router, 'manifestation');
     require('./milestone')(pool, router, 'milestone');

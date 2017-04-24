@@ -13,7 +13,7 @@ module.exports = function(pool, router, table, path) {
         'weapon.special, ' +
         'weapon.name, ' +
         'weapon.description, ' +
-        'person_has_weapon.weapon_custom, ' +
+        'person_has_weapon.custom, ' +
         'weapon.price, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
@@ -103,7 +103,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/weapon/:id2', function(req, res) {
-        rest.personCustomDescription(req, res, 'bionic');
+        rest.personCustomDescription(pool, req, res, 'bionic');
     });
 
     router.put(path + '/id/:id/weapon/:id2/equip/:equip', function(req, res) {

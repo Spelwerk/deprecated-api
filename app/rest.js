@@ -226,36 +226,35 @@ exports.REVIVE = function(pool, req, res, table, options) {
 // PERSON
 
 exports.personInsertAttribute = function(pool, person, insert, current, callback) {
-    if(person.atr[0] !== undefined && insert.atr[0] !== undefined) {
+    if(person.attribute[0] !== undefined && insert.attribute[0] !== undefined) {
         var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
-        for(var i in person.atr) {
-            for(var j in insert.atr) {
-                if(person.atr[i].attribute_id === insert.atr[j].attribute_id) {
-                    person.atr[i].value += insert.atr[j].value;
-                    person.atr[i].changed = true;
-                    insert.atr[j].updated = true;
+        for(var i in person.attribute) {
+            for(var j in insert.attribute) {
+                if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
+                    person.attribute[i].value += insert.attribute[j].value;
+                    person.attribute[i].changed = true;
+                    insert.attribute[j].updated = true;
                 }
             }
 
-            if(current.atr !== undefined && current.atr[0] !== undefined) {
-                for(var k in current.atr) {
-                    if(person.atr[i].attribute_id === current.atr[k].attribute_id) {
-                        person.atr[i].value -= current.atr[k].value;
-                        person.atr[i].changed = true;
+            if(current.attribute !== undefined && current.attribute[0] !== undefined) {
+                for(var k in current.attribute) {
+                    if(person.attribute[i].attribute_id === current.attribute[k].attribute_id) {
+                        person.attribute[i].value -= current.attribute[k].value;
+                        person.attribute[i].changed = true;
                     }
                 }
             }
 
-            if(person.atr[i].changed === true) {
-                call += '(' + person.id + ',' + person.atr[i].attribute_id + ',' + person.atr[i].value + '),';
+            if(person.attribute[i].changed === true) {
+                call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
             }
         }
 
-        for(var m in insert.atr) {
-            console.log(4);
-            if(insert.atr[m].updated !== true) {
-                call += '(' + person.id + ',' + insert.atr[m].attribute_id + ',' + insert.atr[m].value + '),';
+        for(var m in insert.attribute) {
+            if(insert.attribute[m].updated !== true) {
+                call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
             }
         }
 
@@ -267,7 +266,7 @@ exports.personInsertAttribute = function(pool, person, insert, current, callback
     } else { callback(); }
 };
 
-exports.personCustomDescription = function(req, res, tableName) {
+exports.personCustomDescription = function(pool, req, res, tableName) {
     var person = {},
         insert = {};
 
@@ -285,7 +284,7 @@ exports.personCustomDescription = function(req, res, tableName) {
         } else if(!person.auth) {
             res.status(500).send({header: 'Wrong Secret', message: 'You provided the wrong secret', code: 0});
         } else {
-            pool.query(mysql.format('UPDATE person_has_'+tableName+' SET '+tableName+'_custom = ? WHERE person_id = ? AND '+tableName+'_id = ?',[insert.custom,person.id,insert.id]),function(err) {
+            pool.query(mysql.format('UPDATE person_has_'+tableName+' SET custom = ? WHERE person_id = ? AND '+tableName+'_id = ?',[insert.custom,person.id,insert.id]),function(err) {
                 if (err) {
                     res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
                 } else {
@@ -296,7 +295,7 @@ exports.personCustomDescription = function(req, res, tableName) {
     });
 };
 
-exports.personEquip = function(req, res, tableName) {
+exports.personEquip = function(pool, req, res, tableName) {
     var person = {},
         insert = {};
 
@@ -325,7 +324,7 @@ exports.personEquip = function(req, res, tableName) {
     });
 };
 
-exports.personDeleteRelation = function(req, res, tableName) {
+exports.personDeleteRelation = function(pool, req, res, tableName) {
     var person = {},
         insert = {};
 

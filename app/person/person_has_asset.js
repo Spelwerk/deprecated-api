@@ -13,7 +13,7 @@ module.exports = function(pool, router, table, path) {
         'asset.name, ' +
         'person_has_asset.amount, ' +
         'asset.description, ' +
-        'person_has_asset.asset_custom, ' +
+        'person_has_asset.custom, ' +
         'asset.price, ' +
         'asset.legal, ' +
         'asset.assettype_id, ' +

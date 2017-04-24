@@ -11,7 +11,7 @@ module.exports = function(pool, router, table, path) {
         'bionic.id, ' +
         'bionic.name, ' +
         'bionic.description, ' +
-        'person_has_bionic.bionic_custom, ' +
+        'person_has_bionic.custom, ' +
         'bionic.price, ' +
         'bionic.energy, ' +
         'bionic.legal, ' +
@@ -84,6 +84,6 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/bionic/:id2', function(req, res) {
-        rest.personCustomDescription(req, res, 'bionic');
+        rest.personCustomDescription(pool, req, res, 'bionic');
     });
 };
