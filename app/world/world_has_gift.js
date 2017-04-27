@@ -30,6 +30,17 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
+    router.get(path + '/id/:id/gift/special', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_gift.world_id = ? AND ' +
+            'gift.canon = 1 AND ' +
+            'gift.manifestation_id IS NULL AND ' +
+            'gift.species_id IS NULL AND ' +
+            'gift.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
     router.get(path + '/id/:id/gift/species/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_gift.world_id = ? AND ' +

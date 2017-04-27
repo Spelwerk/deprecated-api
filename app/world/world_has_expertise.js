@@ -36,11 +36,23 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id/expertise', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +
-            'expertise.special = ? AND ' +
-            'expertise.canon = ? AND ' +
+            'expertise.special = 0 AND ' +
+            'expertise.canon = 1 AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/id/:id/expertise/special', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_expertise.world_id = ? AND ' +
+            'expertise.special = 0 AND ' +
+            'expertise.canon = 1 AND ' +
+            'expertise.manifestation_id IS NULL AND ' +
+            'expertise.species_id IS NULL AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/expertise/type/:id2', function(req, res) {
@@ -94,17 +106,17 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4, req.params.id5, 0, 1]);
     });
 
-    router.get(path + '/id/:id/expertise/special/skill/:id2', function(req, res) {
+    router.get(path + '/id/:id/expertise/skill/:id2/special', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.skill_attribute_id = ? AND ' +
-            'expertise.special = ? AND ' +
-            'expertise.canon = ? AND ' +
+            'expertise.special = 0 AND ' +
+            'expertise.canon = 1 AND ' +
             'expertise.manifestation_id IS NULL AND ' +
             'expertise.species_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/expertise/special/skill/:id2/species/:id3', function(req, res) {

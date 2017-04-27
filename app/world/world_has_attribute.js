@@ -8,6 +8,7 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'attribute.id, ' +
         'attribute.canon, ' +
+        'attribute.special, ' +
         'attribute.name, ' +
         'world_has_attribute.default_value, ' +
         'attribute.description, ' +
@@ -16,7 +17,6 @@ module.exports = function(pool, router, table, path) {
         'attributetype.name AS attributetype_name, ' +
         'attributetype.maximum, ' +
         'attribute.species_id, ' +
-        'attribute.manifestation_id, ' +
         'species.name AS species_name, ' +
         'icon.path AS icon_path ' +
         'FROM world_has_attribute ' +
@@ -44,10 +44,21 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'world_has_attribute.world_id = ? AND ' +
             'attribute.attributetype_id = ? AND ' +
-            'attribute.canon = ? AND ' +
+            'attribute.canon = 1 AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+    });
+
+    router.get(path + '/id/:id/attribute/type/:id2/special', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_attribute.world_id = ? AND ' +
+            'attribute.attributetype_id = ? AND ' +
+            'attribute.canon = 1 AND ' +
+            'attribute.special = 0 AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/attribute/species/:id2', function(req, res) {
@@ -69,18 +80,6 @@ module.exports = function(pool, router, table, path) {
             'attribute.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, 1]);
-    });
-
-    router.get(path + '/id/:id/attribute/type/:id2/species/:id3/manifestation/:id4', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world_has_attribute.world_id = ? AND ' +
-            'attribute.attributetype_id = ? AND ' +
-            '(attribute.species_id = ? OR attribute.species_id IS NULL) AND ' +
-            '(attribute.manifestation_id = ? OR attribute.manifestation_id IS NULL) AND ' +
-            'attribute.canon = ? AND ' +
-            'attribute.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4, 1]);
     });
 
     router.post(path + '/id/:id/attribute', function(req, res) {

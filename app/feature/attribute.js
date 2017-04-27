@@ -6,6 +6,7 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'attribute.id, ' +
         'attribute.canon, ' +
+        'attribute.special, ' +
         'attribute.name, ' +
         'attribute.description, ' +
         'attribute.protected, ' +
@@ -38,11 +39,12 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/type/:id/special', function(req, res) {
         var call = query + ' WHERE ' +
             'attribute.attributetype_id = ? AND ' +
-            'attribute.canon = ? AND ' +
+            'attribute.canon = 1 AND ' +
             'attribute.species_id IS NULL AND ' +
+            'attribute.special = 0 AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
     router.get(path + '/type/:id/species/:id2', function(req, res) {

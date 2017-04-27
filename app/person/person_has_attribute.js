@@ -10,6 +10,7 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'attribute.id, ' +
         'attribute.canon, ' +
+        'attribute.special, ' +
         'attribute.name, ' +
         'person_has_attribute.value, ' +
         'attribute.description, ' +

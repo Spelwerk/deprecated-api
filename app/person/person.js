@@ -176,10 +176,12 @@ module.exports = function(pool, router, table, path) {
                             'LEFT JOIN attribute ON attribute.id = world_has_attribute.attribute_id ' +
                             'WHERE ' +
                             'world_has_attribute.world_id = ? AND ' +
-                            '(attribute.protected = 1 OR (attribute.attributetype_id = ? AND attribute.manifestation_id IS NULL AND (attribute.species_id = ? OR attribute.species_id IS NULL))) AND ' +
-                            'attribute.canon = ? AND ' +
+
+                            '(attribute.protected = 1 OR (attribute.attributetype_id = ? AND ( (attribute.special = 0 AND attribute.species_id IS NULL) OR (attribute.special = 1 AND attribute.species_id = ?) ) ) ) AND ' +
+
+                            'attribute.canon = 1 AND ' +
                             'attribute.deleted IS NULL',
-                            [world.id, world.select.skill_attributetype_id, species.id, 1]),callback);
+                            [world.id, world.select.skill_attributetype_id, species.id]),callback);
                     }
                 ],function(err,results) {
                     person.id = results[0][0].insertId;

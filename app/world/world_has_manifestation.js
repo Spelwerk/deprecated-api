@@ -96,10 +96,8 @@ module.exports = function(pool, router, table, path) {
 
                                             call = call.slice(0, -1);
 
-                                            console.log(call);
-
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     },
                                     function(callback) {
                                         if(manifestation.gift[0] !== undefined) {
@@ -111,10 +109,8 @@ module.exports = function(pool, router, table, path) {
 
                                             call = call.slice(0, -1);
 
-                                            console.log(call);
-
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     },
                                     function(callback) {
                                         if(manifestation.imperfection[0] !== undefined) {
@@ -126,10 +122,8 @@ module.exports = function(pool, router, table, path) {
 
                                             call = call.slice(0, -1);
 
-                                            console.log(call);
-
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     },
                                     function(callback) {
                                         if(manifestation.milestone[0] !== undefined) {
@@ -141,10 +135,8 @@ module.exports = function(pool, router, table, path) {
 
                                             call = call.slice(0, -1);
 
-                                            console.log(call);
-
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     }
                                 ],function(err) {
                                     callback(err);

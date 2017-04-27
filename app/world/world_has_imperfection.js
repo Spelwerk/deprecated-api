@@ -26,6 +26,17 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
+    router.get(path + '/id/:id/imperfection/special', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_imperfection.world_id = ? AND ' +
+            'imperfection.canon = 1 AND ' +
+            'imperfection.manifestation_id IS NULL AND ' +
+            'imperfection.species_id IS NULL AND ' +
+            'imperfection.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
     router.get(path + '/id/:id/imperfection/species/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_imperfection.world_id = ? AND ' +

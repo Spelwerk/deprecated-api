@@ -117,14 +117,14 @@ module.exports = function(pool, router, table, path) {
                                             console.log(call);
 
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     },
                                     function(callback) {
                                         if(species.attribute[0] !== undefined) {
-                                            var call = 'INSERT INTO world_has_attribute (world_id,attribute_id) VALUES ';
+                                            var call = 'INSERT INTO world_has_attribute (world_id,attribute_id,default_value) VALUES ';
 
                                             for(var i in species.attribute) {
-                                                call += '(' + world.id + ',' + species.attribute[i].id + '),';
+                                                call += '(' + world.id + ',' + species.attribute[i].id + ',0),';
                                             }
 
                                             call = call.slice(0, -1);
@@ -132,7 +132,7 @@ module.exports = function(pool, router, table, path) {
                                             console.log(call);
 
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     },
                                     function(callback) {
                                         if(species.gift[0] !== undefined) {
@@ -147,7 +147,7 @@ module.exports = function(pool, router, table, path) {
                                             console.log(call);
 
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     },
                                     function(callback) {
                                         if(species.imperfection[0] !== undefined) {
@@ -162,7 +162,7 @@ module.exports = function(pool, router, table, path) {
                                             console.log(call);
 
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     },
                                     function(callback) {
                                         if(species.milestone[0] !== undefined) {
@@ -177,7 +177,7 @@ module.exports = function(pool, router, table, path) {
                                             console.log(call);
 
                                             pool.query(call,callback);
-                                        }
+                                        } else { callback(); }
                                     }
                                 ],function(err) {
                                     callback(err);
