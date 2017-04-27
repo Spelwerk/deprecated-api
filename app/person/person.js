@@ -168,6 +168,7 @@ module.exports = function(pool, router, table, path) {
                             [person.secret, insert.playable, insert.nickname, insert.occupation, world.id]),callback);
                     },
                     function(callback) {
+                        // This builds a list of attributes that are either Protected Status, or in the Skill Type. It also adds from Species, but keeps manifestation skill away.
                         pool.query(mysql.format('SELECT ' +
                             'world_has_attribute.attribute_id, ' +
                             'world_has_attribute.default_value AS value ' +
@@ -175,7 +176,7 @@ module.exports = function(pool, router, table, path) {
                             'LEFT JOIN attribute ON attribute.id = world_has_attribute.attribute_id ' +
                             'WHERE ' +
                             'world_has_attribute.world_id = ? AND ' +
-                            '(attribute.protected = 1 OR (attribute.attributetype_id = ? AND (attribute.species_id = ? OR attribute.species_id IS NULL))) AND ' +
+                            '(attribute.protected = 1 OR (attribute.attributetype_id = ? AND attribute.manifestation_id IS NULL AND (attribute.species_id = ? OR attribute.species_id IS NULL))) AND ' +
                             'attribute.canon = ? AND ' +
                             'attribute.deleted IS NULL',
                             [world.id, world.select.skill_attributetype_id, species.id, 1]),callback);
