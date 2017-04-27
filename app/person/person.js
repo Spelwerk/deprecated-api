@@ -745,6 +745,7 @@ module.exports = function(pool, router, table, path) {
 
     router.post(path + '/id/:id/manifestation', function(req, res) {
         var person = {},
+            manifestation = {},
             insert = {};
 
         person.id = req.params.id;
@@ -760,7 +761,28 @@ module.exports = function(pool, router, table, path) {
             } else if(!person.auth) {
                 res.status(400).send('Wrong Secret');
             } else {
-                pool.query(mysql.format('UPDATE person_playable SET manifestation_id = ? WHERE id = ?',[insert.id,person.id]),function(err) {
+                async.series([
+                    function(callback) {
+                        pool.query(mysql.format('UPDATE person_playable SET manifestation_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                    },
+                    function(callback) {
+                        pool.query(mysql.format('SELECT power_attribute_id, skill_attribute_id FROM manifestation WHERE id = ?',[insert.id]),function(err, result) {
+                            manifestation.attribute = result[0];
+
+                            callback(err);
+                        });
+                    },
+                    function(callback) {
+                        var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
+
+                        call += '(' + person.id + ',' + manifestation.attribute.power_attribute_id + ',0),';
+                        call += '(' + person.id + ',' + manifestation.attribute.skill_attribute_id + ',0),';
+
+                        call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
+
+                        pool.query(call,callback);
+                    }
+                ],function(err) {
                     if (err) {
                         res.status(500).send(err);
                     } else {
