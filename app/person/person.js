@@ -59,7 +59,15 @@ module.exports = function(pool, router, table, path) {
             insert = {},
             world = {},
             species = {},
-            points = {};
+            points = {},
+            user = {};
+
+        user.token = tokens.decode(req);
+        user.valid = tokens.validate(req, user.token);
+
+        user.id = user.valid && user.token.sub.verified
+            ? user.token.sub.id
+            : null;
 
         person.secret = hasher(32);
 
@@ -235,9 +243,13 @@ module.exports = function(pool, router, table, path) {
                             call = call.slice(0, -1);
 
                             pool.query(call,callback);
-                        } else {
-                            callback();
-                        }
+                        } else { callback(); }
+                    },
+                    function(callback) {
+                        if(user.id) {
+                            pool.query(mysql.format('INSERT INTO user_has_person (user_id,person_id,owner,secret) VALUES (?,?,?,?)',
+                                [user.id,person.id,1,person.secret]),callback);
+                        } else { callback(); }
                     }
                 ],function(err) {
                     callback(err);

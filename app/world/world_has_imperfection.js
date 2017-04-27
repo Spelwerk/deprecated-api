@@ -11,13 +11,11 @@ module.exports = function(pool, router, table, path) {
         'imperfection.species_id, ' +
         'species.name AS species_name, ' +
         'imperfection.manifestation_id, ' +
-        'manifestation.name AS manifestation_name, ' +
-        'icon.path AS icon_path ' +
+        'manifestation.name AS manifestation_name ' +
         'FROM world_has_imperfection ' +
         'LEFT JOIN imperfection ON imperfection.id = world_has_imperfection.imperfection_id ' +
         'LEFT JOIN species ON species.id = imperfection.species_id ' +
-        'LEFT JOIN manifestation ON manifestation.id = imperfection.manifestation_id ' +
-        'LEFT JOIN icon ON icon.id = imperfection.icon_id';
+        'LEFT JOIN manifestation ON manifestation.id = imperfection.manifestation_id';
 
     router.get(path + '/id/:id/imperfection', function(req, res) {
         var call = query + ' WHERE ' +

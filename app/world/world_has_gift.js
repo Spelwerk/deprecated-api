@@ -14,14 +14,12 @@ module.exports = function(pool, router, table, path) {
         'manifestation.name AS manifestation_name, ' +
         'gift.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
-        'gift.attribute_value, ' +
-        'icon.path AS icon_path ' +
+        'gift.attribute_value ' +
         'FROM world_has_gift ' +
         'LEFT JOIN gift ON gift.id = world_has_gift.gift_id ' +
         'LEFT JOIN species ON species.id = gift.species_id ' +
         'LEFT JOIN manifestation ON manifestation.id = gift.manifestation_id ' +
-        'LEFT JOIN attribute ON attribute.id = gift.attribute_id ' +
-        'LEFT JOIN icon ON icon.id = gift.icon_id';
+        'LEFT JOIN attribute ON attribute.id = gift.attribute_id';
 
     router.get(path + '/id/:id/gift', function(req, res) {
         var call = query + ' WHERE ' +

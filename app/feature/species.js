@@ -1,4 +1,4 @@
-//var rest = require('./../rest');
+var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -21,4 +21,12 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN icon ON icon.id = species.icon_id';
 
     require('./../default')(pool, router, table, path, query);
+
+    router.get(path + '/playable/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'species.playable = ? AND ' +
+            'species.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
 };

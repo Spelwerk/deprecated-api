@@ -24,4 +24,12 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN icon ON icon.id = focus.icon_id';
 
     require('./../default')(pool, router, table, path, query);
+
+    router.get(path + '/manifestation/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'focus.manifestation_id = ? AND ' +
+            'deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
 };

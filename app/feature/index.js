@@ -1,15 +1,14 @@
 module.exports = function(pool, router) {
 
     require('./attribute')(pool, router, 'attribute');
-    require('./../default')(pool, router, 'attributetype');
+    require('./attributetype')(pool, router, 'attributetype');
     require('./../default')(pool, router, 'bodypart');
     require('./background')(pool, router, 'background');
     require('./background_has_asset')(pool, router, 'background_has_asset', '/background-asset');
     require('./background_has_attribute')(pool, router, 'background_has_attribute', '/background-attribute');
-    require('./characteristic')(pool, router, 'characteristic');
     require('./../default')(pool, router, 'disease');
     require('./expertise')(pool, router, 'expertise');
-    require('./../default')(pool, router, 'expertisetype');
+    require('./expertisetype')(pool, router, 'expertisetype');
     require('./focus')(pool, router, 'focus');
     require('./gift')(pool, router, 'gift');
     require('./identity')(pool, router, 'identity');

@@ -49,6 +49,8 @@ module.exports.logCall = function(file, call, error) {
     }
 
     if(error) {
+        console.log('error:'); console.log(call); console.log(error);
+
         logger.error({error: error, file: file, method: 'SQL', call: call});
     }
 };

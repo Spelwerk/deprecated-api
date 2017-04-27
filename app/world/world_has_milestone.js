@@ -37,6 +37,16 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
+    router.get(path + '/id/:id/milestone/background/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'world_has_milestone.world_id = ? AND ' +
+            '(milestone.background_id = ? OR milestone.background_id IS NULL) AND ' +
+            'milestone.canon = ? AND ' +
+            'milestone.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
+    });
+
     router.get(path + '/id/:id/milestone/background/:id2/species/:id3', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_milestone.world_id = ? AND ' +
@@ -60,11 +70,11 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4, 1]);
     });
 
-    router.post(path + '/id/:id/manifestation', function(req, res) {
-        rest.worldPostHas(pool, req, res, req.params.id, 'manifestation');
+    router.post(path + '/id/:id/milestone', function(req, res) {
+        rest.worldPostHas(pool, req, res, req.params.id, 'milestone');
     });
 
-    router.delete(path + '/id/:id/manifestation/:id2', function(req, res) {
-        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'manifestation');
+    router.delete(path + '/id/:id/milestone/:id2', function(req, res) {
+        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'milestone');
     });
 };

@@ -27,12 +27,4 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN weapon ON weapon.id = augmentation.weapon_id';
 
     require('./../default')(pool, router, table, path, query);
-
-    router.get(path + '/bionic/:id', function(req, res) {
-        var call = query + ' WHERE ' +
-            table + '.bionic_id = ? AND ' +
-            table + '.deleted is NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
 };

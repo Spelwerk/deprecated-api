@@ -47,4 +47,16 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id, 0, 1]);
     });
+
+    router.get(path + '/skill/:id/special', function(req, res) {
+        var call = query + ' WHERE ' +
+            'expertise.skill_attribute_id = ? AND ' +
+            'expertise.special = ? AND ' +
+            'expertise.canon = ? AND ' +
+            'expertise.manifestation_id IS NULL AND ' +
+            'expertise.species_id IS NULL AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, 0, 1]);
+    });
 };

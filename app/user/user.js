@@ -177,12 +177,19 @@ module.exports = function(pool, router, table, path) {
                         message: message.toString('ascii')
                     };
 
-                    mailgun.messages().sendMime(dataToSend,callback);
+                    mailgun.messages().sendMime(dataToSend,function(err,result) {
+                        console.log(err);
+                        console.log(result);
+                        callback(err,result);
+                    });
                 });
             },
             function(callback) {
                 loginToken(req, user.id, function(err,result) {
                     user.token = result;
+
+                    console.log(err);
+                    console.log(result);
 
                     callback(err);
                 });

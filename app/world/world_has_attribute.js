@@ -33,6 +33,12 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
+    router.get(path + '/id/:id/attribute/value/:id2', function(req, res) {
+        var call = 'SELECT default_value FROM world_has_attribute WHERE world_id = ? AND attribute_id = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2],{"default_value":"ASC"});
+    });
+
     router.get(path + '/id/:id/attribute/type/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'world_has_attribute.world_id = ? AND ' +
@@ -71,8 +77,8 @@ module.exports = function(pool, router, table, path) {
 
         world.id = req.params.id;
 
-        insert.id = req.body.insert_id;
-        insert.value = req.body.insert_value;
+        insert.id = req.body.attribute_id;
+        insert.value = req.body.default_value;
 
         user.token = tokens.decode(req);
         user.valid = tokens.validate(req, user.token);
@@ -94,7 +100,11 @@ module.exports = function(pool, router, table, path) {
                 if(!user.owner && !user.admin) {
                     res.status(400).send('Not user, nor admin.');
                 } else {
-                    pool.query(mysql.format('INSERT INTO world_has_attribute (world_id,attribute_id,default_value) VALUES (?,?,?)',[world.id,insert.id,insert.value]),function(err) {
+                    var call = mysql.format('INSERT INTO world_has_attribute (world_id,attribute_id,default_value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE default_value = VALUES(default_value)',[world.id,insert.id,insert.value]);
+
+                    console.log(call);
+
+                    pool.query(call,function(err) {
                         if(err) {
                             res.status(500).send(err);
                         } else {

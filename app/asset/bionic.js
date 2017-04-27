@@ -26,7 +26,13 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN attribute ON attribute.id = bionic.attribute_id ' +
         'LEFT JOIN icon ON icon.id = bionic.icon_id';
 
-    require('./../default')(pool, router, table, path, query);
+    // Get
+
+    router.get(path, function(req, res) {
+        var call = query + ' WHERE ' + table + '.deleted is NULL';
+
+        rest.QUERY(pool, req, res, call);
+    });
 
     router.get(path + '/bodypart/:id', function(req, res) {
         var call = query + ' WHERE ' +
@@ -35,4 +41,38 @@ module.exports = function(pool, router, table, path) {
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
+
+    router.get(path + '/deleted', function(req, res) {
+        var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
+
+        rest.QUERY(pool, req, res, call, null, {"id": "ASC"});
+    });
+
+    router.get(path + '/id/:id', function(req, res) {
+        var call = query + ' WHERE ' + table + '.id = ?';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    // Bionic
+
+    router.post(path, function(req, res) {
+        rest.INSERT(pool, req, res, table);
+    });
+
+    router.put(path + '/id/:id', function(req, res) {
+        rest.PUT(pool, req, res, table);
+    });
+
+    router.put(path + '/revive/:id', function(req, res) {
+        rest.REVIVE(pool, req, res, table);
+    });
+
+    router.delete(path + '/id/:id', function(req, res) {
+        rest.DELETE(pool, req, res, table);
+    });
+
+    // Augmentation
+
+    require('./bionic_has_augmentation')(pool, router, table, path);
 };

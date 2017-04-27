@@ -33,7 +33,11 @@ function generate(req, user, permissions) {
 }
 
 function decode(req) {
-    return jwt.verify(req.headers.token, secret);
+    if(req.headers.token) {
+        return jwt.verify(req.headers.token, secret);
+    } else {
+        return false;
+    }
 }
 
 function validate(req, token) {

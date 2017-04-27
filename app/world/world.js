@@ -26,9 +26,23 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE id = ?';
+        var user = {},
+            call = null;
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        user.token = tokens.decode(req);
+        user.valid = tokens.validate(req, user.token);
+
+        user.id = user.valid && user.token.sub.verified
+            ? user.token.sub.id
+            : null;
+
+        if(user.id) {
+            call = mysql.format(query + ' LEFT JOIN user_has_world ON (user_has_world.world_id = world.id AND user_has_world.user_id = ?) WHERE id = ?',[user.id,req.params.id]);
+        } else {
+            call = mysql.format(query + ' LEFT JOIN user_has_world ON user_has_world.world_id = world.id WHERE id = ?',[req.params.id]);
+        }
+
+        rest.QUERY(pool, req, res, call);
     });
 
     // World
@@ -49,6 +63,8 @@ module.exports = function(pool, router, table, path) {
             res.status(400).send('User not logged in.');
         } else {
             insert.name = req.body.name;
+            insert.description = req.body.description;
+
             insert.bionic = req.body.bionic;
             insert.augmentation = req.body.augmentation;
             insert.software = req.body.software;
@@ -91,10 +107,46 @@ module.exports = function(pool, router, table, path) {
                 } else {
                     world.id = result.insertId;
 
-                    var call = mysql.format('INSERT INTO user_has_world (user_id,world_id,owner) VALUES (?,?,?)',
-                        [user.id, world.id, 1]);
+                    async.parallel([
+                        function(callback) {
+                            var defaultAttributes = [];
 
-                    pool.query(call, function (err) {
+                            defaultAttributes.push({attribute_id: 1, default_value: 8});
+                            defaultAttributes.push({attribute_id: 2, default_value: 8});
+                            defaultAttributes.push({attribute_id: 3, default_value: 8});
+                            defaultAttributes.push({attribute_id: 4, default_value: 0});
+                            defaultAttributes.push({attribute_id: 5, default_value: 0});
+                            defaultAttributes.push({attribute_id: 6, default_value: 0});
+                            defaultAttributes.push({attribute_id: 7, default_value: 2});
+                            defaultAttributes.push({attribute_id: 8, default_value: 2});
+                            defaultAttributes.push({attribute_id: 9, default_value: 4});
+                            defaultAttributes.push({attribute_id: 10, default_value: 0});
+                            defaultAttributes.push({attribute_id: 11, default_value: 0});
+                            defaultAttributes.push({attribute_id: 12, default_value: 0});
+                            defaultAttributes.push({attribute_id: 13, default_value: 0});
+                            defaultAttributes.push({attribute_id: 16, default_value: 0});
+                            defaultAttributes.push({attribute_id: 17, default_value: 0});
+                            defaultAttributes.push({attribute_id: 19, default_value: 1});
+                            defaultAttributes.push({attribute_id: 20, default_value: 1});
+                            defaultAttributes.push({attribute_id: 21, default_value: 1});
+                            defaultAttributes.push({attribute_id: 22, default_value: 0});
+
+                            call = 'INSERT INTO world_has_attribute (world_id,attribute_id,default_value) VALUES ';
+
+                            for(var i in defaultAttributes) {
+                                call += '(' + world.id + ',' + defaultAttributes[i].attribute_id + ',' + defaultAttributes[i].default_value + '),';
+                            }
+
+                            call = call.slice(0, -1);
+
+                            console.log(call);
+
+                            pool.query(call,callback);
+                        },
+                        function(callback) {
+                            pool.query(mysql.format('INSERT INTO user_has_world (user_id,world_id,owner) VALUES (?,?,?)',[user.id, world.id, 1]),callback);
+                        }
+                    ],function(err) {
                         if (err) {
                             res.status(500).send(err);
                         } else {

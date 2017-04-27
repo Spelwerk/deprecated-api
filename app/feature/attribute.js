@@ -35,6 +35,26 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
+    router.get(path + '/type/:id/special', function(req, res) {
+        var call = query + ' WHERE ' +
+            'attribute.attributetype_id = ? AND ' +
+            'attribute.canon = ? AND ' +
+            'attribute.species_id IS NULL AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
+    });
+
+    router.get(path + '/type/:id/species/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'attribute.attributetype_id = ? AND ' +
+            '(attribute.species_id = ? OR attribute.species_id IS NULL) AND ' +
+            'attribute.canon = ? AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
+    });
+
     router.get(path + '/protected', function(req, res) {
         var call = query + ' WHERE ' +
             'attribute.protected = ? AND ' +

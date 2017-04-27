@@ -36,8 +36,19 @@ function queryMessage(pool, res, call, status, message) {
     });
 }
 
+function query(pool, call, params, callback) {
+    var query = mysql.format(call,params);
+
+    pool.query(query,function(err,result) {
+        logger.logCall(file,query,err);
+
+        callback(err,result);
+    });
+}
+
 module.exports.queryDefault = queryDefault;
 module.exports.queryMessage = queryMessage;
+module.exports.query = query;
 
 // DEFAULT
 

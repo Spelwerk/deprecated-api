@@ -36,6 +36,14 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
     });
 
+    /*
+     todo add to world on creation:
+     todo + expertises on expertise.species_id
+     todo + attribute(skill) on attribute.species_id
+     todo + gift on gift.species_id
+     todo + imperfection on imperfection.species_id
+     todo + milestone on milestone.species_id
+     */
     router.post(path + '/id/:id/species', function(req, res) {
         rest.worldPostHas(pool, req, res, req.params.id, 'species');
     });

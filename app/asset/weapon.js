@@ -36,8 +36,16 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/type/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            table + '.weapontype_id = ? AND ' +
-            table + '.deleted is NULL';
+            'weapon.weapontype_id = ? AND ' +
+            'weapon.deleted is NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/special/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'weapon.special = ? AND ' +
+            'weapon.deleted is NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

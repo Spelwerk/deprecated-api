@@ -3,23 +3,8 @@ var rest = require('./../rest');
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
-    var query = 'SELECT ' +
-        'manifestation.id, ' +
-        'manifestation.canon, ' +
-        'manifestation.name, ' +
-        'manifestation.description, ' +
-        'manifestation.attributetype_id, ' +
-        'attributetype.name AS attributetype_name, ' +
-        'manifestation.expertisetype_id, ' +
-        'expertisetype.name AS expertisetype_name, ' +
-        'manifestation.power_attribute_id, ' +
-        'manifestation.skill_attributetype_id, ' +
-        'icon.path AS icon_path ' +
-        'FROM world_has_manifestation ' +
-        'LEFT JOIN manifestation ON manifestation.id = world_has_manifestation.manifestation_id ' +
-        'LEFT JOIN attributetype ON attributetype.id = manifestation.attributetype_id ' +
-        'LEFT JOIN expertisetype ON expertisetype.id = manifestation.expertisetype_id ' +
-        'LEFT JOIN icon ON icon.id = manifestation.icon_id';
+    var query = 'SELECT * FROM world_has_manifestation ' +
+        'LEFT JOIN manifestation ON manifestation.id = world_has_manifestation.manifestation_id';
 
     router.get(path + '/id/:id/manifestation', function(req, res) {
         var call = query + ' WHERE ' +
@@ -30,6 +15,16 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
+    /*
+        todo add to world on creation:
+        todo + expertises on manifestation.expertisetype_id
+        todo + attribute(doctrine) manifestation.on attributetype_id
+        todo + attribute(power) on manifestation.power_attribute_id
+        todo + attribute(skill) on manifestation.skill_attribute_id
+        todo + gift on gift.manifestation_id
+        todo + imperfection on imperfection.manifestation_id
+        todo + milestone on milestone.manifestation_id
+    */
     router.post(path + '/id/:id/manifestation', function(req, res) {
         rest.worldPostHas(pool, req, res, req.params.id, 'manifestation');
     });
