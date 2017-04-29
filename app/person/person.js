@@ -9,7 +9,9 @@ module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM person ' +
-        'LEFT JOIN person_playable ON person_playable.id = person.id ' +
+        'LEFT JOIN person_playable ON person_playable.person_id = person.id ' +
+        'LEFT JOIN person_description ON person_description.person_id = person.id ' +
+        'LEFT JOIN person_creation ON person_creation.person_id = person.id ' +
         'LEFT JOIN person_has_species ON (person_has_species.person_id = person.id AND person_has_species.first = 1)';
 
     // Get
@@ -24,26 +26,13 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id], {"person.id": "ASC"});
     });
 
-    router.get(path + '/id/:id/creation', function(req, res) {
-        rest.QUERY(pool, req, res, 'SELECT * FROM person_creation WHERE ID = ?', [req.params.id], {"id":"ASC"});
-    });
-
-    router.get(path + '/id/:id/short', function(req, res) {
-        var call = 'SELECT id,nickname,occupation FROM person WHERE ' +
-            'id = ? AND ' +
-            'playable = ? AND ' +
-            'deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, 1], {"id":"DESC"});
-    });
-
     router.get(path + '/popular', function(req, res) {
-        var call = 'SELECT id,playable,calculated,nickname,firstname,surname,occupation FROM person WHERE ' +
-            'playable = ? AND ' +
-            'calculated = ? AND ' +
+        var call = 'SELECT id,nickname,occupation FROM person WHERE ' +
+            'playable = 1 AND ' +
+            'calculated = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [1, 1]);
+        rest.QUERY(pool, req, res, call);
     });
 
     router.get(path + '/deleted', function(req, res) {
@@ -194,15 +183,19 @@ module.exports = function(pool, router, table, path) {
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        pool.query(mysql.format('INSERT INTO person_playable (id, supernatural, age) VALUES (?,?,?)',
+                        pool.query(mysql.format('INSERT INTO person_playable (person_id, supernatural, age) VALUES (?,?,?)',
                             [person.id, insert.supernatural, insert.age]),callback);
+                    },
+                    function(callback) {
+                        pool.query(mysql.format('INSERT INTO person_description (person_id) VALUES (?)',
+                            [person.id]),callback);
                     },
                     function(callback) {
                         pool.query(mysql.format('INSERT INTO person_has_species (person_id, species_id, first) VALUES (?,?,?)',
                             [person.id, species.id, 1]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('INSERT INTO person_creation (id,point_expertise,point_gift,point_imperfection,' +
+                        pool.query(mysql.format('INSERT INTO person_creation (person_id,point_expertise,point_gift,point_imperfection,' +
                             'point_milestone,point_money,point_power,point_relationship,point_skill,point_supernatural) VALUES (?,?,?,?,?,?,?,?,?,?)',
                             [person.id, points.expertise, points.gift, points.imperfection, points.milestone, points.money, points.power,
                                 points.relationship, points.skill, points.supernatural]),callback);
@@ -361,7 +354,7 @@ module.exports = function(pool, router, table, path) {
                             }
 
                             if(query_amount > 0) {
-                                call = call.slice(0, -2) + ' WHERE id = ?';
+                                call = call.slice(0, -2) + ' WHERE person_id = ?';
                                 values_array.push(person.id);
 
                                 pool.query(mysql.format(call,values_array),callback);
@@ -387,7 +380,7 @@ module.exports = function(pool, router, table, path) {
                             }
 
                             if(query_amount > 0) {
-                                call = call.slice(0, -2) + ' WHERE id = ?';
+                                call = call.slice(0, -2) + ' WHERE person_id = ?';
                                 values_array.push(person.id);
 
                                 pool.query(mysql.format(call,values_array),callback);
@@ -412,7 +405,7 @@ module.exports = function(pool, router, table, path) {
                         }
 
                         if(query_amount > 0) {
-                            call = call.slice(0, -2) + ' WHERE id = ?';
+                            call = call.slice(0, -2) + ' WHERE person_id = ?';
                             values_array.push(person.id);
 
                             pool.query(mysql.format(call,values_array),callback);
@@ -527,7 +520,7 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?',[insert.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT background_id FROM person_playable WHERE id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT background_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
@@ -555,7 +548,7 @@ module.exports = function(pool, router, table, path) {
                 if(person.auth && insert.id != current.id) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('UPDATE person_playable SET background_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                            pool.query(mysql.format('UPDATE person_playable SET background_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
                             rest.personInsertAttribute(pool, person, insert, current, callback);
@@ -631,7 +624,7 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?',[insert.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT focus_id FROM person_playable WHERE id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT focus_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
@@ -655,7 +648,7 @@ module.exports = function(pool, router, table, path) {
                 if(person.auth && insert.id != current.id) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('UPDATE person_playable SET focus_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                            pool.query(mysql.format('UPDATE person_playable SET focus_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
                             rest.personInsertAttribute(pool, person, insert, current, callback);
@@ -700,7 +693,7 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?',[insert.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT identity_id FROM person_playable WHERE id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT identity_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
@@ -724,7 +717,7 @@ module.exports = function(pool, router, table, path) {
                 if(person.auth && insert.id != current.id) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('UPDATE person_playable SET identity_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                            pool.query(mysql.format('UPDATE person_playable SET identity_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
                             rest.personInsertAttribute(pool, person, insert, current, callback);
@@ -766,7 +759,7 @@ module.exports = function(pool, router, table, path) {
             } else {
                 async.series([
                     function(callback) {
-                        pool.query(mysql.format('UPDATE person_playable SET manifestation_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                        pool.query(mysql.format('UPDATE person_playable SET manifestation_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
                     },
                     function(callback) {
                         pool.query(mysql.format('SELECT power_attribute_id, skill_attribute_id FROM manifestation WHERE id = ?',[insert.id]),function(err, result) {
@@ -825,7 +818,7 @@ module.exports = function(pool, router, table, path) {
                         pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?',[insert.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT nature_id FROM person_playable WHERE id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT nature_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
@@ -849,7 +842,7 @@ module.exports = function(pool, router, table, path) {
                 if(person.auth && insert.id != current.id) {
                     async.parallel([
                         function(callback) {
-                            pool.query(mysql.format('UPDATE person_playable SET nature_id = ? WHERE id = ?',[insert.id,person.id]),callback);
+                            pool.query(mysql.format('UPDATE person_playable SET nature_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
                             if(insert.attribute[0] !== undefined) {

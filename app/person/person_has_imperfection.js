@@ -12,11 +12,9 @@ module.exports = function(pool, router, table, path) {
         'imperfection.canon, ' +
         'imperfection.name, ' +
         'imperfection.description, ' +
-        'person_has_imperfection.custom, ' +
-        'icon.path AS icon_path ' +
+        'person_has_imperfection.custom ' +
         'FROM person_has_imperfection ' +
-        'LEFT JOIN imperfection ON imperfection.id = person_has_imperfection.imperfection_id ' +
-        'LEFT JOIN icon ON icon.id = imperfection.icon_id';
+        'LEFT JOIN imperfection ON imperfection.id = person_has_imperfection.imperfection_id';
 
     router.get(path + '/id/:id/imperfection', function(req, res) {
         var call = query + ' WHERE ' +

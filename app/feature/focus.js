@@ -1,4 +1,4 @@
-//var rest = require('./../rest');
+var rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -28,7 +28,7 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/manifestation/:id', function(req, res) {
         var call = query + ' WHERE ' +
             'focus.manifestation_id = ? AND ' +
-            'deleted IS NULL';
+            'focus.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

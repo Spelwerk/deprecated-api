@@ -63,6 +63,7 @@ module.exports = function(pool, router, table, path) {
     router.post(path + '/id/:id/expertise', function(req, res) {
         var person = {},
             insert = {},
+            expertise = {},
             current = {};
 
         person.id = req.params.id;
@@ -71,21 +72,24 @@ module.exports = function(pool, router, table, path) {
         insert.id = req.body.expertise_id;
         insert.lvl = req.body.level;
 
-        async.waterfall([
+        async.series([
             function(callback) {
                 async.parallel([
                     function(callback) {
                         pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
+                        pool.query(mysql.format('SELECT attribute_id,value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
                     },
                     function(callback) {
                         pool.query(mysql.format('SELECT give_attribute_id AS attribute_id FROM expertise WHERE id = ?',[insert.id]),callback);
                     },
                     function(callback) {
                         var call = 'SELECT ' +
-                            'expertisetype.maximum ' +
+                            'expertisetype.maximum, ' +
+                            'expertisetype.attribute, ' +
+                            'expertisetype.dice, ' +
+                            'expertisetype.manifestation ' +
                             'FROM expertise ' +
                             'LEFT JOIN expertisetype ON expertisetype.id = expertise.expertisetype_id ' +
                             'WHERE expertise.id = ?';
@@ -99,28 +103,38 @@ module.exports = function(pool, router, table, path) {
                     person.auth = !!results[0][0][0];
                     person.attribute = results[1][0];
                     insert.attribute = results[2][0];
-                    insert.max = results[3][0][0].maximum;
+                    expertise.maximum = results[3][0][0].maximum;
+
+                    expertise.attribute = results[3][0][0].attribute;
+                    expertise.dice = results[3][0][0].dice;
+                    expertise.manifestation = results[3][0][0].manifestation;
 
                     current.lvl = results[4][0][0] !== undefined
                         ? results[2][0][0].level
                         : 0;
 
-                    callback(err,person,insert,current);
+                    callback(err);
                 });
             },
-            function(person,insert,current,callback) {
+            function(callback) {
                 if(person.auth) {
                     async.parallel([
                         function(callback) {
-                            if(insert.lvl <= insert.max && insert.lvl > 0 && insert.lvl > current.lvl) {
+                            if(insert.lvl <= expertise.maximum && insert.lvl > 0 && insert.lvl > current.lvl) {
                                 pool.query(mysql.format('INSERT INTO person_has_expertise (person_id,expertise_id,level) VALUES (?,?,?) ON DUPLICATE KEY UPDATE level = VALUES(level)',[person.id,insert.id,insert.lvl]),callback);
                             } else { callback(); }
                         },
                         function(callback) {
-                            if(insert.attribute[0].attribute_id !== null && insert.lvl <= insert.max && insert.lvl > current.lvl) {
+                            if(insert.attribute[0].attribute_id !== null && insert.lvl <= expertise.maximum && insert.lvl > current.lvl) {
                                 var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
-                                insert.attribute[0].value = insert.lvl - current.lvl;
+                                if(expertise.attribute) {
+                                    insert.attribute[0].value = insert.lvl - current.lvl;
+                                }
+
+                                if(expertise.manifestation) {
+                                    insert.attribute[0].value = 0;
+                                }
 
                                 for(var i in person.attribute) {
                                     for(var j in insert.attribute) {
@@ -152,7 +166,7 @@ module.exports = function(pool, router, table, path) {
                     ],function(err) {
                         callback(err);
                     });
-                } else { callback('wrong secret'); }
+                } else { callback('Wrong secret'); }
             }
         ],function(err) {
             if(err) {

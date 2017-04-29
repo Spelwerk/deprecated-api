@@ -122,6 +122,54 @@ module.exports = function(pool, router, table, path) {
         }
     });
 
+    // GET RELATIONS
+
+    router.get(path + '/id/:id/person', function(req, res) {
+        var call = 'SELECT ' +
+            'user_has_person.person_id AS id, ' +
+            'user_has_person.secret, ' +
+            'user_has_person.owner, ' +
+            'user_has_person.favorite, ' +
+            'person.nickname AS nickname, ' +
+            'person.occupation AS occupation ' +
+            'FROM user_has_person ' +
+            'LEFT JOIN person ON person.id = user_has_person.person_id ' +
+            'WHERE ' +
+            'user_has_person.user_id = ? AND ' +
+            'person.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id], {"id":"DESC"});
+    });
+
+    router.get(path + '/id/:id/world', function(req, res) {
+        var call = 'SELECT ' +
+            'user_has_world.world_id AS id, ' +
+            'user_has_world.owner, ' +
+            'world.name ' +
+            'FROM user_has_world ' +
+            'LEFT JOIN world ON world.id = user_has_world.world_id ' +
+            'WHERE ' +
+            'user_has_world.user_id = ? AND ' +
+            'world.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id], {"id":"DESC"});
+    });
+
+    router.get(path + '/id/:id/world/calculated', function(req, res) {
+        var call = 'SELECT ' +
+            'user_has_world.world_id AS id, ' +
+            'user_has_world.owner, ' +
+            'world.name ' +
+            'FROM user_has_world ' +
+            'LEFT JOIN world ON world.id = user_has_world.world_id ' +
+            'WHERE ' +
+            'user_has_world.user_id = ? AND ' +
+            'world.calculated = 1 AND ' +
+            'world.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id], {"id":"DESC"});
+    });
+
     // USER
 
     router.post(path, function(req, res) {
@@ -370,18 +418,28 @@ module.exports = function(pool, router, table, path) {
                     [insert.email]);
 
                 pool.query(call,function(err,result) {
-                    user.id = result[0].id;
-                    user.password = result[0].password;
+                    if(err) {
+                        res.status(400).send(err);
+                    } else if(!result[0]) {
+                        res.status(404).send('Email not found');
+                    } else {
+                        user.id = result[0].id;
+                        user.password = result[0].password;
 
-                    insert.encrypted = onion.hash(insert.password);
-                    user.encrypted = onion.decrypt(user.password);
+                        insert.encrypted = onion.hash(insert.password);
+                        user.encrypted = onion.decrypt(user.password);
+                    }
 
                     callback(err);
                 });
             },
             function(callback) {
                 bcrypt.compare(insert.encrypted, user.encrypted, function(err,result) {
-                    user.accepted = result;
+                    if(err) {
+                        res.status(500).send();
+                    } else {
+                        user.accepted = result;
+                    }
 
                     callback(err);
                 });
@@ -389,11 +447,15 @@ module.exports = function(pool, router, table, path) {
             function(callback) {
                 if(user.accepted) {
                     loginToken(req, user.id, function(err,result) {
-                        user.token = result;
+                        if(err) {
+                            res.status(500).send(err);
+                        } else {
+                            user.token = result;
+                        }
 
                         callback(err);
                     });
-                } else { callback(); }
+                } else { callback('Wrong Password'); }
             }
         ],function(err) {
             if(!err) {
@@ -448,26 +510,25 @@ module.exports = function(pool, router, table, path) {
                     [insert.secret]);
 
                 pool.query(call,function(err,result) {
-                    user.id = result[0].id;
-                    user.timeout = result[0].timeout;
+                    if(err) {
+                        res.status(400).send(err);
+                    } else if(!result[0]) {
+                        res.status(404).send('Wrong secret');
+                    } else {
+                        user.id = result[0].id;
+                        user.timeout = result[0].timeout;
+                    }
 
                     callback(err);
                 });
             },
             function(callback) {
-                user.accepted = user.now < user.timeout;
-
-                if(user.accepted) {
-                    callback();
-                } else { callback('Timeout Expired'); }
-            },
-            function(callback) {
-                if(user.accepted) {
+                if(user.accepted && user.now < user.timeout) {
                     var call = mysql.format('UPDATE user SET login_secret = NULL, login_timeout = NULL WHERE id = ?',
                         [user.id]);
 
                     pool.query(call,callback);
-                } else { callback('Timeout Expired'); }
+                } else { callback('Timeout expired'); }
             },
             function(callback) {
                 loginToken(req, user.id, function(err,result) {

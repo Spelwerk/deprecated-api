@@ -170,6 +170,7 @@ module.exports = function(pool, router, table, path) {
         insert.augmentation = req.body.augmentation;
         insert.software = req.body.software;
         insert.supernatural = req.body.supernatural;
+        insert.calculated = req.body.calculated;
 
         insert.skill_attributetype_id = req.body.skill_attributetype_id;
         insert.attribute_expertisetype_id = req.body.attribute_expertisetype_id;
