@@ -139,8 +139,6 @@ module.exports = function(pool, router, table, path) {
 
                             call = call.slice(0, -1);
 
-                            console.log(call);
-
                             pool.query(call,callback);
                         },
                         function(callback) {

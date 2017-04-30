@@ -86,7 +86,6 @@ module.exports = function(pool, router, table, path) {
             }
         ],function(err) {
             if(err) {
-                console.log(err);
                 res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
             } else {
                 res.status(200).send();

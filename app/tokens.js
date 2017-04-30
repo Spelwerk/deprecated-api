@@ -40,22 +40,27 @@ function decode(req) {
     }
 }
 
-function validate(req, token) {
-    var ip = req.headers['x-forwarded-for'] ||
-        req.connection.remoteAddress ||
-        req.socket.remoteAddress ||
-        req.connection.socket.remoteAddress;
+function validate(req) {
+    var token = decode(req),
+        validity = false;
 
-    var now = Math.floor(Date.now() / 1000),
-        exp = token.exp;
+    if(token) {
+        validity = true;
 
-    var validity = true;
+        var ip = req.headers['x-forwarded-for'] ||
+            req.connection.remoteAddress ||
+            req.socket.remoteAddress ||
+            req.connection.socket.remoteAddress;
 
-    if(now > exp) validity = false;
+        var now = Math.floor(Date.now() / 1000),
+            exp = token.exp;
 
-    if(token.oip != ip) validity = false;
+        if(now > exp) validity = false;
 
-    if(!token.sub.id) validity = false;
+        if(token.oip !== ip) validity = false;
+
+        if(!token.sub.id) validity = false;
+    }
 
     return validity;
 }

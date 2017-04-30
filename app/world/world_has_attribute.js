@@ -103,29 +103,31 @@ module.exports = function(pool, router, table, path) {
             ? user.token.sub.admin
             : null;
 
-        pool.query(mysql.format('SELECT owner FROM user_has_world WHERE user_id = ? AND world_id = ?',[user.id,world.id]),function(err,result) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                user.owner = !!result[0];
-
-                if(!user.owner && !user.admin) {
-                    res.status(400).send('Not user, nor admin.');
+        if(!user.valid) {
+            res.status(400).send('User not logged in.');
+        } else {
+            pool.query(mysql.format('SELECT owner FROM user_has_world WHERE user_id = ? AND world_id = ?',[user.id,world.id]),function(err,result) {
+                if(err) {
+                    res.status(500).send(err);
                 } else {
-                    var call = mysql.format('INSERT INTO world_has_attribute (world_id,attribute_id,default_value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE default_value = VALUES(default_value)',[world.id,insert.id,insert.value]);
+                    user.owner = !!result[0];
 
-                    console.log(call);
+                    if(!user.owner && !user.admin) {
+                        res.status(400).send('Not user, nor admin.');
+                    } else {
+                        var call = mysql.format('INSERT INTO world_has_attribute (world_id,attribute_id,default_value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE default_value = VALUES(default_value)',[world.id,insert.id,insert.value]);
 
-                    pool.query(call,function(err) {
-                        if(err) {
-                            res.status(500).send(err);
-                        } else {
-                            res.status(200).send();
-                        }
-                    })
+                        pool.query(call,function(err) {
+                            if(err) {
+                                res.status(500).send(err);
+                            } else {
+                                res.status(200).send();
+                            }
+                        })
+                    }
                 }
-            }
-        });
+            });
+        }
     });
 
     router.put(path + '/id/:id/attribute', function(req, res) {
