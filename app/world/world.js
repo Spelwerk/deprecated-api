@@ -30,13 +30,10 @@ module.exports = function(pool, router, table, path) {
             call = null;
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
+        user.id = user.token.sub.id;
+        user.admin = user.token.sub.admin;
 
-        user.id = user.valid && user.token.sub.verified
-            ? user.token.sub.id
-            : null;
-
-        if(user.id) {
+        if(user.token) {
             call = mysql.format(query + ' LEFT JOIN user_has_world ON (user_has_world.world_id = world.id AND user_has_world.user_id = ?) WHERE id = ?',[user.id,req.params.id]);
         } else {
             call = mysql.format(query + ' LEFT JOIN user_has_world ON user_has_world.world_id = world.id WHERE id = ?',[req.params.id]);
@@ -53,41 +50,33 @@ module.exports = function(pool, router, table, path) {
             user = {};
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
+        user.id = user.token.sub.id;
+        user.admin = user.token.sub.admin;
 
-        user.id = user.valid && user.token.sub.verified
-            ? user.token.sub.id
-            : null;
-
-        if(!user.id) {
+        if(!user.token) {
             res.status(400).send('User not logged in.');
         } else {
             insert.name = req.body.name;
             insert.description = req.body.description;
 
-            insert.bionic = req.body.bionic;
-            insert.augmentation = req.body.augmentation;
-            insert.software = req.body.software;
-            insert.supernatural = req.body.supernatural;
+            insert.bionic = parseInt(req.body.bionic);
+            insert.augmentation = parseInt(req.body.augmentation);
+            insert.software = parseInt(req.body.software);
+            insert.supernatural = parseInt(req.body.supernatural);
 
-            insert.skill_attributetype_id = req.body.skill_attributetype_id;
-            insert.attribute_expertisetype_id = req.body.attribute_expertisetype_id;
-            insert.dice_expertisetype_id = req.body.dice_expertisetype_id;
-            insert.money_attribute_id = req.body.money_attribute_id;
+            insert.split_supernatural = parseInt(req.body.split_supernatural);
+            insert.split_skill = parseInt(req.body.split_skill);
+            insert.split_expertise = parseInt(req.body.split_expertise);
+            insert.split_milestone = parseInt(req.body.split_milestone);
+            insert.split_relationship = parseInt(req.body.split_relationship);
 
-            insert.split_supernatural = req.body.split_supernatural;
-            insert.split_skill = req.body.split_skill;
-            insert.split_expertise = req.body.split_expertise;
-            insert.split_milestone = req.body.split_milestone;
-            insert.split_relationship = req.body.split_relationship;
-
-            insert.max_gift = req.body.max_gift;
-            insert.max_imperfection = req.body.max_imperfection;
-            insert.max_supernatural = req.body.max_supernatural;
-            insert.max_skill = req.body.max_skill;
-            insert.max_expertise = req.body.max_expertise;
-            insert.max_milestone = req.body.max_milestone;
-            insert.max_relationship = req.body.max_relationship;
+            insert.max_gift = parseInt(req.body.max_gift);
+            insert.max_imperfection = parseInt(req.body.max_imperfection);
+            insert.max_supernatural = parseInt(req.body.max_supernatural);
+            insert.max_skill = parseInt(req.body.max_skill);
+            insert.max_expertise = parseInt(req.body.max_expertise);
+            insert.max_milestone = parseInt(req.body.max_milestone);
+            insert.max_relationship = parseInt(req.body.max_relationship);
 
             var call = mysql.format('INSERT INTO world (name,bionic,augmentation,software,supernatural,' +
                 'skill_attributetype_id,attribute_expertisetype_id,dice_expertisetype_id,money_attribute_id,' +
@@ -164,39 +153,32 @@ module.exports = function(pool, router, table, path) {
         world.id = req.params.id;
 
         insert.name = req.body.name;
-        insert.bionic = req.body.bionic;
-        insert.augmentation = req.body.augmentation;
-        insert.software = req.body.software;
-        insert.supernatural = req.body.supernatural;
-        insert.calculated = req.body.calculated;
 
-        insert.skill_attributetype_id = req.body.skill_attributetype_id;
-        insert.attribute_expertisetype_id = req.body.attribute_expertisetype_id;
-        insert.dice_expertisetype_id = req.body.dice_expertisetype_id;
-        insert.money_attribute_id = req.body.money_attribute_id;
+        insert.bionic = parseInt(req.body.bionic);
+        insert.augmentation = parseInt(req.body.augmentation);
+        insert.software = parseInt(req.body.software);
+        insert.supernatural = parseInt(req.body.supernatural);
+        insert.calculated = parseInt(req.body.calculated);
 
-        insert.split_supernatural = req.body.split_supernatural;
-        insert.split_skill = req.body.split_skill;
-        insert.split_expertise = req.body.split_expertise;
-        insert.split_milestone = req.body.split_milestone;
-        insert.split_relationship = req.body.split_relationship;
+        insert.split_supernatural = parseInt(req.body.split_supernatural);
+        insert.split_skill = parseInt(req.body.split_skill);
+        insert.split_expertise = parseInt(req.body.split_expertise);
+        insert.split_milestone = parseInt(req.body.split_milestone);
+        insert.split_relationship = parseInt(req.body.split_relationship);
 
-        insert.max_gift = req.body.max_gift;
-        insert.max_imperfection = req.body.max_imperfection;
-        insert.max_supernatural = req.body.max_supernatural;
-        insert.max_skill = req.body.max_skill;
-        insert.max_expertise = req.body.max_expertise;
-        insert.max_milestone = req.body.max_milestone;
-        insert.max_relationship = req.body.max_relationship;
+        insert.max_gift = parseInt(req.body.max_gift);
+        insert.max_imperfection = parseInt(req.body.max_imperfection);
+        insert.max_supernatural = parseInt(req.body.max_supernatural);
+        insert.max_skill = parseInt(req.body.max_skill);
+        insert.max_expertise = parseInt(req.body.max_expertise);
+        insert.max_milestone = parseInt(req.body.max_milestone);
+        insert.max_relationship = parseInt(req.body.max_relationship);
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
+        user.id = user.token.sub.id;
+        user.admin = user.token.sub.admin;
 
-        user.id = user.valid && user.token.sub.verified
-            ? user.token.sub.id
-            : null;
-
-        if(!user.id) {
+        if(!user.token) {
             res.status(400).send('User not logged in.');
         } else {
             pool.query(mysql.format('SELECT owner FROM user_has_world WHERE user_id = ? AND world_id = ?', [user.id, world.id]), function (err, result) {
@@ -247,13 +229,10 @@ module.exports = function(pool, router, table, path) {
         world.id = req.params.id;
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
+        user.id = user.token.sub.id;
+        user.admin = user.token.sub.admin;
 
-        user.id = user.valid && user.token.sub.verified
-            ? user.token.sub.id
-            : null;
-
-        if(!user.id) {
+        if(!user.token) {
             res.status(400).send('User not logged in.');
         } else {
             pool.query(mysql.format('SELECT owner FROM user_has_world WHERE user_id = ? AND world_id = ?', [user.id, world.id]), function (err, result) {
@@ -285,13 +264,10 @@ module.exports = function(pool, router, table, path) {
         world.id = req.params.id;
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
+        user.id = user.token.sub.id;
+        user.admin = user.token.sub.admin;
 
-        user.id = user.valid && user.token.sub.verified
-            ? user.token.sub.id
-            : null;
-
-        if(!user.id) {
+        if(!user.token) {
             res.status(400).send('User not logged in.');
         } else {
             pool.query(mysql.format('SELECT owner FROM user_has_world WHERE user_id = ? AND world_id = ?', [user.id, world.id]), function (err, result) {
@@ -318,15 +294,9 @@ module.exports = function(pool, router, table, path) {
 
     // Asset
 
-    // Attribute
-
     require('./world_has_attribute')(pool, router, table, path);
 
-    // Background
-
     require('./world_has_background')(pool, router, table, path);
-
-    // Bionic
 
     require('./world_has_bionic')(pool, router, table, path);
 
@@ -334,59 +304,29 @@ module.exports = function(pool, router, table, path) {
 
     // Country
 
-    // Expertise
-
     require('./world_has_expertise')(pool, router, table, path);
 
-    // Focus
-
-    require('./world_has_focus')(pool, router, table, path);
-
-    // Gift
-
     require('./world_has_gift')(pool, router, table, path);
-
-    // Identity
-
-    require('./world_has_identity')(pool, router, table, path);
-
-    // Imperfection
 
     require('./world_has_imperfection')(pool, router, table, path);
 
     // Language
 
-    // Manifestation
-
     require('./world_has_manifestation')(pool, router, table, path);
-
-    // Milestone
 
     require('./world_has_milestone')(pool, router, table, path);
 
-    // Nature
-
-    require('./world_has_nature')(pool, router, table, path);
-
     // NPC
-
-    // Protection
 
     require('./world_has_protection')(pool, router, table, path);
 
-    // Software
+    require('./world_has_protection')(pool, router, table, path);
 
-    require('./world_has_software')(pool, router, table, path);
-
-    // Species
+    require('./world_has_skill')(pool, router, table, path);
 
     require('./world_has_species')(pool, router, table, path);
 
-    // Weapon
-
     require('./world_has_weapon')(pool, router, table, path);
-
-    // Weapon Mod
 
     require('./world_has_weaponmod')(pool, router, table, path);
 };

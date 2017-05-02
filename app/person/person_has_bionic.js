@@ -62,7 +62,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.bionic_id;
+        insert.id = parseInt(req.body.insert_id);
 
         pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
             person.auth = !!result[0];

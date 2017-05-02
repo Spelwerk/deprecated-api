@@ -21,19 +21,19 @@ module.exports = function(pool, router, table, path, query) {
     });
 
     router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(pool, req, res, table);
+        rest.OLD_REVIVE(pool, req, res, table);
     });
 
     router.post(path, function(req, res) {
         req.body.hash = hasher(24);
-        rest.INSERT(pool, req, res, table);
+        rest.OLD_INSERT(pool, req, res, table);
     });
 
     router.put(path + '/id/:id', function(req, res) {
         if (req.body.hash) {
             res.status(403).send({header: 'HASH error', message: 'HASH cannot be changed'})
         } else {
-            rest.PUT(pool, req, res, table);
+            rest.OLD_PUT(pool, req, res, table);
         }
     });
 
@@ -41,11 +41,11 @@ module.exports = function(pool, router, table, path, query) {
         if (req.body.hash) {
             res.status(403).send({header: 'HASH error', message: 'HASH cannot be changed'})
         } else {
-            rest.PUT(pool, req, res, table, {hash: req.params.id});
+            rest.OLD_PUT(pool, req, res, table, {hash: req.params.id});
         }
     });
 
     router.delete(path + '/hash/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table, {hash: req.params.id});
+        rest.OLD_DELETE(pool, req, res, table, {hash: req.params.id});
     });
 };

@@ -54,7 +54,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.attribute_id;
+        insert.id = parseInt(req.body.insert_id);
         insert.value = parseInt(req.body.value);
 
         pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
@@ -84,7 +84,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.attribute_id;
+        insert.id = parseInt(req.body.insert_id);
         insert.value = parseInt(req.body.value);
 
         async.parallel([

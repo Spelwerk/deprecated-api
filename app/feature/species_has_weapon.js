@@ -15,10 +15,10 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path + '/id/:id/weapon', function(req, res) {
-        rest.tablePostHas(pool, req, res, 'species', req.params.id, 'weapon');
+        rest.relationPost(pool, req, res, 'species', 'weapon');
     });
 
     router.delete(path + '/id/:id/weapon/:id2', function(req, res) {
-        rest.tableDeleteHas(pool, req, res, 'species', req.params.id, 'weapon', req.params.id2);
+        rest.relationDelete(pool, req, res, 'species', 'weapon');
     });
 };

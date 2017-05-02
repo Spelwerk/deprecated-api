@@ -5,138 +5,72 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'expertise.id, ' +
-        'expertise.canon, ' +
-        'expertise.special, ' +
         'expertise.name, ' +
         'expertise.description, ' +
-        'expertise.expertisetype_id, ' +
-        'expertisetype.name AS expertisetype_name, ' +
-        'expertisetype.maximum, ' +
-        'expertisetype.skill_attribute_required, ' +
-        'expertisetype.skill_attribute_increment, ' +
-        'expertisetype.startsat, ' +
+        'expertise.skill_id, ' +
         'expertise.species_id, ' +
-        'species.name AS species_name, ' +
         'expertise.manifestation_id, ' +
-        'manifestation.name AS manifestation_name, ' +
-        'expertise.skill_attribute_id, ' +
-        'a1.name AS skill_attribute_name, ' +
-        'expertise.give_attribute_id, ' +
-        'a2.name AS give_attribute_name, ' +
-        'icon.path AS icon_path ' +
+        'expertise.doctrine_id, ' +
+        'skill.icon ' +
         'FROM world_has_expertise ' +
         'LEFT JOIN expertise ON expertise.id = world_has_expertise.expertise_id ' +
-        'LEFT JOIN expertisetype ON expertisetype.id = expertise.expertisetype_id ' +
-        'LEFT JOIN species ON species.id = expertise.species_id ' +
-        'LEFT JOIN manifestation ON manifestation.id = expertise.manifestation_id ' +
-        'LEFT JOIN attribute a1 ON a1.id = expertise.skill_attribute_id ' +
-        'LEFT JOIN attribute a2 ON a2.id = expertise.give_attribute_id ' +
-        'LEFT JOIN icon ON icon.id = a1.icon_id';
+        'LEFT JOIN skill ON skill.id = expertise.skill_id';
 
     router.get(path + '/id/:id/expertise', function(req, res) {
         var call = query + ' WHERE ' +
-            'world_has_expertise.world_id = ? AND ' +
-            'expertise.special = 0 AND ' +
             'expertise.canon = 1 AND ' +
+            'world_has_expertise.world_id = ? AND ' +
+            'expertise.species_id IS NULL AND ' +
+            'expertise.manifestation_id IS NULL AND ' +
+            'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id/expertise/special', function(req, res) {
+    router.get(path + '/id/:id/expertise/skill/:id2', function(req, res) {
         var call = query + ' WHERE ' +
-            'world_has_expertise.world_id = ? AND ' +
-            'expertise.special = 0 AND ' +
             'expertise.canon = 1 AND ' +
-            'expertise.manifestation_id IS NULL AND ' +
+            'world_has_expertise.world_id = ? AND ' +
+            'expertise.skill_id = ? AND ' +
             'expertise.species_id IS NULL AND ' +
-            'expertise.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
-    router.get(path + '/id/:id/expertise/type/:id2', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world_has_expertise.world_id = ? AND ' +
-            'expertise.expertisetype_id = ? AND ' +
-            'expertise.special = ? AND ' +
-            'expertise.canon = ? AND ' +
-            'expertise.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 0, 1]);
-    });
-
-    router.get(path + '/id/:id/expertise/type/:id2/skill/:id3', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world_has_expertise.world_id = ? AND ' +
-            'expertise.expertisetype_id = ? AND ' +
-            'expertise.skill_attribute_id = ? AND ' +
-            'expertise.special = ? AND ' +
-            'expertise.canon = ? AND ' +
-            'expertise.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, 0, 1]);
-    });
-
-    router.get(path + '/id/:id/expertise/type/:id2/skill/:id3/species/:id4', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world_has_expertise.world_id = ? AND ' +
-            'expertise.expertisetype_id = ? AND ' +
-            'expertise.skill_attribute_id = ? AND ' +
             'expertise.manifestation_id IS NULL AND ' +
-            '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +
-            'expertise.special = ? AND ' +
-            'expertise.canon = ? AND ' +
-            'expertise.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4, 0, 1]);
-    });
-
-    router.get(path + '/id/:id/expertise/type/:id2/skill/:id3/species/:id4/manifestation/:id5', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world_has_expertise.world_id = ? AND ' +
-            'expertise.expertisetype_id = ? AND ' +
-            'expertise.skill_attribute_id = ? AND ' +
-            '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +
-            '(expertise.manifestation_id = ? OR expertise.manifestation_id IS NULL) AND ' +
-            'expertise.special = ? AND ' +
-            'expertise.canon = ? AND ' +
-            'expertise.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4, req.params.id5, 0, 1]);
-    });
-
-    router.get(path + '/id/:id/expertise/skill/:id2/special', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world_has_expertise.world_id = ? AND ' +
-            'expertise.skill_attribute_id = ? AND ' +
-            'expertise.special = 0 AND ' +
-            'expertise.canon = 1 AND ' +
-            'expertise.manifestation_id IS NULL AND ' +
-            'expertise.species_id IS NULL AND ' +
+            'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
     });
 
-    router.get(path + '/id/:id/expertise/special/skill/:id2/species/:id3', function(req, res) {
+    router.get(path + '/id/:id/expertise/skill/:id2/species/:id3', function(req, res) {
         var call = query + ' WHERE ' +
+            'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
-            'expertise.skill_attribute_id = ? AND ' +
-            'expertise.species_id = ? AND ' +
-            'expertise.special = ? AND ' +
-            'expertise.canon = ? AND ' +
+            'expertise.skill_id = ? AND ' +
+            '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +
             'expertise.manifestation_id IS NULL AND ' +
+            'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, 0, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3]);
+    });
+
+    router.get(path + '/id/:id/expertise/skill/:id2/species/:id3/manifestation/:id4', function(req, res) {
+        var call = query + ' WHERE ' +
+            'expertise.canon = 1 AND ' +
+            'world_has_expertise.world_id = ? AND ' +
+            'expertise.skill_id = ? AND ' +
+            '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +
+            '(expertise.manifestation_id = ? OR expertise.manifestation_id IS NULL) AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
     });
 
     router.post(path + '/id/:id/expertise', function(req, res) {
-        rest.worldPostHas(pool, req, res, req.params.id, 'expertise');
+        rest.relationPost(pool, req, res, 'world', 'expertise');
     });
 
     router.delete(path + '/id/:id/expertise/:id2', function(req, res) {
-        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'expertise');
+        rest.relationDelete(pool, req, res, 'world', 'expertise');
     });
 };

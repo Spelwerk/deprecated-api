@@ -6,73 +6,39 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'attribute.id, ' +
         'attribute.canon, ' +
-        'attribute.special, ' +
         'attribute.name, ' +
         'attribute.description, ' +
-        'attribute.protected, ' +
         'attribute.attributetype_id, ' +
-        'attributetype.name AS attributetype_name, ' +
         'attributetype.maximum, ' +
-        'attribute.species_id, ' +
-        'species.name AS species_name, ' +
-        'attribute.icon_id, ' +
-        'icon.path AS icon_path, ' +
+        'attribute.icon, ' +
         'attribute.created, ' +
         'attribute.deleted,' +
         'attribute.updated ' +
         'FROM attribute ' +
-        'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
-        'LEFT JOIN species ON species.id = attribute.species_id ' +
-        'LEFT JOIN icon ON icon.id = attribute.icon_id';
+        'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id';
 
-    require('./../default')(pool, router, table, path, query);
+    var allowedPost = ['name', 'description', 'attributetype_id', 'icon'];
+
+    var allowedPut = ['name', 'description', 'attributetype_id', 'icon'];
+
+    var allowsUser = false;
+
+    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+
+    router.get(path, function(req, res) {
+        var call = query + ' WHERE ' +
+            'attribute.canon = 1 AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call);
+    });
 
     router.get(path + '/type/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'attribute.attributetype_id = ? AND ' +
-            'attribute.canon = ? AND ' +
-            'attribute.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
-    });
-
-    router.get(path + '/type/:id/special', function(req, res) {
-        var call = query + ' WHERE ' +
-            'attribute.attributetype_id = ? AND ' +
             'attribute.canon = 1 AND ' +
-            'attribute.species_id IS NULL AND ' +
-            'attribute.special = 0 AND ' +
+            'attribute.attributetype_id = ? AND ' +
             'attribute.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
-    });
-
-    router.get(path + '/type/:id/species/:id2', function(req, res) {
-        var call = query + ' WHERE ' +
-            'attribute.attributetype_id = ? AND ' +
-            '(attribute.species_id = ? OR attribute.species_id IS NULL) AND ' +
-            'attribute.canon = ? AND ' +
-            'attribute.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
-    });
-
-    router.get(path + '/protected', function(req, res) {
-        var call = query + ' WHERE ' +
-            'attribute.protected = ? AND ' +
-            'attribute.canon = ? AND ' +
-            'attribute.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [1, 1]);
-    });
-
-    router.get(path + '/type/:id1/species/:id2', function(req, res) {
-        var call = query + ' WHERE ' +
-            'attribute.attributetype_id = ? AND ' +
-            '(attribute.species_id = ? OR attribute.species_id IS NULL) AND ' +
-            'attribute.canon = ? AND ' +
-            'attribute.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id1, req.params.id2, 1]);
     });
 };

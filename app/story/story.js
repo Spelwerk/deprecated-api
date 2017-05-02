@@ -59,11 +59,11 @@ module.exports = function(pool, router, table, path) {
     }); // todo with secret
 
     router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(pool, req, res, table);
+        rest.OLD_REVIVE(pool, req, res, table);
     }); // todo with secret/admin
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
+        rest.OLD_DELETE(pool, req, res, table);
     }); // todo with secret/admin
 
     // Location

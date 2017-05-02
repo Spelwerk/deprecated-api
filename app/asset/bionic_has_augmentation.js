@@ -12,10 +12,8 @@ module.exports = function(pool, router, table, path) {
         'augmentation.energy, ' +
         'augmentation.legal, ' +
         'augmentation.weapon_id, ' +
-        'weapon.name AS weapon_name ' +
         'FROM bionic_has_augmentation ' +
-        'LEFT JOIN augmentation ON augmentation.id = bionic_has_augmentation.augmentation_id ' +
-        'LEFT JOIN weapon ON weapon.id = augmentation.weapon_id';
+        'LEFT JOIN augmentation ON augmentation.id = bionic_has_augmentation.augmentation_id';
 
     router.get(path + '/id/:id/augmentation', function(req, res) {
         var call = query + ' WHERE ' +
@@ -26,15 +24,11 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, 1]);
     });
 
-    router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
+    router.post(path + '/id/:id/augmentation', function(req, res) {
+        rest.relationPost(pool, req, res, 'bionic', 'augmentation');
     });
 
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
-        var call = 'DELETE FROM ' + table + ' ' +
-            'WHERE ' + deleteArray[0] + ' = \'' + req.params.id1 + '\' ' +
-            'AND ' + deleteArray[1] + ' = \'' + req.params.id2 + '\'';
-
-        rest.queryMessage(pool, res, call, 202, 'deleted');
+    router.delete(path + '/id/:id/augmentation/:id2', function(req, res) {
+        rest.relationDelete(pool, req, res, 'bionic', 'augmentation');
     });
 };

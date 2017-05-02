@@ -8,7 +8,7 @@ module.exports = function(pool, router, table, path, deleteArray) {
     });
 
     router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
+        rest.OLD_INSERT(pool, req, res, table);
     });
 
     router.delete(path + '/id/:id1/id/:id2', function(req, res) {

@@ -3,33 +3,31 @@ var rest = require('./../rest');
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
 
-    var query = 'SELECT ' +
-        'asset.id, ' +
-        'asset.canon, ' +
-        'asset.name, ' +
-        'asset.description, ' +
-        'asset.price, ' +
-        'asset.legal, ' +
-        'asset.assettype_id, ' +
-        'assettype.name AS assettype_name, ' +
-        'assettype.assetgroup_id, ' +
-        'assetgroup.name AS assetgroup_name, ' +
-        'assettype.icon_id, ' +
-        'icon.path AS icon_path, ' +
-        'asset.created, ' +
-        'asset.deleted, ' +
-        'asset.updated ' +
-        'FROM asset ' +
+    var query = 'SELECT * FROM asset ' +
         'LEFT JOIN assettype ON assettype.id = asset.assettype_id ' +
-        'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id ' +
-        'LEFT JOIN icon ON icon.id = assettype.icon_id';
+        'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id';
 
-    require('./../default')(pool, router, table, path, query);
+    var allowedPost = ['name', 'description', 'price', 'legal', 'assettype_id'];
+
+    var allowedPut = ['name', 'description', 'price', 'legal', 'assettype_id'];
+
+    var allowsUser = true;
+
+    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+
+    router.get(path, function(req, res) {
+        var call = query + ' WHERE ' +
+            'asset.canon = 1 AND ' +
+            'asset.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
 
     router.get(path + '/type/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            table + '.assettype_id = ? AND ' +
-            table + '.deleted is NULL';
+            'asset.canon = 1 AND ' +
+            'asset.assettype_id = ? AND ' +
+            'asset.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

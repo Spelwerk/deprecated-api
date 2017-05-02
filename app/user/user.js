@@ -111,10 +111,9 @@ module.exports = function(pool, router, table, path) {
         if(!req.headers.token) {
             res.status(404).send({header: 'Missing Token', message: 'missing token'});
         } else {
-            var token = tokens.decode(req),
-                validity = tokens.validate(req, token);
+            var token = tokens.decode(req);
 
-            if(!validity) {
+            if(!token) {
                 res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
             } else {
                 res.status(200).send({user: token.sub});
@@ -256,14 +255,13 @@ module.exports = function(pool, router, table, path) {
             insert = {};
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
 
         insert.id = req.params.id;
         insert.displayname = req.body.displayname;
         insert.firstname = req.body.firstname;
         insert.surname = req.body.surname;
 
-        if(user.valid && (user.token.sub.admin || user.token.sub.id === insert.id)) {
+        if(user.token && (user.token.sub.admin || user.token.sub.id === insert.id)) {
             var call = mysql.format('INSERT INTO user (displayname,firstname,surname) VALUES (?,?,?) WHERE id = ?'
                 [insert.displayname,insert.firstname,insert.surname,insert.id]);
 
@@ -287,9 +285,8 @@ module.exports = function(pool, router, table, path) {
         insert.admin = req.body.admin;
 
         admin.token = tokens.decode(req);
-        admin.valid = tokens.validate(req, admin.token);
 
-        if(admin.valid) {
+        if(admin.token) {
             var call = mysql.format('UPDATE user SET admin = ? WHERE id = ?',[insert.admin,insert.id]);
 
             pool.query(call,function(err) {
@@ -311,10 +308,9 @@ module.exports = function(pool, router, table, path) {
         insert.id = req.params.id;
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
 
-        if(user.valid && (user.token.sub.admin || user.token.sub.id === insert.id)) {
-            rest.DELETE(pool, req, res, table);
+        if(user.token && (user.token.sub.admin || user.token.sub.id === insert.id)) {
+            rest.OLD_DELETE(pool, req, res, table);
         } else {
             res.status(403).send({header: 'Not Allowed', message: 'You are either not an administrator, or the current user deleting this profile.'});
         }

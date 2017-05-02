@@ -6,13 +6,13 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'weapon.id, ' +
         'weapon.canon, ' +
-        'weapon.special, ' +
+        'weapon.species, ' +
+        'weapon.augmentation, ' +
         'weapon.name, ' +
         'weapon.description, ' +
         'weapon.price, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
-        'weapontype.name AS weapontype_name, ' +
         'weapontype.damage_d12, ' +
         'weapontype.damage_bonus, ' +
         'weapontype.critical_d12, ' +
@@ -21,31 +21,59 @@ module.exports = function(pool, router, table, path) {
         'weapontype.hit, ' +
         'weapontype.distance, ' +
         'weapontype.weapongroup_id, ' +
-        'weapongroup.name AS weapongroup_name, ' +
-        'weapongroup.icon_id, ' +
-        'icon.path AS icon_path, ' +
+        'weapongroup.icon, ' +
         'weapon.created, ' +
         'weapon.deleted, ' +
         'weapon.updated ' +
         'FROM weapon ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
-        'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +
-        'LEFT JOIN icon ON icon.id = weapongroup.icon_id';
+        'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id';
 
-    require('./../default')(pool, router, table, path, query);
+    var allowedPost = ['name', 'description', 'price', 'legal', 'weapontype_id'];
 
-    router.get(path + '/type/:id', function(req, res) {
+    var allowedPut = ['name', 'description', 'price', 'legal', 'weapontype_id'];
+
+    var allowsUser = true;
+
+    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+
+    router.get(path, function(req, res) {
         var call = query + ' WHERE ' +
-            'weapon.weapontype_id = ? AND ' +
-            'weapon.deleted is NULL';
+            'weapon.canon = 1 AND ' +
+            'weapon.species = 0 AND ' +
+            'weapon.augmentation = 0 AND ' +
+            'weapon.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
-    router.get(path + '/special/:id', function(req, res) {
+    router.get(path + '/type/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'weapon.special = ? AND ' +
-            'weapon.deleted is NULL';
+            'weapon.canon = 1 AND ' +
+            'weapon.species = 0 AND ' +
+            'weapon.augmentation = 0 AND ' +
+            'weapon.weapontype_id = ? AND ' +
+            'weapon.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/species', function(req, res) {
+        var call = query + ' WHERE ' +
+            'weapon.canon = 1 AND ' +
+            'weapon.species = 1 AND ' +
+            'weapon.augmentation = 0 AND ' +
+            'weapon.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/augmentation', function(req, res) {
+        var call = query + ' WHERE ' +
+            'weapon.canon = 1 AND ' +
+            'weapon.species = 0 AND ' +
+            'weapon.augmentation = 1 AND ' +
+            'weapon.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

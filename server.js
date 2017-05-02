@@ -28,6 +28,14 @@ router.use(function(req, res, next) {
     }
 });
 
+router.use(function(req, res, next) {
+    if(req.headers.debug !== undefined) {
+        config.debugMode = req.headers.debug;
+    }
+
+    next();
+});
+
 require('./app/index')(pool, router);
 
 app.use('/', router);

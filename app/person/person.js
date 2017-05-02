@@ -52,23 +52,19 @@ module.exports = function(pool, router, table, path) {
             user = {};
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
-
-        user.id = user.valid && user.token.sub.verified
-            ? user.token.sub.id
-            : null;
+        user.id = user.token.sub.id;
 
         person.secret = hasher(32);
 
+        insert.playable = parseInt(req.body.playable) || 1;
+        insert.supernatural = parseInt(req.body.supernatural) || 0;
         insert.nickname = req.body.nickname;
         insert.age = req.body.age;
         insert.occupation = req.body.occupation;
-        insert.supernatural = req.body.supernatural || 0;
-        insert.playable = req.body.playable || 1;
 
-        species.id = req.body.species_id;
+        species.id = parseInt(req.body.species_id);
 
-        world.id = req.body.world_id;
+        world.id = parseInt(req.body.world_id);
 
         async.series([
             function(callback) {
@@ -242,7 +238,7 @@ module.exports = function(pool, router, table, path) {
                         } else { callback(); }
                     },
                     function(callback) {
-                        if(user.id) {
+                        if(user.token) {
                             pool.query(mysql.format('INSERT INTO user_has_person (user_id,person_id,owner,secret) VALUES (?,?,?,?)',
                                 [user.id,person.id,1,person.secret]),callback);
                         } else { callback(); }
@@ -268,30 +264,30 @@ module.exports = function(pool, router, table, path) {
             playable = {},
             description = {};
 
-        person.id = req.params.id;
+        person.id = parseInt(req.params.id);
         person.secret = req.body.secret;
 
-        insert.playable = req.body.playable;
-        insert.calculated = req.body.calculated;
-        insert.popularity = req.body.popularity;
-        insert.thumbsup = req.body.thumbsup;
-        insert.thumbsdown = req.body.thumbsdown;
+        insert.playable = parseInt(req.body.playable);
+        insert.calculated = parseInt(req.body.calculated);
+        insert.popularity = parseInt(req.body.popularity);
+        insert.thumbsup = parseInt(req.body.thumbsup);
+        insert.thumbsdown = parseInt(req.body.thumbsdown);
         insert.nickname = req.body.nickname;
         insert.occupation = req.body.occupation;
 
-        creation.point_expertise = req.body.point_expertise;
-        creation.point_gift = req.body.point_gift;
-        creation.point_imperfection = req.body.point_imperfection;
-        creation.point_milestone = req.body.point_milestone;
-        creation.point_money = req.body.point_money;
-        creation.point_power = req.body.point_power;
-        creation.point_relationship = req.body.point_relationship;
-        creation.point_skill = req.body.point_skill;
-        creation.point_supernatural = req.body.point_supernatural;
+        creation.point_expertise = parseInt(req.body.point_expertise);
+        creation.point_gift = parseInt(req.body.point_gift);
+        creation.point_imperfection = parseInt(req.body.point_imperfection);
+        creation.point_milestone = parseInt(req.body.point_milestone);
+        creation.point_money = parseInt(req.body.point_money);
+        creation.point_power = parseInt(req.body.point_power);
+        creation.point_relationship = parseInt(req.body.point_relationship);
+        creation.point_skill = parseInt(req.body.point_skill);
+        creation.point_supernatural = parseInt(req.body.point_supernatural);
 
-        playable.cheated = req.body.cheated;
-        playable.supernatural = req.body.supernatural;
-        playable.age = req.body.age;
+        playable.cheated = parseInt(req.body.cheated);
+        playable.supernatural = parseInt(req.body.supernatural);
+        playable.age = parseInt(req.body.age);
 
         description.firstname = req.body.firstname;
         description.surname = req.body.surname;
@@ -433,14 +429,13 @@ module.exports = function(pool, router, table, path) {
         person.secret = req.body.secret;
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
 
         pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
             person.auth = !!result[0];
 
             if(err) {
                 res.status(500).send(err);
-            } else if(!person.auth || (!person.auth && user.valid && !user.token.sub.admin)) {
+            } else if(!person.auth || (!person.auth && user.token && !user.token.sub.admin)) {
                 res.status(500).send('Wrong secret, or not administrator.');
             } else {
                 pool.query(mysql.format('UPDATE person SET deleted = NULL, updated = CURRENT_TIMESTAMP WHERE id = ',[person.id]),function(err) {
@@ -462,14 +457,13 @@ module.exports = function(pool, router, table, path) {
         person.secret = req.body.secret;
 
         user.token = tokens.decode(req);
-        user.valid = tokens.validate(req, user.token);
 
         pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
             person.auth = !!result[0];
 
             if(err) {
                 res.status(500).send(err);
-            } else if(!person.auth || (!person.auth && user.valid && !user.token.sub.admin)) {
+            } else if(!person.auth || (!person.auth && user.token && !user.token.sub.admin)) {
                 res.status(500).send('Wrong secret, or not administrator.');
             } else {
                 pool.query(mysql.format('UPDATE person SET deleted = CURRENT_TIMESTAMP WHERE id = ',[person.id]),function(err) {
@@ -505,7 +499,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.background_id;
+        insert.id = req.body.insert_id;
 
         async.series([
             function(callback) {
@@ -609,7 +603,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.focus_id;
+        insert.id = req.body.insert_id;
 
         async.series([
             function(callback) {
@@ -678,7 +672,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.identity_id;
+        insert.id = req.body.insert_id;
 
         async.series([
             function(callback) {
@@ -747,7 +741,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.manifestation_id;
+        insert.id = req.body.insert_id;
 
         pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
             person.auth = !!result[0];
@@ -803,7 +797,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.nature_id;
+        insert.id = req.body.insert_id;
 
         async.series([
             function(callback) {

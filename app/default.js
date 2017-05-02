@@ -32,18 +32,18 @@ module.exports = function(pool, router, table, path, query) {
     });
 
     router.post(path, function(req, res) {
-        rest.INSERT(pool, req, res, table);
+        rest.OLD_INSERT(pool, req, res, table);
     });
 
     router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table);
+        rest.OLD_PUT(pool, req, res, table);
     });
 
     router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(pool, req, res, table);
+        rest.OLD_REVIVE(pool, req, res, table);
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table);
+        rest.OLD_DELETE(pool, req, res, table);
     });
 };

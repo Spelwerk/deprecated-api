@@ -26,28 +26,18 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path + '/id/:id/bionic', function(req, res) {
         var call = query + ' WHERE ' +
+            'bionic.canon = 1 AND ' +
             'world_has_bionic.world_id = ? AND ' +
-            'bionic.canon = ? AND ' +
             'bionic.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
-    });
-
-    router.get(path + '/id/:id/bionic/bodypart/:id2', function(req, res) {
-        var call = query + ' WHERE ' +
-            'world_has_bionic.world_id = ? AND ' +
-            'bionic.bodypart_id = ? AND ' +
-            'bionic.canon = ? AND ' +
-            'bionic.deleted IS NULL';
-
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/bionic', function(req, res) {
-        rest.worldPostHas(pool, req, res, req.params.id, 'bionic');
+        rest.relationPost(pool, req, res, 'world', 'bionic');
     });
 
     router.delete(path + '/id/:id/bionic/:id2', function(req, res) {
-        rest.worldDeleteHas(pool, req, res, req.params.id, req.params.id2, 'bionic');
+        rest.relationDelete(pool, req, res, 'world', 'bionic');
     });
 };

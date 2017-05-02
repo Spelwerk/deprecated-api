@@ -5,15 +5,41 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT * FROM imperfection';
 
-    require('./../default')(pool, router, table, path, query);
+    var allowedPost = ['name', 'description', 'icon', 'species_id', 'manifestation_id'];
 
-    router.get(path + '/special', function(req, res) {
+    var allowedPut = ['name', 'description', 'icon'];
+
+    var allowsUser = true;
+
+    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+
+    router.get(path, function (req, res) {
         var call = query + ' WHERE ' +
-            'canon = ? AND ' +
+            'canon = 1 AND ' +
             'species_id IS NULL AND ' +
             'manifestation_id IS NULL AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [1]);
+        rest.QUERY(pool, req, res, call);
+    });
+
+    router.get(path + '/manifestation/:id', function (req, res) {
+        var call = query + ' WHERE ' +
+            'canon = 1 AND ' +
+            'species_id IS NULL AND ' +
+            'manifestation_id = ? AND ' +
+            'deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/species/:id', function (req, res) {
+        var call = query + ' WHERE ' +
+            'canon = 1 AND ' +
+            'species_id = ? AND ' +
+            'manifestation_id IS NULL AND ' +
+            'deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 };
