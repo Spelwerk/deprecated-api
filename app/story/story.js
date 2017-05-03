@@ -2,7 +2,8 @@ var mysql = require('mysql'),
     async = require('async'),
     logger = require('./../logger'),
     rest = require('./../rest'),
-    hasher = require('./../hasher');
+    hasher = require('./../hasher'),
+    tokens = require('./../tokens');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -29,56 +30,90 @@ module.exports = function(pool, router, table, path) {
 
     router.post(path, function(req, res) {
         var story = {},
-            insert = {};
+            insert = {},
+            user = {};
 
         story.secret = hasher(32);
 
         insert.name = req.body.name;
         insert.description = req.body.description;
         insert.plot = req.body.plot;
+        insert.world = parseInt(req.body.world_id);
 
-        insert.world = {};
-        insert.world.id = req.body.world_id;
+        user.token = tokens.decode(req);
+        user.id = user.token.sub.id;
 
-        var call = mysql.format('INSERT INTO story (secret,name,description,plot,world_id) VALUES (?,?,?,?,?)',
-            [insert.secret, insert.name, insert.description, insert.plot, insert.world.id]);
+        async.series([
+            function (callback) {
+                rest.query(pool, 'INSERT INTO story (secret,name,description,plot,world_id) VALUES (?,?,?,?,?)', [story.secret, insert.name, insert.description, insert.plot, insert.world], function(err, result) {
+                    story.id = result.insertId;
 
-        pool.query(call,function(err,result) {
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                    callback(err);
+                });
+            },
+            function(callback) {
+                if(!user.token) { callback(); } else {
+                    rest.query(pool, 'INSERT INTO user_has_story (user_id,person_id,secret,owner) VALUES (?,?,?,1)', [user.id, story.id, story.secret], callback);
+                }
+            }
+        ],function(err) {
+            if (err) {
+                res.status(500).send({code: err.code, message: err.message});
             } else {
-                story.id = result.insertId;
-
                 res.status(200).send({id: story.id, secret: story.secret});
+            }
+        });
+
+
+    });
+
+    router.put(path + '/id/:id', function(req, res) {
+        var story = {},
+            insert = {};
+
+        story.id = parseInt(req.params.id);
+        story.secret = req.body.secret;
+
+        insert.name = req.body.name;
+        insert.description = req.body.description;
+        insert.plot = req.body.plot;
+
+        async.series([
+            function(callback) {
+                rest.query(pool, 'SELECT secret FROM story WHERE id = ? AND secret = ?', [story.id, story.secret], function(err, result) {
+                    story.auth = !!result[0];
+
+                    if(err) return callback(err);
+
+                    if(!story.auth) return callback({status: 403, code: 0, message: 'Forbidden'});
+
+                    callback();
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'UPDATE story SET name = ?, description = ?, plot = ? WHERE id = ?', [insert.name, insert.description, insert.plot, story.id], callback);
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
             }
         });
     });
 
-    router.put(path + '/id/:id', function(req, res) {
-
-    }); // todo with secret
-
     router.put(path + '/revive/:id', function(req, res) {
-        rest.OLD_REVIVE(pool, req, res, table);
-    }); // todo with secret/admin
+        rest.REVIVE(pool, req, res, 'story');
+    });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.OLD_DELETE(pool, req, res, table);
-    }); // todo with secret/admin
+        rest.DELETE(pool, req, res, 'story');
+    });
 
-    // Location
-
-    require('./story_has_location')(pool, router, table, path);
-
-    // Meeting
+    // RELATIONSHIPS
 
     require('./story_has_meeting')(pool, router, table, path);
-
-    // NPC
-
-    require('./story_has_npc')(pool, router, table, path);
-
-    // Person
 
     require('./story_has_person')(pool, router, table, path);
 };

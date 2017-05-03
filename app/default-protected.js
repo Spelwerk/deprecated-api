@@ -1,8 +1,8 @@
 var rest = require('./rest');
 
-module.exports = function(pool, router, table, path, query, allowedKeysPost, allowedKeysPut, allowsUser) {
+module.exports = function(pool, router, table, path, query, allowedKeysPost, allowedKeysPut, adminOnly) {
     path = path || '/' + table;
-    allowsUser = allowsUser || true;
+    adminOnly = adminOnly || true;
 
     router.get(path + '/all', function(req, res) {
         rest.QUERY(pool, req, res, query, null, {"id": "ASC"});
@@ -21,11 +21,11 @@ module.exports = function(pool, router, table, path, query, allowedKeysPost, all
     });
 
     router.post(path, function(req, res) {
-        rest.POST(pool, req, res, table, allowedKeysPost, allowsUser);
+        rest.POST(pool, req, res, table, allowedKeysPost, adminOnly);
     });
 
     router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(pool, req, res, table, allowedKeysPut, allowsUser);
+        rest.PUT(pool, req, res, table, allowedKeysPut, adminOnly);
     });
 
     router.put(path + '/id/:id/canon', function(req, res) {
@@ -37,6 +37,6 @@ module.exports = function(pool, router, table, path, query, allowedKeysPost, all
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, table, allowsUser);
+        rest.DELETE(pool, req, res, table, adminOnly);
     });
 };

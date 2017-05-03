@@ -51,9 +51,6 @@ module.exports = function(pool, router, table, path) {
             points = {},
             user = {};
 
-        user.token = tokens.decode(req);
-        user.id = user.token.sub.id;
-
         person.secret = hasher(32);
 
         insert.playable = parseInt(req.body.playable) || 1;
@@ -65,6 +62,9 @@ module.exports = function(pool, router, table, path) {
         species.id = parseInt(req.body.species_id);
 
         world.id = parseInt(req.body.world_id);
+
+        user.token = tokens.decode(req);
+        user.id = user.token.sub.id;
 
         async.series([
             function(callback) {
@@ -252,18 +252,17 @@ module.exports = function(pool, router, table, path) {
                         } else { callback(); }
                     },
                     function(callback) {
-                        if(user.token) {
-                            rest.query(pool, 'INSERT INTO user_has_person (user_id,person_id,owner,secret) VALUES (?,?,?,?)', [user.id, person.id, 1, person.secret], callback);
-                        } else { callback(); }
+                        if(!user.token) { callback(); } else {
+                            rest.query(pool, 'INSERT INTO user_has_person (user_id,person_id,owner,secret) VALUES (?,?,?1?)', [user.id, person.id, person.secret], callback);
+                        }
                     }
                 ],function(err) {
                     callback(err);
                 });
             }
         ],function(err) {
-            if(err) {
-                console.log(err);
-                res.status(500).send(err);
+            if (err) {
+                res.status(500).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send({id: person.id, secret: person.secret});
             }
@@ -282,9 +281,6 @@ module.exports = function(pool, router, table, path) {
 
         insert.playable = parseInt(req.body.playable);
         insert.calculated = parseInt(req.body.calculated);
-        insert.popularity = parseInt(req.body.popularity);
-        insert.thumbsup = parseInt(req.body.thumbsup);
-        insert.thumbsdown = parseInt(req.body.thumbsdown);
         insert.nickname = req.body.nickname;
         insert.occupation = req.body.occupation;
 
@@ -315,179 +311,130 @@ module.exports = function(pool, router, table, path) {
         description.shame = req.body.shame;
         description.picture_path = req.body.picture_path;
 
-        pool.query(mysql.format('SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-            person.auth = !!result[0].secret;
-            person.playable = !!result[0].playable;
-            person.calculated = !!result[0].calculated;
+        async.series([
+            function (callback) {
+                rest.query(pool, 'SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?', [person.id,person.secret], function(err,result) {
+                    person.auth = !!result[0];
 
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else if(!person.auth) {
-                res.status(500).send({header: 'Wrong Secret', message: 'You provided the wrong secret', code: 0});
-            } else {
-                async.parallel([
-                    function(callback) {
-                        var call = 'UPDATE person SET ',
-                            values_array = [],
-                            query_amount = 0;
+                    if(err) return callback(err);
 
-                        for (var i in insert) {
-                            if(insert[i] !== undefined) {
-                                call += i + ' = ?, ';
-                                values_array.push(insert[i]);
-                                query_amount++;
-                            }
-                        }
+                    if(!person.auth) return callback({status: 403, code: 0, message: 'Forbidden'});
 
-                        if(query_amount > 0) {
-                            call = call.slice(0, -2) + ', updated = CURRENT_TIMESTAMP WHERE id = ?';
-                            values_array.push(person.id);
-
-                            pool.query(mysql.format(call,values_array),callback);
-                        } else {
-                            callback();
-                        }
-                    },
-                    function(callback) {
-                        if(person.playable && !person.calculated) {
-                            var call = 'UPDATE person_creation SET ',
-                                values_array = [],
-                                query_amount = 0;
-
-                            for (var i in creation) {
-                                if(creation[i] !== undefined) {
-                                    call += i + ' = ?, ';
-                                    values_array.push(creation[i]);
-                                    query_amount++;
-                                }
-                            }
-
-                            if(query_amount > 0) {
-                                call = call.slice(0, -2) + ' WHERE person_id = ?';
-                                values_array.push(person.id);
-
-                                pool.query(mysql.format(call,values_array),callback);
-                            } else {
-                                callback();
-                            }
-                        } else {
-                            callback();
-                        }
-                    },
-                    function(callback) {
-                        if(person.playable) {
-                            var call = 'UPDATE person_playable SET ',
-                                values_array = [],
-                                query_amount = 0;
-
-                            for (var i in playable) {
-                                if(playable[i] !== undefined) {
-                                    call += i + ' = ?, ';
-                                    values_array.push(playable[i]);
-                                    query_amount++;
-                                }
-                            }
-
-                            if(query_amount > 0) {
-                                call = call.slice(0, -2) + ' WHERE person_id = ?';
-                                values_array.push(person.id);
-
-                                pool.query(mysql.format(call,values_array),callback);
-                            } else {
-                                callback();
-                            }
-                        } else {
-                            callback();
-                        }
-                    },
-                    function(callback) {
-                        var call = 'UPDATE person_description SET ',
-                            values_array = [],
-                            query_amount = 0;
-
-                        for (var i in playable) {
-                            if(description[i] !== undefined) {
-                                call += i + ' = ?, ';
-                                values_array.push(description[i]);
-                                query_amount++;
-                            }
-                        }
-
-                        if(query_amount > 0) {
-                            call = call.slice(0, -2) + ' WHERE person_id = ?';
-                            values_array.push(person.id);
-
-                            pool.query(mysql.format(call,values_array),callback);
-                        } else {
-                            callback();
-                        }
-                    }
-                ],function(err) {
-                    if(err) {
-                        console.log(err);
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                    } else {
-                        res.status(200).send();
-                    }
+                    callback();
                 });
+            },
+            function (callback) {
+                var call = 'UPDATE person SET ',
+                    values_array = [],
+                    query_amount = 0;
+
+                for (var i in insert) {
+                    if(insert[i] !== undefined) {
+                        call += i + ' = ?, ';
+                        values_array.push(insert[i]);
+                        query_amount++;
+                    }
+                }
+
+                if(query_amount > 0) {
+                    call = call.slice(0, -2) + ', updated = CURRENT_TIMESTAMP WHERE id = ?';
+                    values_array.push(person.id);
+
+                    rest.query(pool, call, values_array, callback);
+                } else {
+                    callback();
+                }
+            },
+            function (callback) {
+                if(person.playable && !person.calculated) {
+                    var call = 'UPDATE person_creation SET ',
+                        values_array = [],
+                        query_amount = 0;
+
+                    for (var i in creation) {
+                        if(creation[i] !== undefined) {
+                            call += i + ' = ?, ';
+                            values_array.push(creation[i]);
+                            query_amount++;
+                        }
+                    }
+
+                    if(query_amount > 0) {
+                        call = call.slice(0, -2) + ' WHERE person_id = ?';
+                        values_array.push(person.id);
+
+                        rest.query(pool, call, values_array, callback);
+                    } else {
+                        callback();
+                    }
+                } else {
+                    callback();
+                }
+            },
+            function (callback) {
+                if(person.playable) {
+                    var call = 'UPDATE person_playable SET ',
+                        values_array = [],
+                        query_amount = 0;
+
+                    for (var i in playable) {
+                        if(playable[i] !== undefined) {
+                            call += i + ' = ?, ';
+                            values_array.push(playable[i]);
+                            query_amount++;
+                        }
+                    }
+
+                    if(query_amount > 0) {
+                        call = call.slice(0, -2) + ' WHERE person_id = ?';
+                        values_array.push(person.id);
+
+                        rest.query(pool, call, values_array, callback);
+                    } else {
+                        callback();
+                    }
+                } else {
+                    callback();
+                }
+            },
+            function (callback) {
+                var call = 'UPDATE person_description SET ',
+                    values_array = [],
+                    query_amount = 0;
+
+                for (var i in playable) {
+                    if(description[i] !== undefined) {
+                        call += i + ' = ?, ';
+                        values_array.push(description[i]);
+                        query_amount++;
+                    }
+                }
+
+                if(query_amount > 0) {
+                    call = call.slice(0, -2) + ' WHERE person_id = ?';
+                    values_array.push(person.id);
+
+                    rest.query(pool, call, values_array, callback);
+                } else {
+                    callback();
+                }
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
             }
         });
     });
 
     router.put(path + '/revive/:id', function(req, res) {
-        var user = {},
-            person = {};
-
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
-        user.token = tokens.decode(req);
-
-        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-            person.auth = !!result[0];
-
-            if(err) {
-                res.status(500).send(err);
-            } else if(!person.auth || (!person.auth && user.token && !user.token.sub.admin)) {
-                res.status(500).send('Wrong secret, or not administrator.');
-            } else {
-                pool.query(mysql.format('UPDATE person SET deleted = NULL, updated = CURRENT_TIMESTAMP WHERE id = ',[person.id]),function(err) {
-                    if (err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                    } else {
-                        res.status(200).send();
-                    }
-                });
-            }
-        });
+        rest.REVIVE(pool, req, res, 'person');
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        var user = {},
-            person = {};
-
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
-        user.token = tokens.decode(req);
-
-        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-            person.auth = !!result[0];
-
-            if(err) {
-                res.status(500).send(err);
-            } else if(!person.auth || (!person.auth && user.token && !user.token.sub.admin)) {
-                res.status(500).send('Wrong secret, or not administrator.');
-            } else {
-                pool.query(mysql.format('UPDATE person SET deleted = CURRENT_TIMESTAMP WHERE id = ',[person.id]),function(err) {
-                    if (err) {
-                        res.status(500).send(err);
-                    } else {
-                        res.status(202).send();
-                    }
-                });
-            }
-        });
+        rest.DELETE(pool, req, res, 'person');
     });
 
     // SPECIAL

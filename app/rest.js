@@ -87,6 +87,7 @@ module.exports.sendMail = sendMail;
 
 exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
     adminOnly = adminOnly || false;
+    allowedKeys = allowedKeys || null;
 
     var table = {},
         insert = {},
@@ -104,15 +105,24 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
         async.series([
             function(callback) {
                 var body = req.body,
+                    keys = [],
                     call = 'INSERT INTO ' + table.name + ' (',
                     vals = ' VALUES (',
                     varr = [];
 
-                for(var key in body) {
-                    if(allowedKeys.includes(key) && body.hasOwnProperty(key)) {
+                if(allowedKeys[0]) {
+                    for(var key in body) {
+                        keys.push(body[key]);
+                    }
+                } else {
+                    keys = body;
+                }
+
+                for(var key in keys) {
+                    if(keys.hasOwnProperty(key)) {
                         call += key + ',';
                         vals += '?,';
-                        varr.push(body[key]);
+                        varr.push(keys[key]);
                     }
                 }
 
@@ -145,6 +155,7 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
 
 exports.PUT = function(pool, req, res, tableName, allowedKeys, adminOnly) {
     adminOnly = adminOnly || false;
+    allowedKeys = allowedKeys || null;
 
     var table = {},
         user = {};
@@ -161,22 +172,31 @@ exports.PUT = function(pool, req, res, tableName, allowedKeys, adminOnly) {
             });
         },
         function(callback) {
-            var insert = req.body,
+            var body = req.body,
+                keys = [],
                 call = 'UPDATE ' + table.name + ' SET ',
-                valuesArray = [];
+                varr = [];
 
-            for(var key in insert) {
-                if(allowedKeys.includes(key) && insert.hasOwnProperty(key)) {
+            if(allowedKeys[0]) {
+                for(var key in body) {
+                    keys.push(body[key]);
+                }
+            } else {
+                keys = body;
+            }
+
+            for(var key in keys) {
+                if(keys.hasOwnProperty(key)) {
                     call += key + ' = ?,';
-                    valuesArray.push(insert[key]);
+                    varr.push(keys[key]);
                 }
             }
 
             call = call.slice(0, -1) + ' WHERE id = ?';
 
-            valuesArray.push(table.id);
+            varr.push(table.id);
 
-            query(pool, call, valuesArray, callback);
+            query(pool, call, varr, callback);
         }
     ],function(err) {
         if (err) {
@@ -336,102 +356,6 @@ exports.QUERY = function(pool, req, res, call, params, order) {
             } else {
                 res.status(200).send({data: result});
             }
-        }
-    });
-};
-
-exports.OLD_INSERT = function(pool, req, res, table) {
-    var body = req.body,
-        into = 'INSERT INTO ' + table + '(',
-        vals = ' VALUES (',
-        updt = '',
-        varr = [],
-        call;
-
-    for (var key in body) {
-        if(body.hasOwnProperty(key)) {
-            into += key + ', ';
-            vals += '?, ';
-            updt += key + ' = ?, ';
-            varr.push(body[key]);
-        }
-    }
-
-    into = into.slice(0, -2) + ')';
-    vals = vals.slice(0, -2) + ')';
-    updt = updt.slice(0, -2);
-
-    call = into + vals + ' ON DUPLICATE KEY UPDATE ' + updt;
-
-    call = mysql.format(call, varr); // format to fix vals
-    call = mysql.format(call, varr); // format to fix updt
-
-    pool.query(call, function(err, result) {
-        logger.logCall(file, call, err);
-
-        if(!result || err) {
-            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-        } else {
-            var returnId = 0,
-                returnHash = 0,
-                returnSend = null;
-
-            if(result.insertId != undefined) {
-                returnId = result.insertId;
-            } else if(req.body.id != undefined) {
-                returnId = req.body.id;
-            }
-
-            if(req.body.hash != undefined) {
-                returnHash = req.body.hash;
-            }
-
-            if(returnId != 0 && returnHash != 0) {
-                returnSend = {id: returnId, hash: req.body.hash};
-            } else if(returnId != 0 && returnHash == 0) {
-                returnSend = {id: returnId}
-            } else if(returnId == 0 && returnHash != 0) {
-                returnSend = {hash: req.body.hash}
-            }
-
-            res.status(201).send(returnSend);
-        }
-
-    });
-};
-
-exports.OLD_PUT = function(pool, req, res, table, options) {
-    options = options || {id: req.params.id };
-
-    var body = req.body,
-        call = 'UPDATE ' + table + ' SET ',
-        varr = [];
-
-    for (var key in body) {
-        if (body.hasOwnProperty(key)) {
-            call += key + ' = ?, ';
-            varr.push(body[key]);
-        }
-    }
-
-    call = call.slice(0, -2);
-    call += ' WHERE ';
-
-    for (var key in options) {
-        call += key + ' = \'' + options[key] + '\' AND ';
-    }
-
-    call = call.slice(0, -5);
-
-    call = mysql.format(call, varr); // format to fix vals
-
-    pool.query(call, function(err) {
-        logger.logCall(file, call, err);
-
-        if(err) {
-            res.status(500).send({header: 'Internal SQL Error', message: error});
-        } else {
-            res.status(200).send();
         }
     });
 };
