@@ -16,13 +16,19 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN story ON story.id = user_has_story.story_id ' +
         'LEFT JOIN world ON world.id = story.world_id';
 
-    require('../default-has')(pool, router, table, path, ["user_id","story_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/story', function(req, res) {
         var call = query + ' WHERE ' +
             'user_has_story.user_id = ? AND ' +
             'story.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.post(path + '/id/:id/story', function(req, res) {
+        rest.userRelationPost(pool, req, res, 'story');
+    });
+
+    router.delete(path + '/id/:id/story/:id2', function(req, res) {
+        rest.userRelationDelete(pool, req, res, 'story');
     });
 };

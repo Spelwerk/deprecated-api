@@ -14,7 +14,7 @@ module.exports = function(pool, router, table, path) {
         'LEFT JOIN person_creation ON person_creation.person_id = person.id ' +
         'LEFT JOIN person_has_species ON (person_has_species.person_id = person.id AND person_has_species.first = 1)';
 
-    // Get
+    // GET
 
     router.get(path, function(req, res) {
         rest.QUERY(pool, req, res, query, null, {"nickname": "ASC"});
@@ -41,7 +41,7 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, null, {"id": "ASC"});
     });
 
-    // Person
+    // PERSON
 
     router.post(path, function(req, res) {
         var person = {},
@@ -490,7 +490,7 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
-    // Special
+    // SPECIAL
 
     router.put(path + '/id/:id/background', function(req, res) {
         var person = {},
@@ -884,7 +884,7 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
-    // Relationships
+    // RELATIONSHIPS
 
     require('./person_has_attribute')(pool, router, table, path);
 

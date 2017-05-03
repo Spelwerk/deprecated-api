@@ -1,5 +1,8 @@
 var async = require('async'),
     mysql = require('mysql'),
+    config = require('./config'),
+    mailgun = require('mailgun-js')({apiKey: config.mailgun.apikey, domain: config.mailgun.domain}),
+    mailcomposer = require('mailcomposer'),
     logger = require('./logger'),
     config = require('./config'),
     tokens = require('./tokens');
@@ -52,9 +55,33 @@ function userAuth(pool, req, table, adminOnly, callback) {
     });
 }
 
+function sendMail(email, subject, text, callback) {
+    var mail = {
+        from: config.superuser.email,
+        to: email,
+        subject: subject,
+        text: '',
+        html: text
+    };
+
+    var composer = mailcomposer(mail);
+
+    composer.build(function(err, message) {
+        var dataToSend = {
+            to: mail.to,
+            message: message.toString('ascii')
+        };
+
+        mailgun.messages().sendMime(dataToSend,function(err, result) {
+            callback(err, result);
+        });
+    });
+}
+
 module.exports.query = query;
 module.exports.userAuth = userAuth;
 module.exports.personAuth = personAuth;
+module.exports.sendMail = sendMail;
 
 // IMPROVED DEFAULT
 
@@ -464,25 +491,24 @@ exports.relationPost = function(pool, req, res, tableName, relationName, adminOn
     relation.id = parseInt(req.body.insert_id);
     relation.name = relationName;
 
-    async.series([
-        function(callback) {
-            userAuth(pool, req, table, adminOnly, function(err, result) {
-                user.id = result;
+    user.token = tokens.decode(req);
+    user.id = user.token.sub.id;
+    user.admin = user.token.sub.admin;
 
-                callback(err);
-            });
-        },
-        function(callback) {
-            query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id) VALUES (?,?)', [table.id, relation.id], callback);
-        }
-    ],function(err) {
-        if (err) {
-            var status = err.status ? err.status : 500;
-            res.status(status).send({code: err.code, message: err.message});
-        } else {
-            res.status(200).send();
-        }
-    });
+    if(!user.token) {
+        res.status(400).send({code: 0, message: 'User not logged in.'});
+    } else if(adminOnly && !user.admin) {
+        res.status(403).send({code: 0, message: 'Forbidden.'});
+    } else {
+        query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id) VALUES (?,?)', [table.id, relation.id], function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
+            }
+        });
+    }
 };
 
 exports.relationPostWithValue = function(pool, req, res, tableName, relationName, adminOnly) {
@@ -499,25 +525,24 @@ exports.relationPostWithValue = function(pool, req, res, tableName, relationName
     relation.name = relationName;
     relation.value = parseInt(req.body.value);
 
-    async.series([
-        function(callback) {
-            userAuth(pool, req, table, adminOnly, function(err, result) {
-                user.id = result;
+    user.token = tokens.decode(req);
+    user.id = user.token.sub.id;
+    user.admin = user.token.sub.admin;
 
-                callback(err);
-            });
-        },
-        function(callback) {
-            query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id,value) VALUES (?,?,?)', [table.id, relation.id, relation.value], callback);
-        }
-    ],function(err) {
-        if (err) {
-            var status = err.status ? err.status : 500;
-            res.status(status).send({code: err.code, message: err.message});
-        } else {
-            res.status(200).send();
-        }
-    });
+    if(!user.token) {
+        res.status(400).send({code: 0, message: 'User not logged in.'});
+    } else if(adminOnly && !user.admin) {
+        res.status(403).send({code: 0, message: 'Forbidden.'});
+    } else {
+        query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id,value) VALUES (?,?,?)', [table.id, relation.id, relation.value], function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
+            }
+        });
+    }
 };
 
 exports.relationPutValue = function(pool, req, res, tableName, relationName, adminOnly) {
@@ -751,4 +776,54 @@ exports.personDeleteRelation = function(pool, req, res, tableName) {
             res.status(200).send();
         }
     });
+};
+
+// USER
+
+exports.userRelationPost = function(pool, req, res, relationName) {
+    var relation = {},
+        user = {};
+
+    relation.id = parseInt(req.body.insert_id);
+    relation.name = relationName;
+
+    user.token = tokens.decode(req);
+    user.id = user.token.sub.id;
+
+    if(!user.token) {
+        res.status(400).send({code: 0, message: 'User not logged in.'});
+    } else {
+        query(pool, 'INSERT INTO user_has_' + relation.name + ' (user_id,' + relation.name + '_id) VALUES (?,?)', [user.id, relation.id], function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
+            }
+        });
+    }
+};
+
+exports.userRelationDelete = function(pool, req, res, relationName) {
+    var relation = {},
+        user = {};
+
+    relation.id = parseInt(req.params.id2);
+    relation.name = relationName;
+
+    user.token = tokens.decode(req);
+    user.id = user.token.sub.id;
+
+    if(!user.token) {
+        res.status(400).send({code: 0, message: 'User not logged in.'});
+    } else {
+        query(pool, 'DELETE FROM user_has_' + relation.name + ' WHERE user_id = ? AND ' + relation.name + '_id = ?', [user.id, relation.id], function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
+            }
+        });
+    }
 };

@@ -6,19 +6,23 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'user_has_friend.user_id, ' +
         'user_has_friend.friend_id, ' +
-        'user.displayname AS friend_displayname, ' +
-        'user.firstname AS friend_firstname, ' +
-        'user.surname AS friend_surname ' +
+        'user.displayname, ' +
         'FROM user_has_friend ' +
         'LEFT JOIN user ON user.id = user_has_friend.friend_id';
 
-    require('../default-has')(pool, router, table, path, ["user_id","friend_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/friend', function(req, res) {
         var call = query + ' WHERE ' +
             'user_has_friend.user_id = ? AND ' +
             'user.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
+    });
+
+    router.post(path + '/id/:id/friend', function(req, res) {
+        rest.userRelationPost(pool, req, res, 'story');
+    });
+
+    router.delete(path + '/id/:id/friend/:id2', function(req, res) {
+        rest.userRelationDelete(pool, req, res, 'story');
     });
 };

@@ -6,7 +6,8 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'user_has_person.user_id, ' +
         'user_has_person.person_id, ' +
-        'user_has_person.hash AS person_hash, ' +
+        'user_has_person.owner, ' +
+        'user_has_person.secret, ' +
         'user_has_person.favorite, ' +
         'person.nickname AS nickname, ' +
         'person.occupation AS occupation, ' +
@@ -15,9 +16,7 @@ module.exports = function(pool, router, table, path) {
         'FROM user_has_person ' +
         'LEFT JOIN person ON person.id = user_has_person.person_id';
 
-    require('../default-has')(pool, router, table, path, ["user_id","person_id"]);
-
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id/person', function(req, res) {
         var call = query + ' WHERE ' +
             'user_has_person.user_id = ? AND ' +
             'person.deleted IS NULL';
@@ -25,20 +24,20 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id], {"person_id": "ASC"});
     });
 
-    router.get(path + '/id/:id/favorite', function(req, res) {
+    router.get(path + '/id/:id/person/favorite', function(req, res) {
         var call = query + ' WHERE ' +
             'user_has_person.user_id = ? AND ' +
-            'user_has_person.favorite = ? AND ' +
+            'user_has_person.favorite = 1 AND ' +
             'person.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, 1], {"person_id": "ASC"});
+        rest.QUERY(pool, req, res, call, [req.params.id], {"person_id": "ASC"});
     });
 
-    router.get(path + '/id/:id/deleted', function(req, res) {
-        var call = query + ' WHERE ' +
-            'user_has_person.user_id = ? AND ' +
-            'person.deleted IS NOT NULL';
+    router.post(path + '/id/:id/person', function(req, res) {
+        rest.userRelationPost(pool, req, res, 'person');
+    });
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"person_id": "ASC"});
+    router.delete(path + '/id/:id/person/:id2', function(req, res) {
+        rest.userRelationDelete(pool, req, res, 'person');
     });
 };
