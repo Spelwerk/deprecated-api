@@ -16,13 +16,11 @@ module.exports = function(pool, router, table, path) {
         'bionic.attribute_id, ' +
         'attribute.name AS attribute_name, ' +
         'bionic.attribute_value, ' +
-        'bionic.icon_id, ' +
-        'icon.path AS icon_path ' +
+        'bionic.icon ' +
         'FROM world_has_bionic ' +
         'LEFT JOIN bionic ON bionic.id = world_has_bionic.bionic_id ' +
         'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
-        'LEFT JOIN attribute ON attribute.id = bionic.attribute_id ' +
-        'LEFT JOIN icon ON icon.id = bionic.icon_id';
+        'LEFT JOIN attribute ON attribute.id = bionic.attribute_id';
 
     router.get(path + '/id/:id/bionic', function(req, res) {
         var call = query + ' WHERE ' +

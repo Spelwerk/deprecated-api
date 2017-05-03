@@ -1,8 +1,5 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+var async = require('async'),
+    rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -12,13 +9,11 @@ module.exports = function(pool, router, table, path) {
         'gift.canon, ' +
         'gift.name, ' +
         'gift.description, ' +
-        'person_has_gift.custom, ' +
         'gift.attribute_id, ' +
-        'attribute.name AS attribute_name, ' +
-        'gift.attribute_value ' +
+        'gift.attribute_value, ' +
+        'person_has_gift.custom ' +
         'FROM person_has_gift ' +
-        'LEFT JOIN gift ON gift.id = person_has_gift.gift_id ' +
-        'LEFT JOIN attribute ON attribute.id = gift.attribute_id';
+        'LEFT JOIN gift ON gift.id = person_has_gift.gift_id';
 
     router.get(path + '/id/:id/gift', function(req, res) {
         var call = query + ' WHERE ' +
@@ -29,78 +24,42 @@ module.exports = function(pool, router, table, path) {
 
     router.post(path + '/id/:id/gift', function(req, res) {
         var person = {},
+            current = {},
             insert = {};
 
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.gift_id;
+        insert.id = parseInt(req.body.insert_id);
 
-        async.waterfall([
+        async.series([
             function(callback) {
-                async.parallel([
-                    function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM gift WHERE id = ?',[insert.id]),callback);
-                    }
-                ],function(err,results) {
-                    person.auth = !!results[0][0][0];
-                    person.attribute = results[1][0];
-                    insert.attribute = results[2][0];
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
+                    person.attribute = result;
 
-                    callback(err,person,insert);
+                    callback(err);
                 });
             },
-            function(person,insert,callback) {
-                if(person.auth) {
-                    async.parallel([
-                        function(callback) {
-                            pool.query(mysql.format('INSERT INTO person_has_gift (person_id,gift_id) VALUES (?,?)',[person.id,insert.id]),callback);
-                        },
-                        function(callback) {
-                            if(insert.attribute[0].attribute_id !== null) {
-                                var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
+            function(callback) {
+                rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM gift WHERE id = ?', [insert.id], function(err, result) {
+                    insert.attribute = result;
 
-                                for(var i in person.attribute) {
-                                    for(var j in insert.attribute) {
-                                        if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
-                                            person.attribute[i].value += insert.attribute[j].value;
-                                            person.attribute[i].changed = true;
-                                            insert.attribute[j].updated = true;
-                                        }
-                                    }
-
-                                    if(person.attribute[i].changed === true) {
-                                        call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
-                                    }
-                                }
-
-                                for(var m in insert.attribute) {
-                                    if(insert.attribute[m].updated !== true) {
-                                        call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
-                                    }
-                                }
-
-                                call = call.slice(0, -1);
-
-                                call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
-
-                                pool.query(call,callback);
-                            } else { callback(); }
-                        }
-                    ],function(err) {
-                        callback(err);
-                    });
-                } else { callback('wrong secret'); }
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_gift (person_id,gift_id) VALUES (?,?)', [person.id, insert.id], callback);
+            },
+            function(callback) {
+                rest.personInsertAttribute(pool, person, insert, current, callback);
             }
         ],function(err) {
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send();
             }

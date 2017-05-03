@@ -1,8 +1,5 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+var async = require('async'),
+    rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -33,19 +30,26 @@ module.exports = function(pool, router, table, path) {
         insert.name = req.body.name;
         insert.timestwo = req.body.timestwo;
 
-        pool.query(mysql.format('INSERT INTO sanity (name) VALUES (?)',[insert.name]),function(err,result) {
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else {
-                insert.id = result.insertId;
+        async.series([
+            function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO sanity (name) VALUES (?)', [insert.name], function(err,result) {
+                    insert.id = result.insertId;
 
-                pool.query(mysql.format('INSERT INTO person_has_sanity (person_id,sanity_id,timestwo) VALUES (?,?,?)',[person.id,insert.id,insert.timestwo]),function(err) {
-                    if (err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                    } else {
-                        res.status(200).send();
-                    }
+                    callback(err);
                 });
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_sanity (person_id,sanity_id,timestwo) VALUES (?,?,?)', [person.id, insert.id, insert.timestwo], callback);
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
             }
         });
     });
@@ -60,9 +64,17 @@ module.exports = function(pool, router, table, path) {
         insert.id = req.params.id2;
         insert.heal = req.params.heal;
 
-        pool.query(mysql.format('UPDATE person_has_sanity SET heal = ? WHERE person_id = ? AND sanity_id = ?',[insert.heal,person.id,insert.id]),function(err) {
+        async.series([
+            function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'UPDATE person_has_sanity SET heal = ? WHERE person_id = ? AND sanity_id = ?', [insert.heal, person.id, insert.id], callback);
+            }
+        ],function(err) {
             if (err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send();
             }

@@ -1,8 +1,5 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+var async = require('async'),
+    rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -16,14 +13,10 @@ module.exports = function(pool, router, table, path) {
         'augmentation.energy, ' +
         'augmentation.legal, ' +
         'augmentation.weapon_id, ' +
-        'weapon.name AS weapon_name, ' +
         'person_has_augmentation.augmentationquality_id AS quality_id, ' +
-        'augmentationquality.name AS quality_name, ' +
-        'augmentationquality.price AS quality_price, ' +
         'augmentationquality.energy AS quality_energy ' +
         'FROM person_has_augmentation ' +
         'LEFT JOIN augmentation ON augmentation.id = person_has_augmentation.augmentation_id ' +
-        'LEFT JOIN weapon ON weapon.id = augmentation.weapon_id ' +
         'LEFT JOIN augmentationquality ON augmentationquality.id = person_has_augmentation.augmentationquality_id';
 
     router.get(path + '/id/:id/augmentation', function(req, res) {
@@ -38,99 +31,63 @@ module.exports = function(pool, router, table, path) {
             'person_has_augmentation.person_id = ? AND ' +
             'person_has_augmentation.bionic_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id,req.params.id2]);
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/augmentation', function(req, res) {
         var person = {},
+            current = {},
             insert = {};
 
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.augmentation_id;
-        insert.bionic = req.body.bionic_id;
+        insert.id = parseInt(req.body.insert_id);
+        insert.bionic = parseInt(req.body.bionic_id);
 
-        async.waterfall([
+        async.series([
             function(callback) {
-                async.parallel([
-                    function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM augmentation_has_attribute WHERE augmentation_id = ?',[insert.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT weapon_id FROM augmentation WHERE id = ?',[insert.id]),callback);
-                    }
-                ],function(err,results) {
-                    person.auth = !!results[0][0][0];
-                    person.attribute = results[1][0];
-                    insert.attribute = results[2][0];
-                    insert.wpn = results[3][0][0];
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
+                    person.attribute = result;
 
-                    callback(err,person,insert);
+                    callback(err);
                 });
             },
-            function(person,insert,callback) {
-                if(person.auth) {
-                    async.parallel([
-                        function(callback) {
-                            pool.query(mysql.format('INSERT INTO person_has_augmentation (person_id,bionic_id,augmentation_id) VALUES (?,?,?)',[person.id,insert.bionic,insert.id]),callback);
-                        },
-                        function(callback) {
-                            if(insert.attribute[0] !== undefined) {
-                                var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
+            function(callback) {
+                rest.query(pool, 'SELECT attribute_id, value FROM augmentation_has_attribute WHERE augmentation_id = ?', [insert.id], function(err, result) {
+                    insert.attribute = !!result[0] ? result : null;
 
-                                for(var i in person.attribute) {
-                                    for(var j in insert.attribute) {
-                                        if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
-                                            person.attribute[i].value += insert.attribute[j].value;
-                                            person.attribute[i].changed = true;
-                                            insert.attribute[j].updated = true;
-                                        }
-                                    }
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT weapon_id FROM augmentation WHERE id = ?', [insert.id], function(err, result) {
+                    insert.weapon = !!result[0] ? result[0].weapon_id : null;
 
-                                    if(person.attribute[i].changed === true) {
-                                        call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
-                                    }
-                                }
-
-                                for(var m in insert.attribute) {
-                                    if(insert.attribute[m].updated !== true) {
-                                        call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
-                                    }
-                                }
-
-                                call = call.slice(0, -1);
-
-                                call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
-
-                                pool.query(call,callback);
-                            } else { callback(); }
-                        },
-                        function(callback) {
-                            if(insert.wpn !== undefined) {
-                                var weapon = insert.wpn.weapon_id;
-
-                                pool.query(mysql.format('INSERT INTO person_has_weapon (person_id,weapon_id) VALUES (?,?)',[person.id,weapon]),callback);
-                            } else { callback(); }
-                        }
-                    ],function(err) {
-                        callback(err);
-                    });
-                } else { callback('wrong secret'); }
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_augmentation (person_id,bionic_id,augmentation_id) VALUES (?,?,?)', [person.id, insert.bionic, insert.id], callback);
+            },
+            function(callback) {
+                rest.personInsertAttribute(pool, person, insert, current, callback);
+            },
+            function(callback) {
+                if(!insert.weapon) { callback(); } else {
+                    rest.query(pool, 'INSERT INTO person_has_weapon (person_id,weapon_id) VALUES (?,?)', [person.id, insert.weapon], callback);
+                }
             }
         ],function(err) {
             if(err) {
-                console.log(err);
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send();
             }
-        })
+        });
     });
 };

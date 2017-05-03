@@ -1,8 +1,5 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+var async = require('async'),
+    rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -12,26 +9,14 @@ module.exports = function(pool, router, table, path) {
         'milestone.canon, ' +
         'milestone.name, ' +
         'milestone.description, ' +
-        'person_has_milestone.custom, ' +
         'milestone.background_id, ' +
-        'background.name AS background_name, ' +
-        'milestone.species_id, ' +
-        'species.name AS species_name, ' +
-        'milestone.manifestation_id, ' +
-        'manifestation.name AS manifestation_name, ' +
         'milestone.attribute_id, ' +
-        'attribute.name AS attribute_name, ' +
         'milestone.attribute_value, ' +
         'milestone.loyalty_id, ' +
-        'loyalty.name AS loyalty_name, ' +
-        'milestone.loyalty_occupation ' +
+        'milestone.loyalty_occupation, ' +
+        'person_has_milestone.custom ' +
         'FROM person_has_milestone ' +
-        'LEFT JOIN milestone ON milestone.id = person_has_milestone.milestone_id ' +
-        'LEFT JOIN background ON background.id = milestone.background_id ' +
-        'LEFT JOIN species ON species.id = milestone.species_id ' +
-        'LEFT JOIN manifestation ON manifestation.id = milestone.manifestation_id ' +
-        'LEFT JOIN attribute ON attribute.id = milestone.attribute_id ' +
-        'LEFT JOIN loyalty ON loyalty.id = milestone.loyalty_id';
+        'LEFT JOIN milestone ON milestone.id = person_has_milestone.milestone_id';
 
     router.get(path + '/id/:id/milestone', function(req, res) {
         var call = query + ' WHERE ' +
@@ -48,45 +33,36 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.milestone_id;
+        insert.id = parseInt(req.body.insert_id);
 
-        async.waterfall([
+        async.series([
             function(callback) {
-                async.parallel([
-                    function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM milestone WHERE id = ?',[insert.id]),callback);
-                    }
-                ],function(err,results) {
-                    person.auth = !!results[0][0][0];
-                    person.attribute = results[1][0];
-                    insert.attribute = results[2][0];
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
+                    person.attribute = result;
 
-                    callback(err,person,insert);
+                    callback(err);
                 });
             },
-            function(person,insert,callback) {
-                if(person.auth) {
-                    async.parallel([
-                        function(callback) {
-                            pool.query(mysql.format('INSERT INTO person_has_milestone (person_id,milestone_id) VALUES (?,?)',[person.id,insert.id]),callback);
-                        },
-                        function(callback) {
-                            rest.personInsertAttribute(pool, person, insert, current, callback);
-                        }
-                    ],function(err) {
-                        callback(err);
-                    });
-                } else { callback(); }
+            function(callback) {
+                rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM milestone WHERE id = ?', [insert.id], function(err, result) {
+                    insert.attribute = result;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_milestone (person_id,milestone_id) VALUES (?,?)', [person.id, insert.id], callback);
+            },
+            function(callback) {
+                rest.personInsertAttribute(pool, person, insert, current, callback);
             }
         ],function(err) {
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send();
             }

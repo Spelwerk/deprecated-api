@@ -6,55 +6,60 @@ var async = require('async'),
 
 var file = 'rest.js';
 
-function queryDefault(pool, res, call) {
-    pool.query(call, function(err, result) {
-        logger.logCall(file, call, err);
-
-        if(err) {
-            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-        } else {
-            if(!result[0]) {
-                res.status(204).send();
-            } else {
-                res.status(200).send({data: result});
-            }
-        }
-    });
-}
-
-function queryMessage(pool, res, call, status, message) {
-    status = status || 200;
-    message = message || 'success';
-
-    pool.query(call, function(err, result) {
-        logger.logCall(file, call, err);
-
-        if(err) {
-            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-        } else {
-            res.status(status).send({data: result, message: message});
-        }
-    });
-}
-
 function query(pool, call, params, callback) {
-    var query = mysql.format(call,params);
+    if(params[0]) {
+        call = mysql.format(call, params);
+    }
 
-    pool.query(query,function(err,result) {
-        logger.logCall(file,query,err);
+    pool.query(call, function(err, result) {
+        logger.logCall(file, call, err);
 
-        callback(err,result);
+        callback(err, result);
     });
 }
 
-module.exports.queryDefault = queryDefault;
-module.exports.queryMessage = queryMessage;
+function personAuth(pool, person, callback) {
+    query(pool, 'SELECT secret FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err, result) {
+        person.auth = !!result[0];
+
+        if(err) return callback(err);
+
+        if(!person.auth) return callback({status: 403, code: 0, message: 'Forbidden'});
+
+        callback();
+    });
+}
+
+function userAuth(pool, req, table, adminOnly, callback) {
+    var user = {};
+
+    user.token = tokens.decode(req);
+    user.id = user.token.sub.id;
+    user.admin = user.token.sub.admin;
+
+    if(!user.token) return callback({status: 400, code: 0, message: 'User not logged in.'});
+
+    if(user.admin) return callback(null, user.id);
+
+    if(adminOnly && !user.admin) return callback({status: 403, code: 0, message: 'Forbidden.'});
+
+    query(pool,'SELECT owner FROM user_has_' + table.name + ' WHERE user_id = ? AND ' + table.name + '_id = ?',[user.id, table.id],function(err,result) {
+        user.owner = !!result[0];
+
+        if(!user.owner) return callback({status: 403, code: 0, message: 'Forbidden.'});
+
+        callback(err, user.id);
+    });
+}
+
 module.exports.query = query;
+module.exports.userAuth = userAuth;
+module.exports.personAuth = personAuth;
 
 // IMPROVED DEFAULT
 
-exports.POST = function(pool, req, res, tableName, allowedKeys, allowsUser) {
-    allowsUser = allowsUser || true;
+exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
+    adminOnly = adminOnly || false;
 
     var table = {},
         insert = {},
@@ -65,9 +70,9 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, allowsUser) {
     user.token = tokens.decode(req);
 
     if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!allowsUser && !user.sub.admin) {
-        res.status(400).send('User not admin and not allowed to post to this table.');
+        res.status(400).send({status: 400, code: 0, message: 'User not logged in.'});
+    } else if(adminOnly && !user.sub.admin) {
+        res.status(400).send({status: 403, code: 0, message: 'Forbidden.'});
     } else {
         async.series([
             function(callback) {
@@ -89,25 +94,21 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, allowsUser) {
 
                 call += vals;
 
-                query(pool,call,varr,function(err,result) {
+                query(pool, call, varr, function(err, result) {
                     insert.id = parseInt(result.insertId);
 
                     callback(err);
                 });
             },
             function(callback) {
-                if(allowsUser) {
-                    user.id = user.token.sub.id;
-
-                    var user_has_table = 'user_has_' + table.name,
-                        table_id = table.name + '_id';
-
-                    query(pool,'INSERT INTO ' + user_has_table + ' (user_id,' + table_id + ',owner) VALUES (?,?,1)',[user.id,insert.id],callback);
-                } else { callback(); }
+                if(adminOnly || user.token.sub.admin) { callback(); } else {
+                    query(pool, 'INSERT INTO user_has_' + table.name + ' (user_id,' + table.name + '_id,owner) VALUES (?,?,1)', [user.token.sub.id, insert.id], callback);
+                }
             }
         ],function(err) {
             if(err) {
-                res.status(500).send(err);
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send({id: insert.id});
             }
@@ -115,8 +116,8 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, allowsUser) {
     }
 };
 
-exports.PUT = function(pool, req, res, tableName, allowedKeys, allowsUser) {
-    allowsUser = allowsUser || true;
+exports.PUT = function(pool, req, res, tableName, allowedKeys, adminOnly) {
+    adminOnly = adminOnly || false;
 
     var table = {},
         user = {};
@@ -124,101 +125,65 @@ exports.PUT = function(pool, req, res, tableName, allowedKeys, allowsUser) {
     table.id = req.params.id;
     table.name = tableName;
 
-    user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
+    async.series([
+        function(callback) {
+            userAuth(pool, req, table, adminOnly, function(err, result) {
+                user.id = result;
 
-    if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!allowsUser && !user.sub.admin) {
-        res.status(400).send('User not admin and not allowed to put to this table.');
-    } else {
-        async.series([
-            function(callback) {
-                if(allowsUser) {
-                    query(pool,'SELECT owner FROM user_has_' + table.name + ' WHERE user_id = ? AND ' + table.name + '_id = ?',[user.id,table.id],function(err,result) {
-                        user.owner = !!result[0];
+                callback(err);
+            });
+        },
+        function(callback) {
+            var insert = req.body,
+                call = 'UPDATE ' + table.name + ' SET ',
+                valuesArray = [];
 
-                        callback(err);
-                    });
-                } else { callback(); }
-            },
-            function(callback) {
-                if(!user.admin && !user.owner) {
-                    res.status(400).send('User not allowed to delete from this table row.');
-                } else {
-                    var insert = req.body,
-                        call = 'UPDATE ' + table.name + ' SET ',
-                        valuesArray = [];
-
-                    for(var key in insert) {
-                        if(allowedKeys.includes(key) && insert.hasOwnProperty(key)) {
-                            call += key + ' = ?,';
-                            valuesArray.push(insert[key]);
-                        }
-                    }
-
-                    call = call.slice(0, -1) + ' WHERE id = ?';
-
-                    valuesArray.push(table.id);
-
-                    query(pool,call,valuesArray,callback);
+            for(var key in insert) {
+                if(allowedKeys.includes(key) && insert.hasOwnProperty(key)) {
+                    call += key + ' = ?,';
+                    valuesArray.push(insert[key]);
                 }
             }
-        ],function(err) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.status(200).send();
-            }
-        });
-    }
+
+            call = call.slice(0, -1) + ' WHERE id = ?';
+
+            valuesArray.push(table.id);
+
+            query(pool, call, valuesArray, callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
-exports.DELETE = function(pool, req, res, tableName, allowsUser) {
-    allowsUser = allowsUser || true;
+exports.DELETE = function(pool, req, res, tableName, adminOnly) {
+    adminOnly = adminOnly || false;
 
-    var table = {},
-        user = {};
+    var table = {};
 
     table.id = req.params.id;
     table.name = tableName;
 
-    user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
-    user.admin = user.token.sub.admin;
-
-    if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!allowsUser && !user.admin) {
-        res.status(400).send('User not admin and not allowed to change this table.');
-    } else {
-        async.series([
-            function(callback) {
-                if(allowsUser) {
-                    query(pool,'SELECT owner FROM user_has_' + table.name + ' WHERE user_id = ? AND ' + table.name + '_id = ?',[user.id,table.id],function(err,result) {
-                        user.owner = !!result[0];
-
-                        callback(err);
-                    });
-                } else { callback(); }
-            },
-            function(callback) {
-                if(!user.admin && !user.owner) {
-                    res.status(400).send('User not allowed to delete from this table row.');
-                } else {
-                    var call = 'UPDATE ' + table.name + ' SET deleted = CURRENT_TIMESTAMP WHERE id = ?';
-
-                    query(pool,call,[table.id],callback);
-                }
-            }
-        ],function(err) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.status(202).send();
-            }
-        });
-    }
+    async.series([
+        function(callback) {
+            userAuth(pool, req, table, adminOnly, callback);
+        },
+        function(callback) {
+            query(pool, 'UPDATE ' + table.name + ' SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [table.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
 exports.REVIVE = function(pool, req, res, tableName) {
@@ -231,54 +196,60 @@ exports.REVIVE = function(pool, req, res, tableName) {
     user.token = tokens.decode(req);
     user.admin = user.token.sub.admin;
 
-    if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!user.admin) {
-        res.status(400).send('User not admin and not allowed to change this table.');
-    } else {
-        var call = 'UPDATE ' + table.name + ' SET deleted = NULL WHERE id = ?';
-
-        query(pool,call,[table.id],function(err) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.status(202).send();
-            }
-        });
-    }
+    async.series([
+        function(callback) {
+            userAuth(pool, req, table, true, callback);
+        },
+        function(callback) {
+            query(pool, 'UPDATE ' + table.name + ' SET deleted = NULL WHERE id = ?', [table.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
 exports.CANON = function(pool, req, res, tableName) {
-    var table = {},
-        user = {};
+    var table = {};
 
     table.id = req.params.id;
     table.name = tableName;
 
-    user.token = tokens.decode(req);
-    user.admin = user.token.sub.admin;
-
-    if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!user.admin) {
-        res.status(400).send('User not admin and not allowed to change this table.');
-    } else {
-        var call = 'UPDATE ' + table.name + ' SET canon = 1 WHERE id = ?';
-
-        query(pool,call,[table.id],function(err) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.status(202).send();
-            }
-        });
-    }
+    async.series([
+        function(callback) {
+            userAuth(pool, req, table, true, callback);
+        },
+        function(callback) {
+            query(pool, 'UPDATE ' + table.name + ' SET canon = 1 WHERE id = ?', [table.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
 // OLD DEFAULT
 
 exports.HELP = function(pool, req, res, table) {
-    queryDefault(pool, res, 'SHOW FULL COLUMNS FROM ' + table)
+    query(pool, 'SHOW FULL COLUMNS FROM ' + table, null, function(err, result) {
+        if(err) {
+            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+        } else {
+            if(!result[0]) {
+                res.status(204).send();
+            } else {
+                res.status(200).send({data: result});
+            }
+        }
+    });
 };
 
 exports.QUERY = function(pool, req, res, call, params, order) {
@@ -300,10 +271,6 @@ exports.QUERY = function(pool, req, res, call, params, order) {
     var filter_by = req.headers['x-filter-by'] !== undefined
         ? JSON.parse(req.headers['x-filter-by'])
         : null;
-
-    if(params) {
-        call = mysql.format(call, params);
-    }
 
     if(order_by !== null) {
         call += ' ORDER BY ';
@@ -333,7 +300,17 @@ exports.QUERY = function(pool, req, res, call, params, order) {
         call += ',' + pagination_amount;
     }
 
-    queryDefault(pool, res, call);
+    query(pool, call, params, function(err, result) {
+        if(err) {
+            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+        } else {
+            if(!result[0]) {
+                res.status(204).send();
+            } else {
+                res.status(200).send({data: result});
+            }
+        }
+    });
 };
 
 exports.OLD_INSERT = function(pool, req, res, table) {
@@ -443,7 +420,13 @@ exports.OLD_DELETE = function(pool, req, res, table, options) {
 
     call = call.slice(0, -5);
 
-    queryMessage(pool, res, call, 202, 'deleted');
+    query(pool, call, null, function(err) {
+        if(err) {
+            res.status(500).send(err);
+        } else {
+            res.status(202).send();
+        }
+    });
 };
 
 exports.OLD_REVIVE = function(pool, req, res, table, options) {
@@ -457,13 +440,19 @@ exports.OLD_REVIVE = function(pool, req, res, table, options) {
 
     call = call.slice(0, -5);
 
-    queryMessage(pool, res, call, 200, 'revived');
+    query(pool, call, null, function(err) {
+        if(err) {
+            res.status(500).send(err);
+        } else {
+            res.status(202).send();
+        }
+    });
 };
 
 // RELATIONS
 
-exports.relationPost = function(pool, req, res, tableName, relationName, allowsUser) {
-    allowsUser = allowsUser || true;
+exports.relationPost = function(pool, req, res, tableName, relationName, adminOnly) {
+    adminOnly = adminOnly || false;
 
     var table = {},
         relation = {},
@@ -475,46 +464,29 @@ exports.relationPost = function(pool, req, res, tableName, relationName, allowsU
     relation.id = parseInt(req.body.insert_id);
     relation.name = relationName;
 
-    user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
-    user.admin = user.token.sub.admin;
+    async.series([
+        function(callback) {
+            userAuth(pool, req, table, adminOnly, function(err, result) {
+                user.id = result;
 
-    if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!allowsUser && !user.admin) {
-        res.status(400).send('User not admin and not allowed to change this table.');
-    } else {
-        async.series([
-            function(callback) {
-                if(allowsUser) {
-                    query(pool,'SELECT owner FROM user_has_' + table.name + ' WHERE user_id = ? AND ' + table.name + '_id = ?',[user.id, table.id],function(err,result) {
-                        user.owner = !!result[0];
-
-                        callback(err);
-                    });
-                } else { callback(); }
-            },
-            function(callback) {
-                if(!user.admin && !user.owner) {
-                    res.status(400).send('User not allowed to post to this table row.');
-                } else {
-                    var call = 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id) VALUES (?,?)';
-
-                    query(pool,call,[table.id, relation.id],callback);
-                }
-            }
-        ],function(err) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.status(202).send();
-            }
-        });
-    }
+                callback(err);
+            });
+        },
+        function(callback) {
+            query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id) VALUES (?,?)', [table.id, relation.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
-exports.relationPostWithValue = function(pool, req, res, tableName, relationName, allowsUser) {
-    allowsUser = allowsUser || true;
+exports.relationPostWithValue = function(pool, req, res, tableName, relationName, adminOnly) {
+    adminOnly = adminOnly || false;
 
     var table = {},
         relation = {},
@@ -524,49 +496,32 @@ exports.relationPostWithValue = function(pool, req, res, tableName, relationName
     table.name = tableName;
 
     relation.id = parseInt(req.body.insert_id);
-    relation.value = req.body.value;
     relation.name = relationName;
+    relation.value = parseInt(req.body.value);
 
-    user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
-    user.admin = user.token.sub.admin;
+    async.series([
+        function(callback) {
+            userAuth(pool, req, table, adminOnly, function(err, result) {
+                user.id = result;
 
-    if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!allowsUser && !user.admin) {
-        res.status(400).send('User not admin and not allowed to change this table.');
-    } else {
-        async.series([
-            function(callback) {
-                if(allowsUser) {
-                    query(pool,'SELECT owner FROM user_has_' + table.name + ' WHERE user_id = ? AND ' + table.name + '_id = ?',[user.id, table.id],function(err,result) {
-                        user.owner = !!result[0];
-
-                        callback(err);
-                    });
-                } else { callback(); }
-            },
-            function(callback) {
-                if(!user.admin && !user.owner) {
-                    res.status(400).send('User not allowed to post to this table row.');
-                } else {
-                    var call = 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id,value) VALUES (?,?,?)';
-
-                    query(pool,call,[table.id, relation.id, relation.value],callback);
-                }
-            }
-        ],function(err) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.status(202).send();
-            }
-        });
-    }
+                callback(err);
+            });
+        },
+        function(callback) {
+            query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id,value) VALUES (?,?,?)', [table.id, relation.id, relation.value], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
-exports.relationPutValue = function(pool, req, res, tableName, relationName, allowsUser) {
-    allowsUser = allowsUser || true;
+exports.relationPutValue = function(pool, req, res, tableName, relationName, adminOnly) {
+    adminOnly = adminOnly || false;
 
     var table = {},
         relation = {},
@@ -579,46 +534,29 @@ exports.relationPutValue = function(pool, req, res, tableName, relationName, all
     relation.value = req.body.value;
     relation.name = relationName;
 
-    user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
-    user.admin = user.token.sub.admin;
+    async.series([
+        function(callback) {
+            userAuth(pool, req, table, adminOnly, function(err, result) {
+                user.id = result;
 
-    if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!allowsUser && !user.admin) {
-        res.status(400).send('User not admin and not allowed to change this table.');
-    } else {
-        async.series([
-            function(callback) {
-                if(allowsUser) {
-                    query(pool,'SELECT owner FROM user_has_' + table.name + ' WHERE user_id = ? AND ' + table.name + '_id = ?',[user.id, table.id],function(err,result) {
-                        user.owner = !!result[0];
-
-                        callback(err);
-                    });
-                } else { callback(); }
-            },
-            function(callback) {
-                if(!user.admin && !user.owner) {
-                    res.status(400).send('User not allowed to post to this table row.');
-                } else {
-                    var call = 'UPDATE ' + table.name + '_has_' + relation.name + ' SET value = ? WHERE ' + table.name + '_id = ? AND ' + relation.name + '_id = ?';
-
-                    query(pool,call,[relation.value, table.id, relation.id],callback);
-                }
-            }
-        ],function(err) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.status(202).send();
-            }
-        });
-    }
+                callback(err);
+            });
+        },
+        function(callback) {
+            query(pool, 'UPDATE ' + table.name + '_has_' + relation.name + ' SET value = ? WHERE ' + table.name + '_id = ? AND ' + relation.name + '_id = ?', [relation.value, table.id, relation.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
-exports.relationDelete = function(pool, req, res, tableName, relationName, allowsUser) {
-    allowsUser = allowsUser || true;
+exports.relationDelete = function(pool, req, res, tableName, relationName, adminOnly) {
+    adminOnly = adminOnly || false;
 
     var table = {},
         relation = {},
@@ -630,42 +568,25 @@ exports.relationDelete = function(pool, req, res, tableName, relationName, allow
     relation.id = parseInt(req.params.id2);
     relation.name = relationName;
 
-    user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
-    user.admin = user.token.sub.admin;
+    async.series([
+        function(callback) {
+            userAuth(pool, req, table, adminOnly, function(err, result) {
+                user.id = result;
 
-    if(!user.token) {
-        res.status(400).send('User not logged in.');
-    } else if(!allowsUser && !user.admin) {
-        res.status(400).send('User not admin and not allowed to change this table.');
-    } else {
-        async.series([
-            function(callback) {
-                if(allowsUser) {
-                    query(pool,'SELECT owner FROM user_has_' + table.name + ' WHERE user_id = ? AND ' + table.name + '_id = ?',[user.id,table.id],function(err,result) {
-                        user.owner = !!result[0];
-
-                        callback(err);
-                    });
-                } else { callback(); }
-            },
-            function(callback) {
-                if(!user.admin && !user.owner) {
-                    res.status(400).send('User not allowed to delete from this table row.');
-                } else {
-                    var call = 'DELETE FROM ' + table.name + '_has_' + relation.name + ' WHERE ' + table.name + '_id = ? AND ' + relation.name + '_id = ?';
-
-                    query(pool,call,[table.id,relation.id],callback);
-                }
-            }
-        ],function(err) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.status(202).send();
-            }
-        });
-    }
+                callback(err);
+            });
+        },
+        function(callback) {
+            query(pool, 'DELETE FROM ' + table.name + '_has_' + relation.name + ' WHERE ' + table.name + '_id = ? AND ' + relation.name + '_id = ?', [table.id, relation.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
 // PERSON
@@ -711,6 +632,47 @@ exports.personInsertAttribute = function(pool, person, insert, current, callback
     } else { callback(); }
 };
 
+exports.personInsertSkill = function(pool, person, insert, current, callback) {
+    if(person.skill[0] !== undefined && insert.skill[0] !== undefined) {
+        var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
+
+        for(var i in person.skill) {
+            for(var j in insert.skill) {
+                if(person.skill[i].skill_id === insert.skill[j].skill_id) {
+                    person.skill[i].value += insert.skill[j].value;
+                    person.skill[i].changed = true;
+                    insert.skill[j].updated = true;
+                }
+            }
+
+            if(current.skill !== undefined && current.skill[0] !== undefined) {
+                for(var k in current.skill) {
+                    if(person.skill[i].skill_id === current.skill[k].skill_id) {
+                        person.skill[i].value -= current.skill[k].value;
+                        person.skill[i].changed = true;
+                    }
+                }
+            }
+
+            if(person.skill[i].changed === true) {
+                call += '(' + person.id + ',' + person.skill[i].skill_id + ',' + person.skill[i].value + '),';
+            }
+        }
+
+        for(var m in insert.skill) {
+            if(insert.skill[m].updated !== true) {
+                call += '(' + person.id + ',' + insert.skill[m].skill_id + ',' + insert.skill[m].value + '),';
+            }
+        }
+
+        call = call.slice(0, -1);
+
+        call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
+
+        pool.query(call,callback);
+    } else { callback(); }
+};
+
 exports.personCustomDescription = function(pool, req, res, tableName) {
     var person = {},
         insert = {};
@@ -721,21 +683,19 @@ exports.personCustomDescription = function(pool, req, res, tableName) {
     insert.id = parseInt(req.params.id2);
     insert.custom = req.body.custom;
 
-    pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-        person.auth = !!result[0];
-
-        if(err) {
-            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-        } else if(!person.auth) {
-            res.status(500).send({header: 'Wrong Secret', message: 'You provided the wrong secret', code: 0});
+    async.series([
+        function(callback) {
+            personAuth(pool, person, callback);
+        },
+        function(callback) {
+            query(pool, 'UPDATE person_has_' + tableName + ' SET custom = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [insert.custom, person.id, insert.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
         } else {
-            pool.query(mysql.format('UPDATE person_has_'+tableName+' SET custom = ? WHERE person_id = ? AND '+tableName+'_id = ?',[insert.custom,person.id,insert.id]),function(err) {
-                if (err) {
-                    res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                } else {
-                    res.status(200).send();
-                }
-            });
+            res.status(200).send();
         }
     });
 };
@@ -748,23 +708,21 @@ exports.personEquip = function(pool, req, res, tableName) {
     person.secret = req.body.secret;
 
     insert.id = parseInt(req.params.id2);
-    insert.equip = req.params.equip;
+    insert.equip = parseInt(req.params.equip);
 
-    pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-        person.auth = !!result[0];
-
-        if(err) {
-            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-        } else if(!person.auth) {
-            res.status(500).send({header: 'Wrong Secret', message: 'You provided the wrong secret', code: 0});
+    async.series([
+        function(callback) {
+            personAuth(pool, person, callback);
+        },
+        function(callback) {
+            query(pool, 'UPDATE person_has_' + tableName + ' SET equipped = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [insert.equip, person.id, insert.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
         } else {
-            pool.query(mysql.format('UPDATE person_has_'+tableName+' SET equipped = ? WHERE person_id = ? AND '+tableName+'_id = ?',[insert.equip,person.id,insert.id]),function(err) {
-                if (err) {
-                    res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                } else {
-                    res.status(200).send();
-                }
-            });
+            res.status(200).send();
         }
     });
 };
@@ -778,32 +736,19 @@ exports.personDeleteRelation = function(pool, req, res, tableName) {
 
     insert.id = parseInt(req.params.id2);
 
-    pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-        person.auth = !!result[0];
-
-        if(err) {
-            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-        } else if(!person.auth) {
-            res.status(500).send({header: 'Wrong Secret', message: 'You provided the wrong secret', code: 0});
+    async.series([
+        function(callback) {
+            personAuth(pool, person, callback);
+        },
+        function(callback) {
+            query(pool, 'DELETE FROM person_has_' + tableName + ' WHERE person_id = ? AND ' + tableName + '_id = ?', [person.id, insert.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
         } else {
-            var call = mysql.format('DELETE FROM person_has_'+tableName+' WHERE person_id = ? AND '+tableName+'_id = ?',[person.id,insert.id]);
-            pool.query(call,function(err) {
-                if (err) {
-                    res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                } else {
-                    res.status(200).send();
-                }
-            });
+            res.status(200).send();
         }
     });
-};
-
-// WORLD
-
-exports.worldPostHas = function(pool, req, res, worldId, tableName) {
-    tablePostHas(pool, req, res, 'world', worldId, tableName);
-};
-
-exports.worldDeleteHas = function(pool, req, res, worldId, hasId, tableName) {
-    tableDeleteHas(pool, req, res, 'world', worldId, tableName, hasId);
 };

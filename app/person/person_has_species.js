@@ -1,8 +1,5 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+var async = require('async'),
+    rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -26,21 +23,19 @@ module.exports = function(pool, router, table, path) {
 
         insert.id = parseInt(req.body.insert_id);
 
-        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-            person.auth = !!result[0];
-
-            if(err) {
-                res.status(500).send(err);
-            } else if(!person.auth) {
-                res.status(400).send('Wrong secret');
+        async.series([
+            function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_species (person_id,species_id) VALUES (?,?)', [person.id, insert.id], callback);
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
-                pool.query(mysql.format('INSERT INTO person_has_species (person_id,species_id) VALUES (?,?)',[person.id,insert.id]),function(err) {
-                    if(err) {
-                        res.status(500).send(err);
-                    } else {
-                        res.status(200).send();
-                    }
-                });
+                res.status(200).send();
             }
         });
     });
@@ -58,29 +53,31 @@ module.exports = function(pool, router, table, path) {
 
         species.id = req.params.id2;
 
-        async.parallel([
+        async.series([
             function(callback) {
-                pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
+                rest.personAuth(pool, person, callback);
             },
             function(callback) {
-                pool.query(mysql.format('SELECT first FROM person_has_species WHERE person_id = ? AND species_id = ? AND first = ?',[person.id,species.id,1]),callback);
-            }
-        ],function(err,results) {
-            person.auth = !!results[0][0][0];
-            species.first = !!results[1][0][0];
+                rest.query(pool, 'SELECT first FROM person_has_species WHERE person_id = ? AND species_id = ? AND first = 1',[person.id, species.id], function(err, result) {
+                    species.first = !!result[0];
 
-            if(!person.auth) {
-                res.status(400).send('Wrong secret');
-            } else if(species.first) {
-                res.status(400).send('Primary species cannot be changed or removed.');
-            } else {
-                pool.query(mysql.format('DELETE FROM person_has_species WHERE person_id = ? AND species_id = ?', [person.id, species.id]), function (err) {
-                    if(err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                    } else {
-                        res.status(202).send();
-                    }
+                    callback(err);
                 });
+            },
+            function(callback) {
+                if(species.first) return callback({code: 0, message: 'Primary species cannot be changed or removed.'});
+
+                callback();
+            },
+            function(callback) {
+                rest.query(pool, 'DELETE FROM person_has_species WHERE person_id = ? AND species_id = ?', [person.id, species.id], callback);
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
             }
         });
     });

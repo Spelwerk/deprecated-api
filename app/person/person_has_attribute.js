@@ -1,8 +1,5 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+var async = require('async'),
+    rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -10,19 +7,15 @@ module.exports = function(pool, router, table, path) {
     var query = 'SELECT ' +
         'attribute.id, ' +
         'attribute.canon, ' +
-        'attribute.special, ' +
         'attribute.name, ' +
-        'person_has_attribute.value, ' +
         'attribute.description, ' +
-        'attribute.protected, ' +
         'attribute.attributetype_id, ' +
-        'attributetype.name AS attributetype_name, ' +
+        'attribute.icon, ' +
         'attributetype.maximum, ' +
-        'icon.path AS icon_path ' +
+        'person_has_attribute.value ' +
         'FROM person_has_attribute ' +
         'LEFT JOIN attribute ON attribute.id = person_has_attribute.attribute_id ' +
-        'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id ' +
-        'LEFT JOIN icon ON icon.id = attribute.icon_id';
+        'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id';
 
     router.get(path + '/id/:id/attribute', function(req, res) {
         var call = query + ' WHERE ' +
@@ -57,21 +50,19 @@ module.exports = function(pool, router, table, path) {
         insert.id = parseInt(req.body.insert_id);
         insert.value = parseInt(req.body.value);
 
-        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-            person.auth = !!result[0];
-
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-            } else if(!person.auth) {
-                res.status(500).send({header: 'Wrong Secret', message: 'You provided the wrong secret', code: 0});
+        async.series([
+            function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
-                pool.query(mysql.format('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)',[person.id,insert.id,insert.value]),function(err) {
-                    if (err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                    } else {
-                        res.status(200).send();
-                    }
-                });
+                res.status(200).send();
             }
         });
     });
@@ -87,30 +78,28 @@ module.exports = function(pool, router, table, path) {
         insert.id = parseInt(req.body.insert_id);
         insert.value = parseInt(req.body.value);
 
-        async.parallel([
+        async.series([
             function(callback) {
-                pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
+                rest.personAuth(pool, person, callback);
             },
             function(callback) {
-                pool.query(mysql.format('SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?',[person.id,insert.id]),callback);
-            }
-        ],function(err,results) {
-            person.auth = !!results[0][0][0];
+                rest.query(pool, 'SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, insert.id], function(err, result) {
+                    current.value = !!result[0] ? parseInt(result[0].value) : 0;
 
-            if(person.auth) {
-                current.value = results[1][0][0] !== undefined
-                    ? parseInt(results[1][0][0].value)
-                    : 0;
+                    insert.value = insert.value + current.value;
 
-                insert.value = insert.value + current.value;
-
-                pool.query(mysql.format('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)',[person.id,insert.id,insert.value]),function(err) {
-                    if(err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                    } else {
-                        res.status(200).send();
-                    }
+                    callback(err);
                 });
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
+            }
+        ],function(err) {
+            if(err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
             }
         });
     });

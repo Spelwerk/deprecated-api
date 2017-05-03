@@ -1,8 +1,5 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+var async = require('async'),
+    rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -30,23 +27,21 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.imperfection_id;
+        insert.id = parseInt(req.body.insert_id);
 
-        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
-            person.auth = !!result[0];
-
-            if(err) {
-                res.status(500).send(err);
-            } else if(!person.auth) {
-                res.status(500).send('Wrong Secret');
+        async.series([
+            function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_imperfection (person_id,imperfection_id) VALUES (?,?)', [person.id, insert.id], callback);
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
-                pool.query(mysql.format('INSERT INTO person_has_imperfection (person_id,imperfection_id) VALUES (?,?)',[person.id,insert.id]),function(err) {
-                    if (err) {
-                        res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-                    } else {
-                        res.status(200).send();
-                    }
-                });
+                res.status(200).send();
             }
         });
     });

@@ -11,11 +11,17 @@ module.exports = function(pool, router, table, path, deleteArray) {
         rest.OLD_INSERT(pool, req, res, table);
     });
 
-    router.delete(path + '/id/:id1/id/:id2', function(req, res) {
+    router.delete(path + '/id/:id/id/:id2', function(req, res) {
         var call = 'DELETE FROM ' + table + ' ' +
-            'WHERE ' + deleteArray[0] + ' = \'' + req.params.id1 + '\' ' +
-            'AND ' + deleteArray[1] + ' = \'' + req.params.id2 + '\'';
+            'WHERE ' + deleteArray[0] + ' = ? ' +
+            'AND ' + deleteArray[1] + ' = ?';
 
-        rest.queryMessage(pool, res, call, 202, 'deleted');
+        rest.query(pool, call, [req.params.id, req.params.id2], function(err) {
+            if(err) {
+                res.status(500).send(err);
+            } else {
+                res.status(202).send();
+            }
+        });
     });
 };

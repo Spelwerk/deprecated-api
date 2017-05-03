@@ -36,7 +36,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.get(path + '/deleted', function(req, res) {
-        var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
+        var call = query + ' WHERE person.deleted is NOT NULL';
 
         rest.QUERY(pool, req, res, call, null, {"id": "ASC"});
     });
@@ -59,7 +59,7 @@ module.exports = function(pool, router, table, path) {
         insert.playable = parseInt(req.body.playable) || 1;
         insert.supernatural = parseInt(req.body.supernatural) || 0;
         insert.nickname = req.body.nickname;
-        insert.age = req.body.age;
+        insert.age = parseInt(req.body.age);
         insert.occupation = req.body.occupation;
 
         species.id = parseInt(req.body.species_id);
@@ -70,23 +70,35 @@ module.exports = function(pool, router, table, path) {
             function(callback) {
                 async.parallel([
                     function (callback) {
-                        pool.query(mysql.format('SELECT * FROM world WHERE id = ?', [world.id]), callback);
+                        rest.query(pool, 'SELECT * FROM world WHERE id = ?', [world.id], callback);
+                    },
+                    function(callback) {
+                        rest.query(pool, 'SELECT attribute_id, value FROM world_has_attribute WHERE world_id = ?', [world.id], callback);
+                    },
+                    function(callback) {
+                        rest.query(pool, 'SELECT skill_id FROM world_has_skill WHERE world_id = ?', [world.id], callback);
                     },
                     function (callback) {
-                        pool.query(mysql.format('SELECT * FROM species WHERE id = ?', [species.id]), callback);
+                        rest.query(pool, 'SELECT * FROM species WHERE id = ?', [species.id], callback);
                     },
                     function (callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM species_has_attribute WHERE species_id = ?', [species.id]), callback);
+                        rest.query(pool, 'SELECT attribute_id, value FROM species_has_attribute WHERE species_id = ?', [species.id], callback);
                     },
                     function (callback) {
-                        pool.query(mysql.format('SELECT weapon_id FROM species_has_weapon WHERE species_id = ?', [species.id]), callback);
+                        rest.query(pool, 'SELECT id FROM skill WHERE species_id = ?', [species.id], callback);
+                    },
+                    function (callback) {
+                        rest.query(pool, 'SELECT weapon_id FROM species_has_weapon WHERE species_id = ?', [species.id], callback);
                     }
                 ], function (err, results) {
-                    world.select = results[0][0][0];
+                    world.select = results[0][0];
+                    world.attribute = results[1];
+                    world.skill = results[2];
 
-                    species.select = results[1][0][0];
-                    species.attribute = results[2][0];
-                    species.weapon = results[3][0];
+                    species.select = results[3][0];
+                    species.attribute = results[4];
+                    species.skill = results[5];
+                    species.weapon = results[6];
 
                     points.expertise = 1;
                     points.gift = world.select.max_gift;
@@ -147,31 +159,8 @@ module.exports = function(pool, router, table, path) {
                 });
             },
             function(callback) {
-                async.parallel([
-                    function(callback) {
-                        pool.query(mysql.format('INSERT INTO person (secret,playable,nickname,occupation,world_id) VALUES (?,?,?,?,?)',
-                            [person.secret, insert.playable, insert.nickname, insert.occupation, world.id]),callback);
-                    },
-                    function(callback) {
-                        // This builds a list of attributes that are either Protected Status, or in the Skill Type. It also adds from Species, but keeps manifestation skill away.
-                        pool.query(mysql.format('SELECT ' +
-                            'world_has_attribute.attribute_id, ' +
-                            'world_has_attribute.default_value AS value ' +
-                            'FROM world_has_attribute ' +
-                            'LEFT JOIN attribute ON attribute.id = world_has_attribute.attribute_id ' +
-                            'WHERE ' +
-                            'world_has_attribute.world_id = ? AND ' +
-
-                            '(attribute.protected = 1 OR (attribute.attributetype_id = ? AND ( (attribute.special = 0 AND attribute.species_id IS NULL) OR (attribute.special = 1 AND attribute.species_id = ?) ) ) ) AND ' +
-
-                            'attribute.canon = 1 AND ' +
-                            'attribute.deleted IS NULL',
-                            [world.id, world.select.skill_attributetype_id, species.id]),callback);
-                    }
-                ],function(err,results) {
-                    person.id = results[0][0].insertId;
-
-                    world.attribute = results[1][0];
+                rest.query(pool, 'INSERT INTO person (secret,playable,nickname,occupation,world_id) VALUES (?,?,?,?,?)', [person.secret, insert.playable, insert.nickname, insert.occupation, world.id], function(err,result) {
+                    person.id = result.insertId;
 
                     callback(err);
                 });
@@ -179,22 +168,19 @@ module.exports = function(pool, router, table, path) {
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        pool.query(mysql.format('INSERT INTO person_playable (person_id, supernatural, age) VALUES (?,?,?)',
-                            [person.id, insert.supernatural, insert.age]),callback);
+                        rest.query(pool, 'INSERT INTO person_playable (person_id, supernatural, age) VALUES (?,?,?)', [person.id, insert.supernatural, insert.age], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('INSERT INTO person_description (person_id) VALUES (?)',
-                            [person.id]),callback);
+                        rest.query(pool, 'INSERT INTO person_description (person_id) VALUES (?)', [person.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('INSERT INTO person_has_species (person_id, species_id, first) VALUES (?,?,?)',
-                            [person.id, species.id, 1]),callback);
+                        rest.query(pool, 'INSERT INTO person_has_species (person_id, species_id, first) VALUES (?,?,?)', [person.id, species.id, 1], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('INSERT INTO person_creation (person_id,point_expertise,point_gift,point_imperfection,' +
+                        rest.query(pool, 'INSERT INTO person_creation (person_id,point_expertise,point_gift,point_imperfection,' +
                             'point_milestone,point_money,point_power,point_relationship,point_skill,point_supernatural) VALUES (?,?,?,?,?,?,?,?,?,?)',
                             [person.id, points.expertise, points.gift, points.imperfection, points.milestone, points.money, points.power,
-                                points.relationship, points.skill, points.supernatural]),callback);
+                                points.relationship, points.skill, points.supernatural], callback);
                     },
                     function(callback) {
                         var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
@@ -222,7 +208,35 @@ module.exports = function(pool, router, table, path) {
 
                         call = call.slice(0, -1);
 
-                        pool.query(call,callback);
+                        rest.query(pool, call, null, callback);
+                    },
+                    function(callback) {
+                        var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
+
+                        for(var i in world.skill) {
+                            if(species.skill[0]) {
+                                for(var j in species.skill) {
+                                    if(world.skill[i].skill_id === species.skill[j].skill_id) {
+                                        world.skill[i].value += species.skill[j].value;
+                                        species.skill[j].updated = true;
+                                    }
+                                }
+                            }
+
+                            call += '(' + person.id + ',' + world.skill[i].skill_id + ',' + world.skill[i].value + '),';
+                        }
+
+                        if(species.skill[0]) {
+                            for (var m in species.skill) {
+                                if (species.skill[m].updated !== true) {
+                                    call += '(' + person.id + ',' + species.skill[m].skill_id + ',' + species.skill[m].value + '),';
+                                }
+                            }
+                        }
+
+                        call = call.slice(0, -1);
+
+                        rest.query(pool, call, null, callback);
                     },
                     function(callback) {
                         if(species.weapon[0] !== undefined) {
@@ -234,13 +248,12 @@ module.exports = function(pool, router, table, path) {
 
                             call = call.slice(0, -1);
 
-                            pool.query(call,callback);
+                            rest.query(pool, call, null, callback);
                         } else { callback(); }
                     },
                     function(callback) {
                         if(user.token) {
-                            pool.query(mysql.format('INSERT INTO user_has_person (user_id,person_id,owner,secret) VALUES (?,?,?,?)',
-                                [user.id,person.id,1,person.secret]),callback);
+                            rest.query(pool, 'INSERT INTO user_has_person (user_id,person_id,owner,secret) VALUES (?,?,?,?)', [user.id, person.id, 1, person.secret], callback);
                         } else { callback(); }
                     }
                 ],function(err) {
@@ -477,50 +490,47 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
-    // Asset
-
-    require('./person_has_asset')(pool, router, table, path);
-
-    // Attribute
-
-    require('./person_has_attribute')(pool, router, table, path);
-
-    // Augmentation
-
-    require('./person_has_augmentation')(pool, router, table, path);
-
-    // Background
+    // Special
 
     router.put(path + '/id/:id/background', function(req, res) {
         var person = {},
             insert = {},
             current = {};
 
-        person.id = req.params.id;
+        person.id = parseInt(req.params.id);
         person.secret = req.body.secret;
 
-        insert.id = req.body.insert_id;
+        insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
+                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id, person.secret]),callback);
                     },
                     function(callback) {
                         pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
                     },
                     function(callback) {
+                        pool.query(mysql.format('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?',[person.id]),callback);
+                    },
+                    function(callback) {
                         pool.query(mysql.format('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?',[insert.id]),callback);
                     },
+                    function(callback) {
+                        pool.query(mysql.format('SELECT skill_id, value FROM background_has_skill WHERE background_id = ?',[insert.id]),callback);
+                    },
+                    // todo select skill from background && person
                     function(callback) {
                         pool.query(mysql.format('SELECT background_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
                     }
                 ],function(err,results) {
                     person.auth = !!results[0][0][0];
                     person.attribute = results[1][0];
-                    insert.attribute = results[2][0];
-                    current.id = results[3][0][0].background_id;
+                    person.skill = results[2][0];
+                    insert.attribute = results[4][0];
+                    insert.skill = results[4][0];
+                    current.id = parseInt(results[5][0][0].background_id);
 
                     callback(err);
                 });
@@ -539,13 +549,29 @@ module.exports = function(pool, router, table, path) {
                 } else { callback(); }
             },
             function(callback) {
-                if(person.auth && insert.id != current.id) {
+                if(person.auth) {
+                    if(current.id !== undefined) {
+                        pool.query(mysql.format('SELECT skill_id, value FROM background_has_skill WHERE background_id = ?',[current.id]),function(err,result) {
+                            current.skill = result;
+
+                            callback(err);
+                        });
+                    } else {
+                        callback();
+                    }
+                } else { callback(); }
+            },
+            function(callback) {
+                if(person.auth && insert.id !== current.id) {
                     async.parallel([
                         function(callback) {
                             pool.query(mysql.format('UPDATE person_playable SET background_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
                         },
                         function(callback) {
                             rest.personInsertAttribute(pool, person, insert, current, callback);
+                        },
+                        function(callback) {
+                            rest.personInsertSkill(pool, person, insert, current, callback);
                         }
                     ],function(err) {
                         callback(err);
@@ -560,40 +586,6 @@ module.exports = function(pool, router, table, path) {
             }
         });
     });
-
-    // Bionic
-
-    require('./person_has_bionic')(pool, router, table, path);
-
-    // Characteristic
-
-    require('./person_has_characteristic')(pool, router, table, path);
-
-    // Companion
-
-    require('./person_has_companion')(pool, router, table, path);
-
-    // Disease
-
-    require('./person_has_disease')(pool, router, table, path);
-
-    // Expertise
-
-    require('./person_has_expertise')(pool, router, table, path);
-
-    // Gift
-
-    require('./person_has_gift')(pool, router, table, path);
-
-    // Imperfection
-
-    require('./person_has_imperfection')(pool, router, table, path);
-
-    // Language
-
-    require('./person_has_language')(pool, router, table, path);
-
-    // Focus
 
     router.put(path + '/id/:id/focus', function(req, res) {
         var person = {},
@@ -662,8 +654,6 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
-    // Identity
-
     router.put(path + '/id/:id/identity', function(req, res) {
         var person = {},
             insert = {},
@@ -731,8 +721,6 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
-    // Manifestation
-
     router.post(path + '/id/:id/manifestation', function(req, res) {
         var person = {},
             manifestation = {},
@@ -743,7 +731,7 @@ module.exports = function(pool, router, table, path) {
 
         insert.id = req.body.insert_id;
 
-        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),function(err,result) {
+        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id, person.secret]),function(err,result) {
             person.auth = !!result[0];
 
             if(err) {
@@ -753,11 +741,12 @@ module.exports = function(pool, router, table, path) {
             } else {
                 async.series([
                     function(callback) {
-                        pool.query(mysql.format('UPDATE person_playable SET manifestation_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
+                        pool.query(mysql.format('UPDATE person_playable SET manifestation_id = ? WHERE person_id = ?',[insert.id, person.id]),callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT power_attribute_id, skill_attribute_id FROM manifestation WHERE id = ?',[insert.id]),function(err, result) {
-                            manifestation.attribute = result[0];
+                        pool.query(mysql.format('SELECT power_id, skill_id FROM manifestation WHERE id = ?',[insert.id]),function(err, result) {
+                            manifestation.power = result[0].power_id;
+                            manifestation.skill = result[0].skill_id;
 
                             callback(err);
                         });
@@ -765,8 +754,16 @@ module.exports = function(pool, router, table, path) {
                     function(callback) {
                         var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
-                        call += '(' + person.id + ',' + manifestation.attribute.power_attribute_id + ',0),';
-                        call += '(' + person.id + ',' + manifestation.attribute.skill_attribute_id + ',0),';
+                        call += '(' + person.id + ',' + manifestation.power + ',0),';
+
+                        call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
+
+                        pool.query(call,callback);
+                    },
+                    function(callback) {
+                        var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
+
+                        call += '(' + person.id + ',' + manifestation.skill + ',0),';
 
                         call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
 
@@ -782,12 +779,6 @@ module.exports = function(pool, router, table, path) {
             }
         });
     });
-
-    // Milestone
-
-    require('./person_has_milestone')(pool, router, table, path);
-
-    // Nature
 
     router.put(path + '/id/:id/nature', function(req, res) {
         var person = {},
@@ -893,31 +884,35 @@ module.exports = function(pool, router, table, path) {
         });
     });
 
-    // Protection
+    // Relationships
+
+    require('./person_has_attribute')(pool, router, table, path);
+
+    require('./person_has_augmentation')(pool, router, table, path);
+
+    require('./person_has_bionic')(pool, router, table, path);
+
+    require('./person_has_disease')(pool, router, table, path);
+
+    require('./person_has_doctrine')(pool, router, table, path);
+
+    require('./person_has_expertise')(pool, router, table, path);
+
+    require('./person_has_gift')(pool, router, table, path);
+
+    require('./person_has_imperfection')(pool, router, table, path);
+
+    require('./person_has_milestone')(pool, router, table, path);
 
     require('./person_has_protection')(pool, router, table, path);
 
-    // Relationship
-
-    require('./person_has_relationship')(pool, router, table, path);
-
-    // Sanity
-
     require('./person_has_sanity')(pool, router, table, path);
 
-    // Species
+    require('./person_has_skill')(pool, router, table, path);
 
     require('./person_has_species')(pool, router, table, path);
 
-    // Software
-
-    require('./person_has_software')(pool, router, table, path);
-
-    // Weapon
-
     require('./person_has_weapon')(pool, router, table, path);
-
-    // Wound
 
     require('./person_has_wound')(pool, router, table, path);
 };
