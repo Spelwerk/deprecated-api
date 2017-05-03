@@ -313,8 +313,10 @@ module.exports = function(pool, router, table, path) {
 
         async.series([
             function (callback) {
-                rest.query(pool, 'SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?', [person.id,person.secret], function(err,result) {
+                rest.query(pool, 'SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err,result) {
                     person.auth = !!result[0];
+                    person.playable = !!result[0];
+                    person.calculated = !!result[0];
 
                     if(err) return callback(err);
 
@@ -451,83 +453,74 @@ module.exports = function(pool, router, table, path) {
 
         async.series([
             function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
                 async.parallel([
                     function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id, person.secret]),callback);
+                        rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?',[insert.id]),callback);
+                        rest.query(pool, 'SELECT skill_id, value FROM background_has_skill WHERE background_id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT skill_id, value FROM background_has_skill WHERE background_id = ?',[insert.id]),callback);
-                    },
-                    // todo select skill from background && person
-                    function(callback) {
-                        pool.query(mysql.format('SELECT background_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT background_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
-                ],function(err,results) {
-                    person.auth = !!results[0][0][0];
-                    person.attribute = results[1][0];
-                    person.skill = results[2][0];
-                    insert.attribute = results[4][0];
-                    insert.skill = results[4][0];
-                    current.id = parseInt(results[5][0][0].background_id);
+                ],function(err, results) {
+                    person.attribute = results[0];
+                    person.skill = results[1];
+
+                    insert.attribute = results[2];
+                    insert.skill = results[3];
+
+                    current.id = results[4][0].background_id;
 
                     callback(err);
                 });
             },
             function(callback) {
-                if(person.auth) {
-                    if(current.id !== undefined) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?',[current.id]),function(err,result) {
-                            current.attribute = result;
+                if(!current.id) { callback(); } else {
+                    rest.query(pool, 'SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?', [current.id], function(err, result) {
+                        current.attribute = result;
 
-                            callback(err);
-                        });
-                    } else {
-                        callback();
-                    }
-                } else { callback(); }
-            },
-            function(callback) {
-                if(person.auth) {
-                    if(current.id !== undefined) {
-                        pool.query(mysql.format('SELECT skill_id, value FROM background_has_skill WHERE background_id = ?',[current.id]),function(err,result) {
-                            current.skill = result;
-
-                            callback(err);
-                        });
-                    } else {
-                        callback();
-                    }
-                } else { callback(); }
-            },
-            function(callback) {
-                if(person.auth && insert.id !== current.id) {
-                    async.parallel([
-                        function(callback) {
-                            pool.query(mysql.format('UPDATE person_playable SET background_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
-                        },
-                        function(callback) {
-                            rest.personInsertAttribute(pool, person, insert, current, callback);
-                        },
-                        function(callback) {
-                            rest.personInsertSkill(pool, person, insert, current, callback);
-                        }
-                    ],function(err) {
                         callback(err);
                     });
-                } else { callback(); }
+                }
+            },
+            function(callback) {
+                if(!current.id) { callback(); } else {
+                    rest.query(pool, 'SELECT skill_id, value FROM background_has_skill WHERE background_id = ?', [current.id], function(err, result) {
+                        current.skill = result;
+
+                        callback(err);
+                    });
+                }
+            },
+            function(callback) {
+                if(insert.id === current.id) { callback(); } else {
+                    rest.query(pool, 'UPDATE person_playable SET background_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
+                }
+            },
+            function(callback) {
+                if(insert.id === current.id) { callback(); } else {
+                    rest.personInsertAttribute(pool, person, insert, current, callback);
+                }
+            },
+            function(callback) {
+                if(insert.id === current.id) { callback(); } else {
+                    rest.personInsertSkill(pool, person, insert, current, callback);
+                }
             }
         ],function(err) {
-            if(err) {
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send();
             }
@@ -542,59 +535,56 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.insert_id;
+        insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
                 async.parallel([
                     function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
+                        rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?',[insert.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT focus_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT focus_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
                 ],function(err,results) {
-                    person.auth = !!results[0][0][0];
-                    person.attribute = results[1][0];
-                    insert.attribute = results[2][0];
-                    current.id = results[3][0][0].focus_id;
+                    person.attribute = results[1];
+
+                    insert.attribute = results[2];
+
+                    current.id = results[3][0].focus_id;
 
                     callback(err);
                 });
             },
             function(callback) {
-                if(person.auth && current.id !== undefined) {
-                    pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?',[current.id]),function(err,result) {
+                if(!current.id) { callback(); } else {
+                    rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?', [current.id], function(err,result) {
                         current.attribute = result;
 
                         callback(err);
                     });
-                } else { callback(); }
+                }
             },
             function(callback) {
-                if(person.auth && insert.id != current.id) {
-                    async.parallel([
-                        function(callback) {
-                            pool.query(mysql.format('UPDATE person_playable SET focus_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
-                        },
-                        function(callback) {
-                            rest.personInsertAttribute(pool, person, insert, current, callback);
-                        }
-                    ],function(err) {
-                        callback(err);
-                    });
-                } else { callback(); }
+                if(insert.id === current.id) { callback(); } else {
+                    rest.query(pool, 'UPDATE person_playable SET focus_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
+                }
+            },
+            function(callback) {
+                if(insert.id === current.id) { callback(); } else {
+                    rest.personInsertAttribute(pool, person, insert, current, callback);
+                }
             }
         ],function(err) {
-            if(err) {
-                console.log(err);
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send();
             }
@@ -609,59 +599,56 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.insert_id;
+        insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
                 async.parallel([
                     function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
+                        rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?',[insert.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT identity_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT identity_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
                 ],function(err,results) {
-                    person.auth = !!results[0][0][0];
-                    person.attribute = results[1][0];
-                    insert.attribute = results[2][0];
-                    current.id = results[3][0][0].identity_id;
+                    person.attribute = results[0];
+
+                    insert.attribute = results[1];
+
+                    current.id = results[2][0].identity_id;
 
                     callback(err);
                 });
             },
             function(callback) {
-                if(person.auth && current.id !== undefined) {
-                    pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?',[current.id]),function(err,result) {
+                if(!current.id) { callback(); } else {
+                    rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?', [current.id], function(err,result) {
                         current.attribute = result;
 
                         callback(err);
                     });
-                } else { callback(); }
+                }
             },
             function(callback) {
-                if(person.auth && insert.id != current.id) {
-                    async.parallel([
-                        function(callback) {
-                            pool.query(mysql.format('UPDATE person_playable SET identity_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
-                        },
-                        function(callback) {
-                            rest.personInsertAttribute(pool, person, insert, current, callback);
-                        }
-                    ],function(err) {
-                        callback(err);
-                    });
-                } else { callback(); }
+                if(insert.id === current.id) { callback(); } else {
+                    rest.query(pool, 'UPDATE person_playable SET identity_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
+                }
+            },
+            function(callback) {
+                if(insert.id === current.id) { callback(); } else {
+                    rest.personInsertAttribute(pool, person, insert, current, callback);
+                }
             }
         ],function(err) {
-            if(err) {
-                console.log(err);
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send();
             }
@@ -676,53 +663,35 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.insert_id;
+        insert.id = parseInt(req.body.insert_id);
 
-        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id, person.secret]),function(err,result) {
-            person.auth = !!result[0];
+        async.series([
+            function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'UPDATE person_playable SET manifestation_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT power_id, skill_id FROM manifestation WHERE id = ?', [insert.id], function(err, result) {
+                    manifestation.power = result[0].power_id;
+                    manifestation.skill = result[0].skill_id;
 
-            if(err) {
-                res.status(500).send(err);
-            } else if(!person.auth) {
-                res.status(400).send('Wrong Secret');
-            } else {
-                async.series([
-                    function(callback) {
-                        pool.query(mysql.format('UPDATE person_playable SET manifestation_id = ? WHERE person_id = ?',[insert.id, person.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT power_id, skill_id FROM manifestation WHERE id = ?',[insert.id]),function(err, result) {
-                            manifestation.power = result[0].power_id;
-                            manifestation.skill = result[0].skill_id;
-
-                            callback(err);
-                        });
-                    },
-                    function(callback) {
-                        var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
-
-                        call += '(' + person.id + ',' + manifestation.power + ',0),';
-
-                        call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
-
-                        pool.query(call,callback);
-                    },
-                    function(callback) {
-                        var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
-
-                        call += '(' + person.id + ',' + manifestation.skill + ',0),';
-
-                        call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
-
-                        pool.query(call,callback);
-                    }
-                ],function(err) {
-                    if (err) {
-                        res.status(500).send(err);
-                    } else {
-                        res.status(200).send();
-                    }
+                    callback(err);
                 });
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.power], callback)
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES (?,?,0) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.skill], callback)
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
             }
         });
     });
@@ -735,96 +704,54 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.insert_id;
+        insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
+                rest.personAuth(pool, person, callback);
+            },
+            function(callback) {
                 async.parallel([
                     function(callback) {
-                        pool.query(mysql.format('SELECT secret FROM person WHERE id = ? AND secret = ?',[person.id,person.secret]),callback);
+                        rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?',[insert.id]),callback);
-                    },
-                    function(callback) {
-                        pool.query(mysql.format('SELECT nature_id FROM person_playable WHERE person_id = ?',[person.id]),callback);
+                        rest.query(pool, 'SELECT nature_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
                 ],function(err,results) {
-                    person.auth = !!results[0][0][0];
-                    person.attribute = results[1][0];
-                    insert.attribute = results[2][0];
-                    current.id = results[3][0][0].nature_id;
+                    person.attribute = results[0];
+                    insert.attribute = results[1];
+                    current.id = results[2][0].nature_id;
 
                     callback(err);
                 });
             },
             function(callback) {
-                if(person.auth && current.id !== undefined) {
-                    pool.query(mysql.format('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?',[current.id]),function(err,result) {
+                if(!current.id) { callback(); } else {
+                    rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?', [current.id], function(err, result) {
                         current.attribute = result;
 
                         callback(err);
                     });
-                } else { callback(); }
+                }
             },
             function(callback) {
-                if(person.auth && insert.id != current.id) {
-                    async.parallel([
-                        function(callback) {
-                            pool.query(mysql.format('UPDATE person_playable SET nature_id = ? WHERE person_id = ?',[insert.id,person.id]),callback);
-                        },
-                        function(callback) {
-                            if(insert.attribute[0] !== undefined) {
-                                var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
-
-                                for(var i in person.attribute) {
-                                    for(var j in insert.attribute) {
-                                        if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
-                                            person.attribute[i].value += insert.attribute[j].value;
-                                            person.attribute[i].changed = true;
-                                            insert.attribute[j].updated = true;
-                                        }
-                                    }
-
-                                    if(current.attribute[0]) {
-                                        for(var k in current.attribute) {
-                                            if(person.attribute[i].attribute_id === current.attribute[k].attribute_id) {
-                                                person.attribute[i].value -= current.attribute[k].value;
-                                                person.attribute[i].changed = true;
-                                            }
-                                        }
-                                    }
-
-                                    if(person.attribute[i].changed === true) {
-                                        call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
-                                    }
-                                }
-
-                                for(var m in insert.attribute) {
-                                    if(insert.attribute[m].updated !== true) {
-                                        call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
-                                    }
-                                }
-
-                                call = call.slice(0, -1);
-
-                                call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
-
-                                pool.query(call,callback);
-                            } else { callback(); }
-                        }
-                    ],function(err) {
-                        callback(err);
-                    });
-                } else { callback(); }
+                if(insert.id === current.id) { callback(); } else {
+                    rest.query(pool, 'UPDATE person_playable SET nature_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
+                }
+            },
+            function(callback) {
+                if(insert.id === current.id) { callback(); } else {
+                    rest.personInsertAttribute(pool, person, insert, current, callback);
+                }
             }
         ],function(err) {
-            if(err) {
-                console.log(err);
-                res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
             } else {
                 res.status(200).send();
             }

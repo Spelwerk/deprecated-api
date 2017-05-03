@@ -1,7 +1,5 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    rest = require('./../rest'),
-    tokens = require('./../tokens');
+var async = require('async'),
+    rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -39,92 +37,70 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.post(path + '/id/:id/species', function(req, res) {
-        var world = {},
+        var table = {},
             insert = {},
-            species = {},
-            user = {};
+            species = {};
 
-        world.id = req.params.id;
+        table.id = req.params.id;
+        table.name = 'world';
+
         insert.id = parseInt(req.body.insert_id);
 
-        user.token = tokens.decode(req);
-        user.id = user.token.sub.id;
-        user.admin = user.token.sub.admin;
+        async.series([
+            function(callback) {
+                rest.userAuth(pool, req, table, false, callback);
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT id FROM skill WHERE species_id = ?', [insert.id], function(err, result) {
+                    species.skill = result;
 
-        if(!user.token) {
-            res.status(400).send('User not logged in.');
-        } else {
-            pool.query(mysql.format('SELECT owner FROM user_has_world WHERE user_id = ? AND world_id = ?',[user.id,world.id]),function(err,result) {
-                if(err) {
-                    res.status(500).send(err);
-                } else {
-                    user.owner = !!result[0];
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT id FROM expertise WHERE species_id = ?', [insert.id], function(err, result) {
+                    species.expertise = result;
 
-                    if(!user.owner && !user.admin) {
-                        res.status(400).send('Not user, nor admin.');
-                    } else {
-                        async.series([
-                            function(callback) {
-                                async.parallel([
-                                    function(callback) {
-                                        pool.query(mysql.format('INSERT INTO world_has_species (world_id,species_id) VALUES (?,?)',[world.id,insert.id]),callback);
-                                    },
-                                    function(callback) {
-                                        pool.query(mysql.format('SELECT id FROM expertise WHERE species_id = ?',[insert.id]),callback);
-                                    },
-                                    function(callback) {
-                                        pool.query(mysql.format('SELECT id FROM skill WHERE species_id = ?',[insert.id]),callback);
-                                    }
-                                ],function(err,results) {
-                                    species.expertise = results[1][0];
-                                    species.skill = results[2][0];
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'INSERT INTO world_has_species (world_id,species_id) VALUES (?,?)', [table.id, insert.id], callback);
+            },
+            function(callback) {
+                if(!species.skill) { callback(); } else {
+                    var call = 'INSERT INTO world_has_skill (world_id,skill_id) VALUES ';
 
-                                    callback(err);
-                                });
-                            },
-                            function(callback) {
-                                async.parallel([
-                                    function(callback) {
-                                        if(species.expertise[0] !== undefined) {
-                                            var call = 'INSERT INTO world_has_expertise (world_id,expertise_id) VALUES ';
-
-                                            for(var i in species.expertise) {
-                                                call += '(' + world.id + ',' + species.expertise[i].id + '),';
-                                            }
-
-                                            call = call.slice(0, -1);
-
-                                            pool.query(call,callback);
-                                        } else { callback(); }
-                                    },
-                                    function(callback) {
-                                        if(species.skill[0] !== undefined) {
-                                            var call = 'INSERT INTO world_has_skill (world_id,skill_id) VALUES ';
-
-                                            for(var i in species.skill) {
-                                                call += '(' + world.id + ',' + species.skill[i].id + '),';
-                                            }
-
-                                            call = call.slice(0, -1);
-
-                                            pool.query(call,callback);
-                                        } else { callback(); }
-                                    }
-                                ],function(err) {
-                                    callback(err);
-                                });
-                            }
-                        ],function(err) {
-                            if (err) {
-                                res.status(500).send(err);
-                            } else {
-                                res.status(200).send();
-                            }
-                        });
+                    for(var i in species.skill) {
+                        call += '(' + table.id + ',' + species.skill[i].id + '),';
                     }
+
+                    call = call.slice(0, -1);
+
+                    rest.query(pool, call, null, callback);
                 }
-            });
-        }
+            },
+            function(callback) {
+                if(!species.expertise) { callback(); } else {
+                    var call = 'INSERT INTO world_has_expertise (world_id,expertise_id) VALUES ';
+
+                    for(var i in species.expertise) {
+                        call += '(' + table.id + ',' + species.expertise[i].id + '),';
+                    }
+
+                    call = call.slice(0, -1);
+
+                    rest.query(pool, call, null, callback);
+                }
+            }
+        ],function(err) {
+            if (err) {
+                var status = err.status ? err.status : 500;
+                res.status(status).send({code: err.code, message: err.message});
+            } else {
+                res.status(200).send();
+            }
+        });
     });
 
     router.delete(path + '/id/:id/species/:id2', function(req, res) {

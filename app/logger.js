@@ -37,10 +37,10 @@ module.exports.logCall = function(file, call, error) {
     error = error || null;
 
     if(debugMode) {
-        console.log('\ncall:'); console.log(call);
+        console.log(call);
 
         if(error) {
-            console.log('error:'); console.log(error);
+            console.log('error:'); console.log(error); console.log();
 
             logger.debug({error: error, file: file, method: 'SQL', call: call});
         } else {

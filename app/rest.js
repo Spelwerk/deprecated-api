@@ -10,7 +10,7 @@ var async = require('async'),
 var file = 'rest.js';
 
 function query(pool, call, params, callback) {
-    if(params[0]) {
+    if(params) {
         call = mysql.format(call, params);
     }
 
@@ -415,24 +415,25 @@ exports.relationPost = function(pool, req, res, tableName, relationName, adminOn
     relation.id = parseInt(req.body.insert_id);
     relation.name = relationName;
 
-    user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
-    user.admin = user.token.sub.admin;
+    async.series([
+        function (callback) {
+            userAuth(pool, req, table, adminOnly, function(err, result) {
+                user.id = result;
 
-    if(!user.token) {
-        res.status(400).send({code: 0, message: 'User not logged in.'});
-    } else if(adminOnly && !user.admin) {
-        res.status(403).send({code: 0, message: 'Forbidden.'});
-    } else {
-        query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id) VALUES (?,?)', [table.id, relation.id], function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
-        });
-    }
+                callback(err);
+            });
+        },
+        function (callback) {
+            query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id) VALUES (?,?)', [table.id, relation.id], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
 exports.relationPostWithValue = function(pool, req, res, tableName, relationName, adminOnly) {
@@ -449,24 +450,25 @@ exports.relationPostWithValue = function(pool, req, res, tableName, relationName
     relation.name = relationName;
     relation.value = parseInt(req.body.value);
 
-    user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
-    user.admin = user.token.sub.admin;
+    async.series([
+        function (callback) {
+            userAuth(pool, req, table, adminOnly, function(err, result) {
+                user.id = result;
 
-    if(!user.token) {
-        res.status(400).send({code: 0, message: 'User not logged in.'});
-    } else if(adminOnly && !user.admin) {
-        res.status(403).send({code: 0, message: 'Forbidden.'});
-    } else {
-        query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id,value) VALUES (?,?,?)', [table.id, relation.id, relation.value], function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
-        });
-    }
+                callback(err);
+            });
+        },
+        function (callback) {
+            query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id,value) VALUES (?,?,?)', [table.id, relation.id, relation.value], callback);
+        }
+    ],function(err) {
+        if (err) {
+            var status = err.status ? err.status : 500;
+            res.status(status).send({code: err.code, message: err.message});
+        } else {
+            res.status(200).send();
+        }
+    });
 };
 
 exports.relationPutValue = function(pool, req, res, tableName, relationName, adminOnly) {
@@ -577,7 +579,7 @@ exports.personInsertAttribute = function(pool, person, insert, current, callback
 
         call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
 
-        pool.query(call,callback);
+        query(pool, call, null, callback);
     } else { callback(); }
 };
 
@@ -618,7 +620,7 @@ exports.personInsertSkill = function(pool, person, insert, current, callback) {
 
         call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
 
-        pool.query(call,callback);
+        query(pool, call, null, callback);
     } else { callback(); }
 };
 
