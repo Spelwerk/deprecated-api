@@ -76,7 +76,7 @@ module.exports = function(pool, router, table, path) {
         person.id = req.params.id;
         person.secret = req.body.secret;
 
-        insert.id = req.body.weapon_id;
+        insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
