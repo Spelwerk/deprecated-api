@@ -11,10 +11,6 @@ module.exports = function(pool, router, table, path, query) {
         rest.QUERY(pool, req, res, call);
     });
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/deleted', function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
 

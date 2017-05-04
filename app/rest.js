@@ -4,7 +4,6 @@ var async = require('async'),
     mailgun = require('mailgun-js')({apiKey: config.mailgun.apikey, domain: config.mailgun.domain}),
     mailcomposer = require('mailcomposer'),
     logger = require('./logger'),
-    config = require('./config'),
     tokens = require('./tokens');
 
 var file = 'rest.js';
@@ -23,11 +22,11 @@ function query(pool, call, params, callback) {
 
 function personAuth(pool, person, callback) {
     query(pool, 'SELECT secret FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err, result) {
-        person.auth = !!result[0];
-
         if(err) return callback(err);
 
-        if(!person.auth) return callback({status: 403, code: 0, message: 'Forbidden'});
+        person.auth = !!result[0];
+
+        if(!person.auth) return callback({status: 403, code: 0, message: 'Forbidden.'});
 
         callback();
     });
@@ -37,16 +36,19 @@ function userAuth(pool, req, table, adminOnly, callback) {
     var user = {};
 
     user.token = tokens.decode(req);
-    user.id = user.token.sub.id;
-    user.admin = user.token.sub.admin;
 
     if(!user.token) return callback({status: 400, code: 0, message: 'User not logged in.'});
+
+    user.id = user.token.sub.id;
+    user.admin = user.token.sub.admin;
 
     if(user.admin) return callback(null, user.id);
 
     if(adminOnly && !user.admin) return callback({status: 403, code: 0, message: 'Forbidden.'});
 
     query(pool,'SELECT owner FROM user_has_' + table.name + ' WHERE user_id = ? AND ' + table.name + '_id = ?',[user.id, table.id],function(err,result) {
+        if(err) return callback(err);
+
         user.owner = !!result[0];
 
         if(!user.owner) return callback({status: 403, code: 0, message: 'Forbidden.'});
@@ -283,22 +285,6 @@ exports.CANON = function(pool, req, res, tableName) {
     });
 };
 
-// OLD DEFAULT
-
-exports.HELP = function(pool, req, res, table) {
-    query(pool, 'SHOW FULL COLUMNS FROM ' + table, null, function(err, result) {
-        if(err) {
-            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
-        } else {
-            if(!result[0]) {
-                res.status(204).send();
-            } else {
-                res.status(200).send({data: result});
-            }
-        }
-    });
-};
-
 exports.QUERY = function(pool, req, res, call, params, order) {
     params = params || null;
     order = order || {"name": "ASC"};
@@ -349,53 +335,13 @@ exports.QUERY = function(pool, req, res, call, params, order) {
 
     query(pool, call, params, function(err, result) {
         if(err) {
-            res.status(500).send({header: 'Internal SQL Error', message: err, code: err.code});
+            res.status(500).send({code: err.code, message: err.message});
         } else {
             if(!result[0]) {
                 res.status(204).send();
             } else {
-                res.status(200).send({data: result});
+                res.status(200).send(result);
             }
-        }
-    });
-};
-
-exports.OLD_DELETE = function(pool, req, res, table, options) {
-    options = options || {id: req.params.id};
-
-    var call = 'UPDATE ' + table + ' SET deleted = CURRENT_TIMESTAMP WHERE ';
-
-    for (var key in options) {
-        call += key + ' = \'' + options[key] + '\' AND ';
-    }
-
-    call = call.slice(0, -5);
-
-    query(pool, call, null, function(err) {
-        if(err) {
-            res.status(500).send(err);
-        } else {
-            res.status(202).send();
-        }
-    });
-};
-
-exports.OLD_REVIVE = function(pool, req, res, table, options) {
-    options = options || {id: req.params.id};
-
-    var call = 'UPDATE ' + table + ' SET deleted = NULL, updated = CURRENT_TIMESTAMP WHERE ';
-
-    for (var key in options) {
-        call += key + ' = \'' + options[key] + '\' AND ';
-    }
-
-    call = call.slice(0, -5);
-
-    query(pool, call, null, function(err) {
-        if(err) {
-            res.status(500).send(err);
-        } else {
-            res.status(202).send();
         }
     });
 };

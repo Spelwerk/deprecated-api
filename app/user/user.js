@@ -58,10 +58,6 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, null, {"displayname": "ASC"});
     });
 
-    router.get(path + '/help', function(req, res) {
-        rest.HELP(pool, req, res, table);
-    });
-
     router.get(path + '/deleted', function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
         rest.QUERY(pool, req, res, call);
@@ -154,10 +150,12 @@ module.exports = function(pool, router, table, path) {
 
         async.series([
             function(callback) {
-                bcrypt.hash(insert.hashed, config.salt, function(err,result) {
+                bcrypt.hash(insert.hashed, config.salt, function(err, result) {
+                    if(err) return callback(err);
+
                     insert.encrypted = onion.encrypt(result);
 
-                    callback(err);
+                    callback();
                 });
             },
             function(callback) {
@@ -184,9 +182,11 @@ module.exports = function(pool, router, table, path) {
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
+                    if(err) return callback(err);
+
                     user.token = result;
 
-                    callback(err);
+                    callback();
                 });
             }
         ],function(err) {
@@ -320,25 +320,31 @@ module.exports = function(pool, router, table, path) {
         async.series([
             function(callback) {
                 rest.query(pool, 'SELECT id, verify_timeout AS timeout FROM user WHERE verify_secret = ?', [insert.secret], function(err,result) {
+                    if(err) return callback(err);
+
+                    if(!result[0]) return callback({status: 403, code: 0, message: 'Wrong Secret.'});
+
                     user.id = result[0].id;
                     user.timeout = result[0].timeout;
 
-                    callback(err);
+                    callback();
                 });
             },
             function(callback) {
-                if(user.now < user.timeout) {
-                    callback({status: 400, code: 0, message: 'Timeout Expired.'});
-                } else { callback(); }
+                if(user.now < user.timeout) return callback({status: 400, code: 0, message: 'Timeout Expired.'});
+
+                callback();
             },
             function(callback) {
                 rest.query(pool, 'UPDATE user SET verify = 1, verify_secret = NULL, verify_timeout = NULL WHERE id = ?', [user.id], callback);
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
+                    if(err) return callback(err);
+
                     user.token = result;
 
-                    callback(err);
+                    callback();
                 });
             }
         ],function(err) {
@@ -362,14 +368,16 @@ module.exports = function(pool, router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'SELECT id,password FROM user WHERE email = ? AND deleted IS NULL', [insert.email], function(err, result) {
+                rest.query(pool, 'SELECT id,password,twofactor FROM user WHERE email = ? AND deleted IS NULL', [insert.email], function(err, result) {
+                    if(err) return callback(err);
+
+                    if(!result[0]) return callback({status: 404, code: 0, message: 'Missing Email.'});
+
                     user.id = result[0].id;
                     user.password = result[0].password;
 
                     insert.encrypted = onion.hash(insert.password);
                     user.encrypted = onion.decrypt(user.password);
-
-                    if(!result[0]) return callback({status: 404, code: 0, message: 'Missing Email.'});
 
                     callback(err);
                 });
@@ -387,6 +395,8 @@ module.exports = function(pool, router, table, path) {
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
+                    if(err) return callback(err);
+
                     user.token = result;
 
                     callback(err);
@@ -448,12 +458,14 @@ module.exports = function(pool, router, table, path) {
         async.series([
             function(callback) {
                 rest.query(pool, 'SELECT id, login_timeout AS timeout FROM user WHERE login_secret = ?', [insert.secret], function(err, result) {
-                    user.id = result[0].id;
-                    user.timeout = result[0].timeout;
+                    if(err) return callback(err);
 
                     if(!result[0]) return callback({status: 403, code: 0, message: 'Wrong Secret.'});
 
-                    callback(err);
+                    user.id = result[0].id;
+                    user.timeout = result[0].timeout;
+
+                    callback();
                 });
             },
             function(callback) {
@@ -466,9 +478,11 @@ module.exports = function(pool, router, table, path) {
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
+                    if(err) return callback(err);
+
                     user.token = result;
 
-                    callback(err);
+                    callback();
                 });
             }
         ],function(err) {
@@ -532,12 +546,14 @@ module.exports = function(pool, router, table, path) {
         async.series([
             function(callback) {
                 rest.query(pool, 'SELECT id, reset_timeout AS timeout FROM user WHERE reset_secret = ?', [insert.secret], function(err, result) {
-                    user.id = result[0].id;
-                    user.timeout = result[0].timeout;
+                    if(err) return callback(err);
 
                     if(!result[0]) return callback({status: 403, code: 0, message: 'Wrong Secret.'});
 
-                    callback(err);
+                    user.id = result[0].id;
+                    user.timeout = result[0].timeout;
+
+                    callback();
                 });
             },
             function(callback) {
@@ -547,9 +563,11 @@ module.exports = function(pool, router, table, path) {
             },
             function(callback) {
                 bcrypt.hash(insert.hashed, config.salt, function(err,result) {
+                    if(err) return callback(err);
+
                     insert.encrypted = onion.encrypt(result);
 
-                    callback(err);
+                    callback();
                 });
             },
             function(callback) {
@@ -557,9 +575,11 @@ module.exports = function(pool, router, table, path) {
             },
             function(callback) {
                 loginToken(req, user.id, function(err,result) {
+                    if(err) return callback(err);
+
                     user.token = result;
 
-                    callback(err);
+                    callback();
                 });
             }
         ],function(err) {
