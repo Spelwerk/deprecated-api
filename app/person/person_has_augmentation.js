@@ -57,8 +57,22 @@ module.exports = function(pool, router, table, path) {
                 });
             },
             function(callback) {
+                rest.query(pool, 'SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
+                    person.skill = result;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
                 rest.query(pool, 'SELECT attribute_id, value FROM augmentation_has_attribute WHERE augmentation_id = ?', [insert.id], function(err, result) {
                     insert.attribute = !!result[0] ? result : null;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT skill_id, value FROM augmentation_has_skill WHERE augmentation_id = ?', [insert.id], function(err, result) {
+                    insert.skill = !!result[0] ? result : null;
 
                     callback(err);
                 });
@@ -75,6 +89,9 @@ module.exports = function(pool, router, table, path) {
             },
             function(callback) {
                 rest.personInsertAttribute(pool, person, insert, current, callback);
+            },
+            function(callback) {
+                rest.personInsertSkill(pool, person, insert, current, callback);
             },
             function(callback) {
                 if(!insert.weapon) { callback(); } else {

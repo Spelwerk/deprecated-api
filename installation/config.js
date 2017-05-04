@@ -1,49 +1,41 @@
-exports.base = '';
-exports.port = 3001;
+var secrets = require('./config/secret.json'),
+    database = require('./config/database.json'),
+    superuser = require('./config/superuser.json'),
+    mailgun = require('./config/mailgun.json');
+
+module.exports.secrets = secrets;
+module.exports.superuser = superuser;
+module.exports.mailgun = mailgun;
+
+exports.port = 3003;
 exports.salt = 12;
 exports.timeoutTTL = 60;
-exports.debugMode = false;
-exports.noreply = 'noreply@email';
-
-var secrets = {
-    api: '',
-    jwt: '',
-    aes: '',
-    sha: '',
-    dbp: '',
-    sus: ''
-};
+exports.debugMode = true;
+exports.noreply = superuser.noreply;
 
 var pool = {
-    host: '',
-    user: '',
-    database: '',
+    host: database.host,
+    database: database.name,
+    user: database.username,
+    password: database.password,
     connectionLimit: 100,
     waitForConnections: true,
     queueLimit: 0,
-    password: secrets.dbp,
     debug: false,
     wait_timeout: 28800,
     connect_timeout: 10
 };
 
-var superuser = {
-    displayname: 'admin',
-    firstname: 'admin',
-    surname: 'admin',
-    password: secrets.sus,
-    email: ''
-};
-
-var mailgun = {
-    apikey: '',
-    domain: ''
-};
+var base = '';
 
 var links = {
-    user_new_verify: '',
-    user_password_reset: '',
-    user_login_with_hash: ''
+    user: {
+        verify: {
+            new: base + 'outside?d=verify&s=',
+            login: base + 'outside?d=login&s=',
+            reset: base + 'user/verify/reset/'
+        }
+    }
 };
 
 var defaults = {
@@ -121,9 +113,7 @@ var defaults = {
     }
 };
 
-module.exports.secrets = secrets;
 module.exports.pool = pool;
-module.exports.superuser = superuser;
-module.exports.mailgun = mailgun;
+module.exports.base = base;
 module.exports.links = links;
 module.exports.defaults = defaults;

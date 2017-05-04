@@ -20,9 +20,9 @@ bcrypt.hash(onion.hash(password), require('./../app/config').salt, function(erro
         query = mysql.format(query,array);
         query = mysql.format(query,array);
 
-        pool.query(query, function(error, result) {
-            if(error) {
-                console.log(error);
+        pool.query(query, function(err) {
+            if(err) {
+                console.log(err);
                 process.exit(1);
             } else {
                 console.log("Created Super User account with...\nemail: " + superuser.email + "\npassword: " + superuser.password);

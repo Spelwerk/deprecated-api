@@ -13,7 +13,7 @@
 - Setup the mysql server and import the sql-file into a new database. The sql-file can be found in the installation folder.
 - Copy ```config.js``` from the installation folder into ```/app/``` and fill all fields.
 - Run the server with ```npm start``` in root folder
-- Run ```node /installation/create_admin.js``` when you have verified a database connection.
+- Run ```node /installation/install_admin.js``` when you have verified a database connection.
 - When you have verified that the API works you should set it up as a service. There is an example systemd configuration file in the ```installation/``` folder.
 
 ## Database Export
