@@ -1,4 +1,5 @@
 var async = require('async'),
+    energyId = require('./../config').defaults.attribute.id.energy,
     rest = require('./../rest');
 
 module.exports = function(pool, router, table, path) {
@@ -48,10 +49,13 @@ module.exports = function(pool, router, table, path) {
 
     router.post(path + '/id/:id/bionic', function(req, res) {
         var person = {},
+            energy = {},
             insert = {};
 
         person.id = req.params.id;
         person.secret = req.body.secret;
+
+        energy.id = energyId;
 
         insert.id = parseInt(req.body.insert_id);
 
@@ -60,7 +64,30 @@ module.exports = function(pool, router, table, path) {
                 rest.personAuth(pool, person, callback);
             },
             function(callback) {
+                rest.query(pool, 'SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, energy.id], function(err, result) {
+                    if(err) return callback(err);
+
+                    person.energy = parseInt(result[0].value);
+
+                    callback();
+                });
+            },
+            function(callback) {
+                rest.query(pool, 'SELECT energy FROM bionic WHERE id = ?', [insert.id], function(err, result) {
+                    if(err) return callback(err);
+
+                    insert.energy = parseInt(result[0].energy);
+
+                    callback();
+                });
+            },
+            function(callback) {
                 rest.query(pool, 'INSERT INTO person_has_bionic (person_id,bionic_id) VALUES (?,?)', [person.id, insert.id], callback);
+            },
+            function(callback) {
+                insert.value = insert.energy + person.energy;
+
+                rest.query(pool, 'UPDATE person_has_attribute SET value = ? WHERE person_id = ? AND attribute_id = ?', [insert.value, person.id, energy.id], callback);
             }
         ],function(err) {
             if (err) {

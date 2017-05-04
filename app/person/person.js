@@ -253,7 +253,7 @@ module.exports = function(pool, router, table, path) {
                     },
                     function(callback) {
                         if(!user.token) { callback(); } else {
-                            rest.query(pool, 'INSERT INTO user_has_person (user_id,person_id,owner,secret) VALUES (?,?,?1?)', [user.id, person.id, person.secret], callback);
+                            rest.query(pool, 'INSERT INTO user_has_person (user_id,person_id,secret,owner) VALUES (?,?,?,1)', [user.id, person.id, person.secret], callback);
                         }
                     }
                 ],function(err) {

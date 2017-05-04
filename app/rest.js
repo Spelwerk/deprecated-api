@@ -543,85 +543,85 @@ exports.relationDelete = function(pool, req, res, tableName, relationName, admin
 // PERSON
 
 exports.personInsertAttribute = function(pool, person, insert, current, callback) {
-    if(person.attribute[0] !== undefined && insert.attribute[0] !== undefined) {
-        var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
+    if(!person.attribute || !insert.attribute) return callback();
 
-        for(var i in person.attribute) {
-            for(var j in insert.attribute) {
-                if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
-                    person.attribute[i].value += insert.attribute[j].value;
+    var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
+
+    for(var i in person.attribute) {
+        for(var j in insert.attribute) {
+            if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
+                person.attribute[i].value += insert.attribute[j].value;
+                person.attribute[i].changed = true;
+                insert.attribute[j].updated = true;
+            }
+        }
+
+        if(current.attribute !== undefined && current.attribute[0] !== undefined) {
+            for(var k in current.attribute) {
+                if(person.attribute[i].attribute_id === current.attribute[k].attribute_id) {
+                    person.attribute[i].value -= current.attribute[k].value;
                     person.attribute[i].changed = true;
-                    insert.attribute[j].updated = true;
                 }
-            }
-
-            if(current.attribute !== undefined && current.attribute[0] !== undefined) {
-                for(var k in current.attribute) {
-                    if(person.attribute[i].attribute_id === current.attribute[k].attribute_id) {
-                        person.attribute[i].value -= current.attribute[k].value;
-                        person.attribute[i].changed = true;
-                    }
-                }
-            }
-
-            if(person.attribute[i].changed === true) {
-                call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
             }
         }
 
-        for(var m in insert.attribute) {
-            if(insert.attribute[m].updated !== true) {
-                call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
-            }
+        if(person.attribute[i].changed === true) {
+            call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
         }
+    }
 
-        call = call.slice(0, -1);
+    for(var m in insert.attribute) {
+        if(insert.attribute[m].updated !== true) {
+            call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
+        }
+    }
 
-        call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
+    call = call.slice(0, -1);
 
-        query(pool, call, null, callback);
-    } else { callback(); }
+    call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
+
+    query(pool, call, null, callback);
 };
 
 exports.personInsertSkill = function(pool, person, insert, current, callback) {
-    if(person.skill[0] !== undefined && insert.skill[0] !== undefined) {
-        var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
+    if(!person.skill || !insert.skill) return callback();
 
-        for(var i in person.skill) {
-            for(var j in insert.skill) {
-                if(person.skill[i].skill_id === insert.skill[j].skill_id) {
-                    person.skill[i].value += insert.skill[j].value;
+    var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
+
+    for(var i in person.skill) {
+        for(var j in insert.skill) {
+            if(person.skill[i].skill_id === insert.skill[j].skill_id) {
+                person.skill[i].value += insert.skill[j].value;
+                person.skill[i].changed = true;
+                insert.skill[j].updated = true;
+            }
+        }
+
+        if(current.skill !== undefined && current.skill[0] !== undefined) {
+            for(var k in current.skill) {
+                if(person.skill[i].skill_id === current.skill[k].skill_id) {
+                    person.skill[i].value -= current.skill[k].value;
                     person.skill[i].changed = true;
-                    insert.skill[j].updated = true;
                 }
-            }
-
-            if(current.skill !== undefined && current.skill[0] !== undefined) {
-                for(var k in current.skill) {
-                    if(person.skill[i].skill_id === current.skill[k].skill_id) {
-                        person.skill[i].value -= current.skill[k].value;
-                        person.skill[i].changed = true;
-                    }
-                }
-            }
-
-            if(person.skill[i].changed === true) {
-                call += '(' + person.id + ',' + person.skill[i].skill_id + ',' + person.skill[i].value + '),';
             }
         }
 
-        for(var m in insert.skill) {
-            if(insert.skill[m].updated !== true) {
-                call += '(' + person.id + ',' + insert.skill[m].skill_id + ',' + insert.skill[m].value + '),';
-            }
+        if(person.skill[i].changed === true) {
+            call += '(' + person.id + ',' + person.skill[i].skill_id + ',' + person.skill[i].value + '),';
         }
+    }
 
-        call = call.slice(0, -1);
+    for(var m in insert.skill) {
+        if(insert.skill[m].updated !== true) {
+            call += '(' + person.id + ',' + insert.skill[m].skill_id + ',' + insert.skill[m].value + '),';
+        }
+    }
 
-        call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
+    call = call.slice(0, -1);
 
-        query(pool, call, null, callback);
-    } else { callback(); }
+    call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
+
+    query(pool, call, null, callback);
 };
 
 exports.personCustomDescription = function(pool, req, res, tableName) {

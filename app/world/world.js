@@ -2,7 +2,8 @@ var mysql = require('mysql'),
     async = require('async'),
     logger = require('./../logger'),
     rest = require('./../rest'),
-    tokens = require('./../tokens');
+    tokens = require('./../tokens'),
+    defaults = require('./../config').defaults.attribute.id;
 
 module.exports = function(pool, router, table, path) {
     path = path || '/' + table;
@@ -97,27 +98,28 @@ module.exports = function(pool, router, table, path) {
                 function(callback) {
                     var defaultAttributes = [];
 
-                    defaultAttributes.push({attribute_id: 1, default_value: 8});
-                    defaultAttributes.push({attribute_id: 2, default_value: 8});
-                    defaultAttributes.push({attribute_id: 3, default_value: 8});
-                    defaultAttributes.push({attribute_id: 4, default_value: 0});
-                    defaultAttributes.push({attribute_id: 5, default_value: 0});
-                    defaultAttributes.push({attribute_id: 6, default_value: 0});
-                    defaultAttributes.push({attribute_id: 7, default_value: 2});
-                    defaultAttributes.push({attribute_id: 8, default_value: 2});
-                    defaultAttributes.push({attribute_id: 9, default_value: 4});
-                    defaultAttributes.push({attribute_id: 10, default_value: 0});
-                    defaultAttributes.push({attribute_id: 11, default_value: 0});
-                    defaultAttributes.push({attribute_id: 12, default_value: 0});
-                    defaultAttributes.push({attribute_id: 13, default_value: 0});
-                    defaultAttributes.push({attribute_id: 16, default_value: 0});
-                    defaultAttributes.push({attribute_id: 17, default_value: 0});
-                    defaultAttributes.push({attribute_id: 19, default_value: 1});
-                    defaultAttributes.push({attribute_id: 20, default_value: 1});
-                    defaultAttributes.push({attribute_id: 21, default_value: 1});
-                    defaultAttributes.push({attribute_id: 22, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.resilience, default_value: 8});
+                    defaultAttributes.push({attribute_id: defaults.stamina, default_value: 8});
+                    defaultAttributes.push({attribute_id: defaults.tolerance, default_value: 8});
+                    defaultAttributes.push({attribute_id: defaults.initiative, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.speed, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.disease, default_value: 2});
+                    defaultAttributes.push({attribute_id: defaults.sanity, default_value: 2});
+                    defaultAttributes.push({attribute_id: defaults.trauma, default_value: 4});
+                    defaultAttributes.push({attribute_id: defaults.ballistic, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.bashing, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.piercing, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.slashing, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.damage, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.honor, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.infamy, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.ammunition, default_value: 1});
+                    defaultAttributes.push({attribute_id: defaults.money, default_value: 1});
+                    defaultAttributes.push({attribute_id: defaults.rations, default_value: 1});
+                    defaultAttributes.push({attribute_id: defaults.experience, default_value: 0});
+                    defaultAttributes.push({attribute_id: defaults.energy, default_value: 0});
 
-                    call = 'INSERT INTO world_has_attribute (world_id,attribute_id,default_value) VALUES ';
+                    call = 'INSERT INTO world_has_attribute (world_id,attribute_id,value) VALUES ';
 
                     for(var i in defaultAttributes) {
                         call += '(' + world.id + ',' + defaultAttributes[i].attribute_id + ',' + defaultAttributes[i].default_value + '),';

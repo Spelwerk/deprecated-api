@@ -376,11 +376,9 @@ module.exports = function(pool, router, table, path) {
             },
             function(callback) {
                 bcrypt.compare(insert.encrypted, user.encrypted, function(err,result) {
-                    if(err) {
-                        res.status(500).send();
-                    } else {
-                        user.accepted = result;
-                    }
+                    if(err) return callback(err);
+
+                    user.accepted = result;
 
                     if(!user.accepted) return callback({status: 401, code: 0, message: 'Wrong Password.'});
 
