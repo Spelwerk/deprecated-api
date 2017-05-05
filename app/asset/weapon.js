@@ -21,10 +21,11 @@ module.exports = function(pool, router, table, path) {
         'weapontype.hit, ' +
         'weapontype.distance, ' +
         'weapontype.weapongroup_id, ' +
-        'weapongroup.icon, ' +
-        'weapon.created, ' +
-        'weapon.deleted, ' +
-        'weapon.updated ' +
+        'weapongroup.special, ' +
+        'weapongroup.skill_id, ' +
+        'weapongroup.expertise_id, ' +
+        'weapongroup.damage_id, ' +
+        'weapongroup.icon ' +
         'FROM weapon ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
         'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id';

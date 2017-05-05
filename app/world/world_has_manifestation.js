@@ -31,7 +31,7 @@ module.exports = function(pool, router, table, path) {
                 rest.userAuth(pool, req, table, false, callback);
             },
             function(callback) {
-                rest.query(pool, 'SELECT id FROM expertise WHERE manifestation_id = ?', [insert.id], function(err, result) {
+                rest.query(pool, 'SELECT id FROM expertise WHERE manifestation_id = ? AND doctrine_id IS NOT NULL', [insert.id], function(err, result) {
                     manifestation.expertise = result;
 
                     callback(err);
@@ -41,17 +41,17 @@ module.exports = function(pool, router, table, path) {
                 rest.query(pool, 'INSERT INTO world_has_manifestation (world_id,manifestation_id) VALUES (?,?)', [table.id, insert.id], callback);
             },
             function(callback) {
-                if(!manifestation.expertise) { callback(); } else {
-                    var call = 'INSERT INTO world_has_expertise (world_id,expertise_id) VALUES ';
+                if(!manifestation.expertise[0]) return callback();
 
-                    for(var i in manifestation.expertise) {
-                        call += '(' + table.id + ',' + manifestation.expertise[i].id + '),';
-                    }
+                var call = 'INSERT INTO world_has_expertise (world_id,expertise_id) VALUES ';
 
-                    call = call.slice(0, -1);
-
-                    rest.query(pool, call, null, callback);
+                for(var i in manifestation.expertise) {
+                    call += '(' + table.id + ',' + manifestation.expertise[i].id + '),';
                 }
+
+                call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE expertise_id = VALUES(expertise_id)';
+
+                rest.query(pool, call, null, callback);
             }
         ],function(err) {
             if (err) {

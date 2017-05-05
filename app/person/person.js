@@ -279,37 +279,37 @@ module.exports = function(pool, router, table, path) {
         person.id = parseInt(req.params.id);
         person.secret = req.body.secret;
 
-        insert.playable = parseInt(req.body.playable);
-        insert.calculated = parseInt(req.body.calculated);
-        insert.nickname = req.body.nickname;
-        insert.occupation = req.body.occupation;
+        insert.playable = parseInt(req.body.playable) || null;
+        insert.calculated = parseInt(req.body.calculated) || null;
+        insert.nickname = req.body.nickname || null;
+        insert.occupation = req.body.occupation || null;
 
-        creation.point_expertise = parseInt(req.body.point_expertise);
-        creation.point_gift = parseInt(req.body.point_gift);
-        creation.point_imperfection = parseInt(req.body.point_imperfection);
-        creation.point_milestone = parseInt(req.body.point_milestone);
-        creation.point_money = parseInt(req.body.point_money);
-        creation.point_power = parseInt(req.body.point_power);
-        creation.point_relationship = parseInt(req.body.point_relationship);
-        creation.point_skill = parseInt(req.body.point_skill);
-        creation.point_supernatural = parseInt(req.body.point_supernatural);
+        creation.point_expertise = parseInt(req.body.point_expertise) || null;
+        creation.point_gift = parseInt(req.body.point_gift) || null;
+        creation.point_imperfection = parseInt(req.body.point_imperfection) || null;
+        creation.point_milestone = parseInt(req.body.point_milestone) || null;
+        creation.point_money = parseInt(req.body.point_money) || null;
+        creation.point_power = parseInt(req.body.point_power) || null;
+        creation.point_relationship = parseInt(req.body.point_relationship) || null;
+        creation.point_skill = parseInt(req.body.point_skill) || null;
+        creation.point_supernatural = parseInt(req.body.point_supernatural) || null;
 
-        playable.cheated = parseInt(req.body.cheated);
-        playable.supernatural = parseInt(req.body.supernatural);
-        playable.age = parseInt(req.body.age);
+        playable.cheated = parseInt(req.body.cheated) || null;
+        playable.supernatural = parseInt(req.body.supernatural) || null;
+        playable.age = parseInt(req.body.age) || null;
 
-        description.firstname = req.body.firstname;
-        description.surname = req.body.surname;
-        description.gender = req.body.gender;
-        description.description = req.body.description;
-        description.personality = req.body.personality;
-        description.appearance = req.body.appearance;
-        description.background = req.body.background;
-        description.drive = req.body.drive;
-        description.pride = req.body.pride;
-        description.problem = req.body.problem;
-        description.shame = req.body.shame;
-        description.picture_path = req.body.picture_path;
+        description.firstname = req.body.firstname || null;
+        description.surname = req.body.surname || null;
+        description.gender = req.body.gender || null;
+        description.description = req.body.description || null;
+        description.personality = req.body.personality || null;
+        description.appearance = req.body.appearance || null;
+        description.background = req.body.background || null;
+        description.drive = req.body.drive || null;
+        description.pride = req.body.pride || null;
+        description.problem = req.body.problem || null;
+        description.shame = req.body.shame || null;
+        description.picture_path = req.body.picture_path || null;
 
         async.series([
             function (callback) {
@@ -331,7 +331,7 @@ module.exports = function(pool, router, table, path) {
                     query_amount = 0;
 
                 for (var i in insert) {
-                    if(insert[i] !== undefined) {
+                    if(insert[i] !== null) {
                         call += i + ' = ?, ';
                         values_array.push(insert[i]);
                         query_amount++;
@@ -354,7 +354,7 @@ module.exports = function(pool, router, table, path) {
                         query_amount = 0;
 
                     for (var i in creation) {
-                        if(creation[i] !== undefined) {
+                        if(creation[i] !== null) {
                             call += i + ' = ?, ';
                             values_array.push(creation[i]);
                             query_amount++;
@@ -380,7 +380,7 @@ module.exports = function(pool, router, table, path) {
                         query_amount = 0;
 
                     for (var i in playable) {
-                        if(playable[i] !== undefined) {
+                        if(playable[i] !== null) {
                             call += i + ' = ?, ';
                             values_array.push(playable[i]);
                             query_amount++;
@@ -405,7 +405,7 @@ module.exports = function(pool, router, table, path) {
                     query_amount = 0;
 
                 for (var i in playable) {
-                    if(description[i] !== undefined) {
+                    if(description[i] !== null) {
                         call += i + ' = ?, ';
                         values_array.push(description[i]);
                         query_amount++;

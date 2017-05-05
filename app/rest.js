@@ -340,7 +340,7 @@ exports.QUERY = function(pool, req, res, call, params, order) {
             if(!result[0]) {
                 res.status(204).send();
             } else {
-                res.status(200).send(result);
+                res.status(200).send({data: result});
             }
         }
     });

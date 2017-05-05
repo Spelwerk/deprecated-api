@@ -29,7 +29,7 @@ module.exports = function(pool, router, table, path) {
         'weapongroup.skill_id, ' +
         'person_has_skill.value AS skill_value, ' +
         'weapongroup.expertise_id, ' +
-        'person_has_expertise.value AS expertise_value, ' +
+        'person_has_expertise.value AS expertise_level, ' +
         'weapongroup.damage_id, ' +
         'weapongroup.icon, ' +
         'person_has_weapon.weaponquality_id AS quality_id, ' +

@@ -13,6 +13,7 @@ module.exports = function(pool, router, table, path) {
         'protection.bodypart_id, ' +
         'protection.icon, ' +
         'person_has_protection.protectionquality_id AS quality_id, ' +
+        'protectionquality.price AS quality_price, ' +
         'protectionquality.bonus, ' +
         'person_has_protection.equipped, ' +
         'person_has_protection.custom ' +

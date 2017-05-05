@@ -15,6 +15,7 @@ module.exports = function(pool, router, table, path) {
         'augmentation.legal, ' +
         'augmentation.weapon_id, ' +
         'person_has_augmentation.augmentationquality_id AS quality_id, ' +
+        'augmentationquality.price AS quality_price, ' +
         'augmentationquality.energy AS quality_energy ' +
         'FROM person_has_augmentation ' +
         'LEFT JOIN augmentation ON augmentation.id = person_has_augmentation.augmentation_id ' +

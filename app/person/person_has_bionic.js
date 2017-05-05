@@ -19,7 +19,8 @@ module.exports = function(pool, router, table, path) {
         'bionic.icon, ' +
         'person_has_bionic.custom, ' +
         'person_has_bionic.bionicquality_id AS quality_id, ' +
-        'bionicquality.energy AS quality_energy, ' +
+        'bionicquality.price AS quality_price, ' +
+        'bionicquality.energy AS quality_energy ' +
         'FROM person_has_bionic ' +
         'LEFT JOIN bionic ON bionic.id = person_has_bionic.bionic_id ' +
         'LEFT JOIN bionicquality ON bionicquality.id = person_has_bionic.bionicquality_id';

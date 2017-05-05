@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'expertise.id, ' +
+        'expertise.canon, ' +
         'expertise.name, ' +
         'expertise.description, ' +
         'expertise.skill_id, ' +
@@ -28,6 +29,7 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
+    // world creation
     router.get(path + '/id/:id/expertise/skill/:id2', function(req, res) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
@@ -41,6 +43,20 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
     });
 
+    // world creation
+    router.get(path + '/id/:id/expertise/manifestation/:id2', function(req, res) {
+        var call = query + ' WHERE ' +
+            'expertise.canon = 1 AND ' +
+            'world_has_expertise.world_id = ? AND ' +
+            'expertise.species_id IS NULL AND ' +
+            'expertise.manifestation_id = ? AND ' +
+            'expertise.doctrine_id IS NULL AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+    });
+
+    // person creation
     router.get(path + '/id/:id/expertise/skill/:id2/species/:id3', function(req, res) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
@@ -54,6 +70,7 @@ module.exports = function(pool, router, table, path) {
         rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
+    // person creation
     router.get(path + '/id/:id/expertise/skill/:id2/species/:id3/manifestation/:id4', function(req, res) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +

@@ -75,17 +75,14 @@ module.exports = function(pool, router, table, path) {
             insert.max_relationship = parseInt(req.body.max_relationship);
 
             var call = 'INSERT INTO world (name,bionic,augmentation,software,supernatural,' +
-                'skill_attributetype_id,attribute_expertisetype_id,dice_expertisetype_id,money_attribute_id,' +
                 'split_supernatural,split_skill,split_expertise,split_milestone,split_relationship,' +
                 'max_gift,max_imperfection,max_supernatural,max_skill,max_expertise,max_milestone,max_relationship) VALUES ' +
-                '(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+                '(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
 
             var values = [insert.name, insert.bionic, insert.augmentation, insert.software, insert.supernatural,
-                    insert.skill_attributetype_id, insert.attribute_expertisetype_id, insert.dice_expertisetype_id,
-                    insert.money_attribute_id, insert.split_supernatural, insert.split_skill, insert.split_expertise,
-                    insert.split_milestone, insert.split_relationship, insert.max_gift, insert.max_imperfection,
-                    insert.max_supernatural, insert.max_skill, insert.max_expertise, insert.max_milestone,
-                    insert.max_relationship];
+                    insert.split_supernatural, insert.split_skill, insert.split_expertise, insert.split_milestone,
+                    insert.split_relationship, insert.max_gift, insert.max_imperfection, insert.max_supernatural,
+                    insert.max_skill, insert.max_expertise, insert.max_milestone, insert.max_relationship];
 
             async.series([
                 function(callback) {
@@ -149,27 +146,27 @@ module.exports = function(pool, router, table, path) {
         table.id = req.params.id;
         table.name = 'world';
 
-        insert.name = req.body.name;
+        insert.name = req.body.name || null;
 
-        insert.bionic = parseInt(req.body.bionic);
-        insert.augmentation = parseInt(req.body.augmentation);
-        insert.software = parseInt(req.body.software);
-        insert.supernatural = parseInt(req.body.supernatural);
-        insert.calculated = parseInt(req.body.calculated);
+        insert.bionic = parseInt(req.body.bionic) || null;
+        insert.augmentation = parseInt(req.body.augmentation) || null;
+        insert.software = parseInt(req.body.software) || null;
+        insert.supernatural = parseInt(req.body.supernatural) || null;
+        insert.calculated = parseInt(req.body.calculated) || null;
 
-        insert.split_supernatural = parseInt(req.body.split_supernatural);
-        insert.split_skill = parseInt(req.body.split_skill);
-        insert.split_expertise = parseInt(req.body.split_expertise);
-        insert.split_milestone = parseInt(req.body.split_milestone);
-        insert.split_relationship = parseInt(req.body.split_relationship);
+        insert.split_supernatural = parseInt(req.body.split_supernatural) || null;
+        insert.split_skill = parseInt(req.body.split_skill) || null;
+        insert.split_expertise = parseInt(req.body.split_expertise) || null;
+        insert.split_milestone = parseInt(req.body.split_milestone) || null;
+        insert.split_relationship = parseInt(req.body.split_relationship) || null;
 
-        insert.max_gift = parseInt(req.body.max_gift);
-        insert.max_imperfection = parseInt(req.body.max_imperfection);
-        insert.max_supernatural = parseInt(req.body.max_supernatural);
-        insert.max_skill = parseInt(req.body.max_skill);
-        insert.max_expertise = parseInt(req.body.max_expertise);
-        insert.max_milestone = parseInt(req.body.max_milestone);
-        insert.max_relationship = parseInt(req.body.max_relationship);
+        insert.max_gift = parseInt(req.body.max_gift) || null;
+        insert.max_imperfection = parseInt(req.body.max_imperfection) || null;
+        insert.max_supernatural = parseInt(req.body.max_supernatural) || null;
+        insert.max_skill = parseInt(req.body.max_skill) || null;
+        insert.max_expertise = parseInt(req.body.max_expertise) || null;
+        insert.max_milestone = parseInt(req.body.max_milestone) || null;
+        insert.max_relationship = parseInt(req.body.max_relationship) || null;
 
         async.series([
             function(callback) {
@@ -181,7 +178,7 @@ module.exports = function(pool, router, table, path) {
                     query_amount = 0;
 
                 for(var i in insert) {
-                    if(insert[i] !== undefined) {
+                    if(insert[i] !== null) {
                         call += i + ' = ?, ';
                         values_array.push(insert[i]);
                         query_amount++;

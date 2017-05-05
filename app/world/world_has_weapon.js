@@ -22,7 +22,7 @@ module.exports = function(pool, router, table, path) {
         'weapontype.hit, ' +
         'weapontype.distance, ' +
         'weapontype.weapongroup_id, ' +
-        'weapongroup.name AS weapongroup_name' +
+        'weapongroup.name AS weapongroup_name, ' +
         'weapongroup.special, ' +
         'weapongroup.skill_id, ' +
         'weapongroup.expertise_id, ' +

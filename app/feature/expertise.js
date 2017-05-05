@@ -5,6 +5,7 @@ module.exports = function(pool, router, table, path) {
 
     var query = 'SELECT ' +
         'expertise.id, ' +
+        'expertise.canon, ' +
         'expertise.name, ' +
         'expertise.description, ' +
         'expertise.skill_id, ' +
@@ -25,32 +26,33 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' +
-            'canon = 1 AND ' +
-            'species_id IS NULL AND ' +
-            'manifestation_id IS NULL AND ' +
-            'doctrine_id IS NULL AND ' +
-            'deleted IS NULL';
+            'expertise.canon = 1 AND ' +
+            'expertise.species_id IS NULL AND ' +
+            'expertise.manifestation_id IS NULL AND ' +
+            'expertise.doctrine_id IS NULL AND ' +
+            'expertise.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call);
     });
 
     router.get(path + '/skill/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'canon = 1 AND ' +
-            'skill_id = ? AND ' +
-            'species_id IS NULL AND ' +
-            'manifestation_id IS NULL AND ' +
-            'doctrine_id IS NULL AND ' +
-            'deleted IS NULL';
+            'expertise.canon = 1 AND ' +
+            'expertise.skill_id = ? AND ' +
+            'expertise.species_id IS NULL AND ' +
+            'expertise.manifestation_id IS NULL AND ' +
+            'expertise.doctrine_id IS NULL AND ' +
+            'expertise.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
     router.get(path + '/manifestation/:id', function(req, res) {
         var call = query + ' WHERE ' +
-            'canon = 1 AND ' +
-            'manifestation_id = ? AND ' +
-            'deleted IS NULL';
+            'expertise.canon = 1 AND ' +
+            'expertise.manifestation_id = ? AND ' +
+            'expertise.doctrine_id IS NULL AND ' +
+            'expertise.deleted IS NULL';
 
         rest.QUERY(pool, req, res, call, [req.params.id]);
     });

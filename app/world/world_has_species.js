@@ -68,30 +68,30 @@ module.exports = function(pool, router, table, path) {
                 rest.query(pool, 'INSERT INTO world_has_species (world_id,species_id) VALUES (?,?)', [table.id, insert.id], callback);
             },
             function(callback) {
-                if(!species.skill) { callback(); } else {
-                    var call = 'INSERT INTO world_has_skill (world_id,skill_id) VALUES ';
+                if(!species.skill[0]) return callback();
 
-                    for(var i in species.skill) {
-                        call += '(' + table.id + ',' + species.skill[i].id + '),';
-                    }
+                var call = 'INSERT INTO world_has_skill (world_id,skill_id) VALUES ';
 
-                    call = call.slice(0, -1);
-
-                    rest.query(pool, call, null, callback);
+                for(var i in species.skill) {
+                    call += '(' + table.id + ',' + species.skill[i].id + '),';
                 }
+
+                call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE skill_id = VALUES(skill_id)';
+
+                rest.query(pool, call, null, callback);
             },
             function(callback) {
-                if(!species.expertise) { callback(); } else {
-                    var call = 'INSERT INTO world_has_expertise (world_id,expertise_id) VALUES ';
+                if(!species.expertise[0]) return callback();
 
-                    for(var i in species.expertise) {
-                        call += '(' + table.id + ',' + species.expertise[i].id + '),';
-                    }
+                var call = 'INSERT INTO world_has_expertise (world_id,expertise_id) VALUES ';
 
-                    call = call.slice(0, -1);
-
-                    rest.query(pool, call, null, callback);
+                for(var i in species.expertise) {
+                    call += '(' + table.id + ',' + species.expertise[i].id + '),';
                 }
+
+                call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE expertise_id = VALUES(expertise_id)';
+
+                rest.query(pool, call, null, callback);
             }
         ],function(err) {
             if (err) {

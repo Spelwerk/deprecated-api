@@ -18,10 +18,10 @@ module.exports = function(pool, router, table, path) {
     router.get(path + '/id/:id/augmentation', function(req, res) {
         var call = query + ' WHERE ' +
             'bionic_has_augmentation.bionic_id = ? AND ' +
-            'augmentation.canon = ? AND ' +
+            'augmentation.canon = 1 AND ' +
             'augmentation.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, 1]);
+        rest.QUERY(pool, req, res, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/augmentation', function(req, res) {
