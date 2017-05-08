@@ -1,7 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -17,7 +17,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"heal": "ASC", "name": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"heal": "ASC", "name": "ASC"});
     });
 
     router.post(path + '/id/:id/wound', function(req, res) {

@@ -1,5 +1,6 @@
 var async = require('async'),
     mysql = require('mysql'),
+    pool = require('./pooler'),
     config = require('./config'),
     mailgun = require('mailgun-js')({apiKey: config.mailgun.apikey, domain: config.mailgun.domain}),
     mailcomposer = require('mailcomposer'),
@@ -8,7 +9,7 @@ var async = require('async'),
 
 var file = 'rest.js';
 
-function query(pool, call, params, callback) {
+function query(call, params, callback) {
     if(params) {
         call = mysql.format(call, params);
     }
@@ -20,8 +21,8 @@ function query(pool, call, params, callback) {
     });
 }
 
-function personAuth(pool, person, callback) {
-    query(pool, 'SELECT secret FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err, result) {
+function personAuth(person, callback) {
+    query('SELECT secret FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err, result) {
         if(err) return callback(err);
 
         person.auth = !!result[0];
@@ -32,7 +33,7 @@ function personAuth(pool, person, callback) {
     });
 }
 
-function userAuth(pool, req, table, adminOnly, callback) {
+function userAuth(req, table, adminOnly, callback) {
     var user = {};
 
     user.token = tokens.decode(req);
@@ -87,9 +88,8 @@ module.exports.sendMail = sendMail;
 
 // IMPROVED DEFAULT
 
-exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
+exports.POST = function(req, res, tableName, allowedKeys, adminOnly) {
     adminOnly = adminOnly || false;
-    allowedKeys = allowedKeys || null;
 
     var table = {},
         insert = {},
@@ -101,30 +101,21 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
 
     if(!user.token) {
         res.status(400).send({status: 400, code: 0, message: 'User not logged in.'});
-    } else if(adminOnly && !user.sub.admin) {
+    } else if(adminOnly && !user.token.sub.admin) {
         res.status(400).send({status: 403, code: 0, message: 'Forbidden.'});
     } else {
         async.series([
             function(callback) {
                 var body = req.body,
-                    keys = [],
                     call = 'INSERT INTO ' + table.name + ' (',
                     vals = ' VALUES (',
                     varr = [];
 
-                if(allowedKeys[0]) {
-                    for(var key in body) {
-                        keys.push(body[key]);
-                    }
-                } else {
-                    keys = body;
-                }
-
-                for(var key in keys) {
-                    if(keys.hasOwnProperty(key)) {
+                for(var key in body) {
+                    if(body.hasOwnProperty(key)) {
                         call += key + ',';
                         vals += '?,';
-                        varr.push(keys[key]);
+                        varr.push(body[key]);
                     }
                 }
 
@@ -133,7 +124,7 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
 
                 call += vals;
 
-                query(pool, call, varr, function(err, result) {
+                query(call, varr, function(err, result) {
                     insert.id = parseInt(result.insertId);
 
                     callback(err);
@@ -141,7 +132,7 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
             },
             function(callback) {
                 if(adminOnly || user.token.sub.admin) { callback(); } else {
-                    query(pool, 'INSERT INTO user_has_' + table.name + ' (user_id,' + table.name + '_id,owner) VALUES (?,?,1)', [user.token.sub.id, insert.id], callback);
+                    query('INSERT INTO user_has_' + table.name + ' (user_id,' + table.name + '_id,owner) VALUES (?,?,1)', [user.token.sub.id, insert.id], callback);
                 }
             }
         ],function(err) {
@@ -155,9 +146,8 @@ exports.POST = function(pool, req, res, tableName, allowedKeys, adminOnly) {
     }
 };
 
-exports.PUT = function(pool, req, res, tableName, allowedKeys, adminOnly) {
+exports.PUT = function(req, res, tableName, allowedKeys, adminOnly) {
     adminOnly = adminOnly || false;
-    allowedKeys = allowedKeys || null;
 
     var table = {},
         user = {};
@@ -167,7 +157,7 @@ exports.PUT = function(pool, req, res, tableName, allowedKeys, adminOnly) {
 
     async.series([
         function(callback) {
-            userAuth(pool, req, table, adminOnly, function(err, result) {
+            userAuth(req, table, adminOnly, function(err, result) {
                 user.id = result;
 
                 callback(err);
@@ -175,22 +165,13 @@ exports.PUT = function(pool, req, res, tableName, allowedKeys, adminOnly) {
         },
         function(callback) {
             var body = req.body,
-                keys = [],
                 call = 'UPDATE ' + table.name + ' SET ',
                 varr = [];
 
-            if(allowedKeys[0]) {
-                for(var key in body) {
-                    keys.push(body[key]);
-                }
-            } else {
-                keys = body;
-            }
-
-            for(var key in keys) {
-                if(keys.hasOwnProperty(key)) {
+            for(var key in body) {
+                if(body.hasOwnProperty(key)) {
                     call += key + ' = ?,';
-                    varr.push(keys[key]);
+                    varr.push(body[key]);
                 }
             }
 
@@ -198,7 +179,7 @@ exports.PUT = function(pool, req, res, tableName, allowedKeys, adminOnly) {
 
             varr.push(table.id);
 
-            query(pool, call, varr, callback);
+            query(call, varr, callback);
         }
     ],function(err) {
         if (err) {
@@ -210,7 +191,7 @@ exports.PUT = function(pool, req, res, tableName, allowedKeys, adminOnly) {
     });
 };
 
-exports.DELETE = function(pool, req, res, tableName, adminOnly) {
+exports.DELETE = function(req, res, tableName, adminOnly) {
     adminOnly = adminOnly || false;
 
     var table = {};
@@ -220,10 +201,10 @@ exports.DELETE = function(pool, req, res, tableName, adminOnly) {
 
     async.series([
         function(callback) {
-            userAuth(pool, req, table, adminOnly, callback);
+            userAuth(req, table, adminOnly, callback);
         },
         function(callback) {
-            query(pool, 'UPDATE ' + table.name + ' SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [table.id], callback);
+            query('UPDATE ' + table.name + ' SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [table.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -235,7 +216,7 @@ exports.DELETE = function(pool, req, res, tableName, adminOnly) {
     });
 };
 
-exports.REVIVE = function(pool, req, res, tableName) {
+exports.REVIVE = function(req, res, tableName) {
     var table = {},
         user = {};
 
@@ -247,10 +228,10 @@ exports.REVIVE = function(pool, req, res, tableName) {
 
     async.series([
         function(callback) {
-            userAuth(pool, req, table, true, callback);
+            userAuth(req, table, true, callback);
         },
         function(callback) {
-            query(pool, 'UPDATE ' + table.name + ' SET deleted = NULL WHERE id = ?', [table.id], callback);
+            query('UPDATE ' + table.name + ' SET deleted = NULL WHERE id = ?', [table.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -262,7 +243,7 @@ exports.REVIVE = function(pool, req, res, tableName) {
     });
 };
 
-exports.CANON = function(pool, req, res, tableName) {
+exports.CANON = function(req, res, tableName) {
     var table = {};
 
     table.id = req.params.id;
@@ -270,10 +251,10 @@ exports.CANON = function(pool, req, res, tableName) {
 
     async.series([
         function(callback) {
-            userAuth(pool, req, table, true, callback);
+            userAuth(req, table, true, callback);
         },
         function(callback) {
-            query(pool, 'UPDATE ' + table.name + ' SET canon = 1 WHERE id = ?', [table.id], callback);
+            query('UPDATE ' + table.name + ' SET canon = 1 WHERE id = ?', [table.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -285,7 +266,7 @@ exports.CANON = function(pool, req, res, tableName) {
     });
 };
 
-exports.QUERY = function(pool, req, res, call, params, order) {
+exports.QUERY = function(req, res, call, params, order) {
     params = params || null;
     order = order || {"name": "ASC"};
 
@@ -333,7 +314,7 @@ exports.QUERY = function(pool, req, res, call, params, order) {
         call += ',' + pagination_amount;
     }
 
-    query(pool, call, params, function(err, result) {
+    query(call, params, function(err, result) {
         if(err) {
             res.status(500).send({code: err.code, message: err.message});
         } else {
@@ -348,7 +329,7 @@ exports.QUERY = function(pool, req, res, call, params, order) {
 
 // RELATIONS
 
-exports.relationPost = function(pool, req, res, tableName, relationName, adminOnly) {
+exports.relationPost = function(req, res, tableName, relationName, adminOnly) {
     adminOnly = adminOnly || false;
 
     var table = {},
@@ -363,14 +344,14 @@ exports.relationPost = function(pool, req, res, tableName, relationName, adminOn
 
     async.series([
         function (callback) {
-            userAuth(pool, req, table, adminOnly, function(err, result) {
+            userAuth(req, table, adminOnly, function(err, result) {
                 user.id = result;
 
                 callback(err);
             });
         },
         function (callback) {
-            query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id) VALUES (?,?)', [table.id, relation.id], callback);
+            query('INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id) VALUES (?,?)', [table.id, relation.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -382,7 +363,7 @@ exports.relationPost = function(pool, req, res, tableName, relationName, adminOn
     });
 };
 
-exports.relationPostWithValue = function(pool, req, res, tableName, relationName, adminOnly) {
+exports.relationPostWithValue = function(req, res, tableName, relationName, adminOnly) {
     adminOnly = adminOnly || false;
 
     var table = {},
@@ -398,14 +379,14 @@ exports.relationPostWithValue = function(pool, req, res, tableName, relationName
 
     async.series([
         function (callback) {
-            userAuth(pool, req, table, adminOnly, function(err, result) {
+            userAuth(req, table, adminOnly, function(err, result) {
                 user.id = result;
 
                 callback(err);
             });
         },
         function (callback) {
-            query(pool, 'INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id,value) VALUES (?,?,?)', [table.id, relation.id, relation.value], callback);
+            query('INSERT INTO ' + table.name + '_has_' + relation.name + ' (' + table.name + '_id,' + relation.name + '_id,value) VALUES (?,?,?)', [table.id, relation.id, relation.value], callback);
         }
     ],function(err) {
         if (err) {
@@ -417,7 +398,7 @@ exports.relationPostWithValue = function(pool, req, res, tableName, relationName
     });
 };
 
-exports.relationPutValue = function(pool, req, res, tableName, relationName, adminOnly) {
+exports.relationPutValue = function(req, res, tableName, relationName, adminOnly) {
     adminOnly = adminOnly || false;
 
     var table = {},
@@ -433,14 +414,14 @@ exports.relationPutValue = function(pool, req, res, tableName, relationName, adm
 
     async.series([
         function(callback) {
-            userAuth(pool, req, table, adminOnly, function(err, result) {
+            userAuth(req, table, adminOnly, function(err, result) {
                 user.id = result;
 
                 callback(err);
             });
         },
         function(callback) {
-            query(pool, 'UPDATE ' + table.name + '_has_' + relation.name + ' SET value = ? WHERE ' + table.name + '_id = ? AND ' + relation.name + '_id = ?', [relation.value, table.id, relation.id], callback);
+            query('UPDATE ' + table.name + '_has_' + relation.name + ' SET value = ? WHERE ' + table.name + '_id = ? AND ' + relation.name + '_id = ?', [relation.value, table.id, relation.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -452,7 +433,7 @@ exports.relationPutValue = function(pool, req, res, tableName, relationName, adm
     });
 };
 
-exports.relationDelete = function(pool, req, res, tableName, relationName, adminOnly) {
+exports.relationDelete = function(req, res, tableName, relationName, adminOnly) {
     adminOnly = adminOnly || false;
 
     var table = {},
@@ -467,14 +448,14 @@ exports.relationDelete = function(pool, req, res, tableName, relationName, admin
 
     async.series([
         function(callback) {
-            userAuth(pool, req, table, adminOnly, function(err, result) {
+            userAuth(req, table, adminOnly, function(err, result) {
                 user.id = result;
 
                 callback(err);
             });
         },
         function(callback) {
-            query(pool, 'DELETE FROM ' + table.name + '_has_' + relation.name + ' WHERE ' + table.name + '_id = ? AND ' + relation.name + '_id = ?', [table.id, relation.id], callback);
+            query('DELETE FROM ' + table.name + '_has_' + relation.name + ' WHERE ' + table.name + '_id = ? AND ' + relation.name + '_id = ?', [table.id, relation.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -488,7 +469,7 @@ exports.relationDelete = function(pool, req, res, tableName, relationName, admin
 
 // PERSON
 
-exports.personInsertAttribute = function(pool, person, insert, current, callback) {
+exports.personInsertAttribute = function(person, insert, current, callback) {
     if(!person.attribute || !insert.attribute) return callback();
 
     var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
@@ -526,10 +507,10 @@ exports.personInsertAttribute = function(pool, person, insert, current, callback
 
     call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
 
-    query(pool, call, null, callback);
+    query(call, null, callback);
 };
 
-exports.personInsertSkill = function(pool, person, insert, current, callback) {
+exports.personInsertSkill = function(person, insert, current, callback) {
     if(!person.skill || !insert.skill) return callback();
 
     var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
@@ -567,10 +548,10 @@ exports.personInsertSkill = function(pool, person, insert, current, callback) {
 
     call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
 
-    query(pool, call, null, callback);
+    query(call, null, callback);
 };
 
-exports.personCustomDescription = function(pool, req, res, tableName) {
+exports.personCustomDescription = function(req, res, tableName) {
     var person = {},
         insert = {};
 
@@ -582,10 +563,10 @@ exports.personCustomDescription = function(pool, req, res, tableName) {
 
     async.series([
         function(callback) {
-            personAuth(pool, person, callback);
+            personAuth(person, callback);
         },
         function(callback) {
-            query(pool, 'UPDATE person_has_' + tableName + ' SET custom = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [insert.custom, person.id, insert.id], callback);
+            query('UPDATE person_has_' + tableName + ' SET custom = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [insert.custom, person.id, insert.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -597,7 +578,7 @@ exports.personCustomDescription = function(pool, req, res, tableName) {
     });
 };
 
-exports.personEquip = function(pool, req, res, tableName) {
+exports.personEquip = function(req, res, tableName) {
     var person = {},
         insert = {};
 
@@ -609,10 +590,10 @@ exports.personEquip = function(pool, req, res, tableName) {
 
     async.series([
         function(callback) {
-            personAuth(pool, person, callback);
+            personAuth(person, callback);
         },
         function(callback) {
-            query(pool, 'UPDATE person_has_' + tableName + ' SET equipped = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [insert.equip, person.id, insert.id], callback);
+            query('UPDATE person_has_' + tableName + ' SET equipped = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [insert.equip, person.id, insert.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -624,7 +605,7 @@ exports.personEquip = function(pool, req, res, tableName) {
     });
 };
 
-exports.personDeleteRelation = function(pool, req, res, tableName) {
+exports.personDeleteRelation = function(req, res, tableName) {
     var person = {},
         insert = {};
 
@@ -635,10 +616,10 @@ exports.personDeleteRelation = function(pool, req, res, tableName) {
 
     async.series([
         function(callback) {
-            personAuth(pool, person, callback);
+            personAuth(person, callback);
         },
         function(callback) {
-            query(pool, 'DELETE FROM person_has_' + tableName + ' WHERE person_id = ? AND ' + tableName + '_id = ?', [person.id, insert.id], callback);
+            query('DELETE FROM person_has_' + tableName + ' WHERE person_id = ? AND ' + tableName + '_id = ?', [person.id, insert.id], callback);
         }
     ],function(err) {
         if (err) {
@@ -652,7 +633,7 @@ exports.personDeleteRelation = function(pool, req, res, tableName) {
 
 // USER
 
-exports.userRelationPost = function(pool, req, res, relationName) {
+exports.userRelationPost = function(req, res, relationName) {
     var relation = {},
         user = {};
 
@@ -665,7 +646,7 @@ exports.userRelationPost = function(pool, req, res, relationName) {
     if(!user.token) {
         res.status(400).send({code: 0, message: 'User not logged in.'});
     } else {
-        query(pool, 'INSERT INTO user_has_' + relation.name + ' (user_id,' + relation.name + '_id) VALUES (?,?)', [user.id, relation.id], function(err) {
+        query('INSERT INTO user_has_' + relation.name + ' (user_id,' + relation.name + '_id) VALUES (?,?)', [user.id, relation.id], function(err) {
             if (err) {
                 var status = err.status ? err.status : 500;
                 res.status(status).send({code: err.code, message: err.message});
@@ -676,7 +657,7 @@ exports.userRelationPost = function(pool, req, res, relationName) {
     }
 };
 
-exports.userRelationDelete = function(pool, req, res, relationName) {
+exports.userRelationDelete = function(req, res, relationName) {
     var relation = {},
         user = {};
 
@@ -689,7 +670,7 @@ exports.userRelationDelete = function(pool, req, res, relationName) {
     if(!user.token) {
         res.status(400).send({code: 0, message: 'User not logged in.'});
     } else {
-        query(pool, 'DELETE FROM user_has_' + relation.name + ' WHERE user_id = ? AND ' + relation.name + '_id = ?', [user.id, relation.id], function(err) {
+        query('DELETE FROM user_has_' + relation.name + ' WHERE user_id = ? AND ' + relation.name + '_id = ?', [user.id, relation.id], function(err) {
             if (err) {
                 var status = err.status ? err.status : 500;
                 res.status(status).send({code: err.code, message: err.message});

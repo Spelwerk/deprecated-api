@@ -1,4 +1,4 @@
-module.exports = function(pool, router) {
+module.exports = function(router) {
 
 
 

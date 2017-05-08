@@ -3,7 +3,7 @@ var async = require('async'),
     rest = require('./../rest'),
     tokens = require('./../tokens');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM background_has_asset';
@@ -12,7 +12,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'background_has_asset.background_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"asset_id": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"asset_id": "ASC"});
     });
 
     router.post(path + '/id/:id/asset', function(req, res) {
@@ -60,6 +60,6 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id/asset/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'background', 'asset');
+        rest.relationDelete(req, res, 'background', 'asset');
     });
 };

@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -15,14 +15,14 @@ module.exports = function(pool, router, table, path) {
             'user_has_friend.user_id = ? AND ' +
             'user.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/friend', function(req, res) {
-        rest.userRelationPost(pool, req, res, 'story');
+        rest.userRelationPost(req, res, 'story');
     });
 
     router.delete(path + '/id/:id/friend/:id2', function(req, res) {
-        rest.userRelationDelete(pool, req, res, 'story');
+        rest.userRelationDelete(req, res, 'story');
     });
 };

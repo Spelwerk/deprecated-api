@@ -5,7 +5,7 @@ var mysql = require('mysql'),
     tokens = require('./../tokens'),
     defaults = require('./../config').defaults.attribute.id;
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM world';
@@ -17,14 +17,14 @@ module.exports = function(pool, router, table, path) {
             'canon = 1 AND ' +
             'deleted is NULL';
 
-        rest.QUERY(pool, req, res, call);
+        rest.QUERY(req, res, call);
     });
 
     router.get(path + '/deleted', function(req, res) {
         var call = query + ' WHERE ' +
             'deleted is NOT NULL';
 
-        rest.QUERY(pool, req, res, call);
+        rest.QUERY(req, res, call);
     });
 
     router.get(path + '/id/:id', function(req, res) {
@@ -35,7 +35,7 @@ module.exports = function(pool, router, table, path) {
         var token = tokens.decode(req),
             userId = token ? token.sub.id : 0;
 
-        rest.QUERY(pool, req, res, call, [userId, req.params.id]);
+        rest.QUERY(req, res, call, [userId, req.params.id]);
     });
 
     // WORLD
@@ -170,7 +170,7 @@ module.exports = function(pool, router, table, path) {
 
         async.series([
             function(callback) {
-                rest.userAuth(pool, req, table, false, callback);
+                rest.userAuth(req, table, false, callback);
             },
             function(callback) {
                 var call = 'UPDATE world SET ',
@@ -204,40 +204,40 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(pool, req, res, 'world');
+        rest.REVIVE(req, res, 'world');
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, 'world');
+        rest.DELETE(req, res, 'world');
     });
 
     // RELATIONSHIPS
 
-    require('./world_has_attribute')(pool, router, table, path);
+    require('./world_has_attribute')(router, table, path);
 
-    require('./world_has_background')(pool, router, table, path);
+    require('./world_has_background')(router, table, path);
 
-    require('./world_has_bionic')(pool, router, table, path);
+    require('./world_has_bionic')(router, table, path);
 
-    require('./world_has_expertise')(pool, router, table, path);
+    require('./world_has_expertise')(router, table, path);
 
-    require('./world_has_gift')(pool, router, table, path);
+    require('./world_has_gift')(router, table, path);
 
-    require('./world_has_imperfection')(pool, router, table, path);
+    require('./world_has_imperfection')(router, table, path);
 
-    require('./world_has_manifestation')(pool, router, table, path);
+    require('./world_has_manifestation')(router, table, path);
 
-    require('./world_has_milestone')(pool, router, table, path);
+    require('./world_has_milestone')(router, table, path);
 
-    require('./world_has_protection')(pool, router, table, path);
+    require('./world_has_protection')(router, table, path);
 
-    require('./world_has_protection')(pool, router, table, path);
+    require('./world_has_protection')(router, table, path);
 
-    require('./world_has_skill')(pool, router, table, path);
+    require('./world_has_skill')(router, table, path);
 
-    require('./world_has_species')(pool, router, table, path);
+    require('./world_has_species')(router, table, path);
 
-    require('./world_has_weapon')(pool, router, table, path);
+    require('./world_has_weapon')(router, table, path);
 
-    require('./world_has_weaponmod')(pool, router, table, path);
+    require('./world_has_weaponmod')(router, table, path);
 };

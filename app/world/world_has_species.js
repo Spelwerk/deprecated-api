@@ -1,7 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM world_has_species ' +
@@ -13,7 +13,7 @@ module.exports = function(pool, router, table, path) {
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/species/playable', function(req, res) {
@@ -23,7 +23,7 @@ module.exports = function(pool, router, table, path) {
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/species/creature', function(req, res) {
@@ -33,7 +33,7 @@ module.exports = function(pool, router, table, path) {
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/species', function(req, res) {
@@ -48,7 +48,7 @@ module.exports = function(pool, router, table, path) {
 
         async.series([
             function(callback) {
-                rest.userAuth(pool, req, table, false, callback);
+                rest.userAuth(req, table, false, callback);
             },
             function(callback) {
                 rest.query(pool, 'SELECT id FROM skill WHERE species_id = ?', [insert.id], function(err, result) {
@@ -104,6 +104,6 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id/species/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'world', 'species');
+        rest.relationDelete(req, res, 'world', 'species');
     });
 };

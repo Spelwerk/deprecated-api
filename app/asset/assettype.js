@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM assettype';
@@ -11,13 +11,13 @@ module.exports = function(pool, router, table, path) {
 
     var allowsUser = false;
 
-    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/group/:id', function(req, res) {
@@ -25,6 +25,6 @@ module.exports = function(pool, router, table, path) {
             'assetgroup_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 };

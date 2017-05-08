@@ -1,18 +1,18 @@
-module.exports = function(pool, router) {
+module.exports = function(router) {
 
-    require('./asset')(pool, router, 'asset');
-    require('./assettype')(pool, router, 'assettype');
-    require('./../default')(pool, router, 'assetgroup');
-    require('./augmentation')(pool, router, 'augmentation');
-    require('./../default')(pool, router, 'augmentationquality');
-    require('./bionic')(pool, router, 'bionic');
-    require('./../default')(pool, router, 'bionicquality');
-    require('./protection')(pool, router, 'protection');
-    require('./../default')(pool, router, 'protectionquality');
-    require('./weapon')(pool, router, 'weapon');
-    require('./weapontype')(pool, router, 'weapontype');
-    require('./weapongroup')(pool, router, 'weapongroup');
-    require('./../default')(pool, router, 'weaponquality');
-    require('./weaponmod')(pool, router, 'weaponmod');
+    require('./asset')(router, 'asset');
+    require('./assettype')(router, 'assettype');
+    require('./../default')(router, 'assetgroup');
+    require('./augmentation')(router, 'augmentation');
+    require('./../default')(router, 'augmentationquality');
+    require('./bionic')(router, 'bionic');
+    require('./../default')(router, 'bionicquality');
+    require('./protection')(router, 'protection');
+    require('./../default')(router, 'protectionquality');
+    require('./weapon')(router, 'weapon');
+    require('./weapontype')(router, 'weapontype');
+    require('./weapongroup')(router, 'weapongroup');
+    require('./../default')(router, 'weaponquality');
+    require('./weaponmod')(router, 'weaponmod');
 
 };

@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM protection_has_attribute ' +
@@ -10,14 +10,14 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'protection_has_attribute.protection_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"attribute_id": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"attribute_id": "ASC"});
     });
 
     router.post(path + '/id/:id/attribute', function(req, res) {
-        rest.relationPostWithValue(pool, req, res, 'protection', 'attribute');
+        rest.relationPostWithValue(req, res, 'protection', 'attribute');
     });
 
     router.delete(path + '/id/:id/attribute/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'protection', 'attribute');
+        rest.relationDelete(req, res, 'protection', 'attribute');
     });
 };

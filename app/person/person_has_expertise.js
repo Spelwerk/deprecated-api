@@ -1,7 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -21,7 +21,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'person_has_expertise.person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id]); // Using ? ON person.id IN LEFT JOIN
+        rest.QUERY(req, res, call, [req.params.id, req.params.id]); // Using ? ON person.id IN LEFT JOIN
     });
 
     router.post(path + '/id/:id/expertise', function(req, res) {
@@ -78,6 +78,6 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/expertise/:id2', function(req, res) {
-        rest.personCustomDescription(pool, req, res, 'expertise');
+        rest.personCustomDescription(req, res, 'expertise');
     });
 };

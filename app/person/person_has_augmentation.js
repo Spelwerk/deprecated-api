@@ -2,7 +2,7 @@ var async = require('async'),
     energyId = require('./../config').defaults.attribute.id.energy,
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -25,7 +25,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'person_has_augmentation.person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"bionic_id":"ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"bionic_id":"ASC"});
     });
 
     router.get(path + '/id/:id/augmentation/bionic/:id2', function(req, res) {
@@ -33,7 +33,7 @@ module.exports = function(pool, router, table, path) {
             'person_has_augmentation.person_id = ? AND ' +
             'person_has_augmentation.bionic_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/augmentation', function(req, res) {

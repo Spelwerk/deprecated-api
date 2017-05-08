@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -26,7 +26,7 @@ module.exports = function(pool, router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     // world creation
@@ -40,7 +40,7 @@ module.exports = function(pool, router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     // world creation
@@ -53,7 +53,7 @@ module.exports = function(pool, router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     // person creation
@@ -67,7 +67,7 @@ module.exports = function(pool, router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
     // person creation
@@ -80,14 +80,14 @@ module.exports = function(pool, router, table, path) {
             '(expertise.manifestation_id = ? OR expertise.manifestation_id IS NULL) AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
     });
 
     router.post(path + '/id/:id/expertise', function(req, res) {
-        rest.relationPost(pool, req, res, 'world', 'expertise');
+        rest.relationPost(req, res, 'world', 'expertise');
     });
 
     router.delete(path + '/id/:id/expertise/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'world', 'expertise');
+        rest.relationDelete(req, res, 'world', 'expertise');
     });
 };

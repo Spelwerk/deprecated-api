@@ -1,6 +1,6 @@
-module.exports = function(pool, router) {
+module.exports = function(router) {
 
-    require('./../default')(pool, router, 'icon');
-    require('./system')(pool, router);
+    require('./../default')(router, 'icon');
+    require('./system')(router);
 
 };

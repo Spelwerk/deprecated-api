@@ -1,7 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -22,7 +22,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'person_has_milestone.person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"name": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"name": "ASC"});
     });
 
     router.post(path + '/id/:id/milestone', function(req, res) {
@@ -70,7 +70,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/milestone/:id2', function(req, res) {
-        rest.personCustomDescription(pool, req, res, 'milestone');
+        rest.personCustomDescription(req, res, 'milestone');
     });
 
     router.delete(path + '/id/:id/milestone/:id2', function(req, res) {

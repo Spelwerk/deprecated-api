@@ -5,7 +5,7 @@ var mysql = require('mysql'),
     hasher = require('./../hasher'),
     tokens = require('./../tokens');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM person ' +
@@ -17,13 +17,13 @@ module.exports = function(pool, router, table, path) {
     // GET
 
     router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null, {"nickname": "ASC"});
+        rest.QUERY(req, res, query, null, {"nickname": "ASC"});
     });
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE person.id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"person.id": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"person.id": "ASC"});
     });
 
     router.get(path + '/popular', function(req, res) {
@@ -32,13 +32,13 @@ module.exports = function(pool, router, table, path) {
             'calculated = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call);
+        rest.QUERY(req, res, call);
     });
 
     router.get(path + '/deleted', function(req, res) {
         var call = query + ' WHERE person.deleted is NOT NULL';
 
-        rest.QUERY(pool, req, res, call, null, {"id": "ASC"});
+        rest.QUERY(req, res, call, null, {"id": "ASC"});
     });
 
     // PERSON
@@ -432,11 +432,11 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(pool, req, res, 'person');
+        rest.REVIVE(req, res, 'person');
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, 'person');
+        rest.DELETE(req, res, 'person');
     });
 
     // SPECIAL
@@ -760,33 +760,33 @@ module.exports = function(pool, router, table, path) {
 
     // RELATIONSHIPS
 
-    require('./person_has_attribute')(pool, router, table, path);
+    require('./person_has_attribute')(router, table, path);
 
-    require('./person_has_augmentation')(pool, router, table, path);
+    require('./person_has_augmentation')(router, table, path);
 
-    require('./person_has_bionic')(pool, router, table, path);
+    require('./person_has_bionic')(router, table, path);
 
-    require('./person_has_disease')(pool, router, table, path);
+    require('./person_has_disease')(router, table, path);
 
-    require('./person_has_doctrine')(pool, router, table, path);
+    require('./person_has_doctrine')(router, table, path);
 
-    require('./person_has_expertise')(pool, router, table, path);
+    require('./person_has_expertise')(router, table, path);
 
-    require('./person_has_gift')(pool, router, table, path);
+    require('./person_has_gift')(router, table, path);
 
-    require('./person_has_imperfection')(pool, router, table, path);
+    require('./person_has_imperfection')(router, table, path);
 
-    require('./person_has_milestone')(pool, router, table, path);
+    require('./person_has_milestone')(router, table, path);
 
-    require('./person_has_protection')(pool, router, table, path);
+    require('./person_has_protection')(router, table, path);
 
-    require('./person_has_sanity')(pool, router, table, path);
+    require('./person_has_sanity')(router, table, path);
 
-    require('./person_has_skill')(pool, router, table, path);
+    require('./person_has_skill')(router, table, path);
 
-    require('./person_has_species')(pool, router, table, path);
+    require('./person_has_species')(router, table, path);
 
-    require('./person_has_weapon')(pool, router, table, path);
+    require('./person_has_weapon')(router, table, path);
 
-    require('./person_has_wound')(pool, router, table, path);
+    require('./person_has_wound')(router, table, path);
 };

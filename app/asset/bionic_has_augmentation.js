@@ -1,6 +1,6 @@
 var rest = require('../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -21,14 +21,14 @@ module.exports = function(pool, router, table, path) {
             'augmentation.canon = 1 AND ' +
             'augmentation.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/augmentation', function(req, res) {
-        rest.relationPost(pool, req, res, 'bionic', 'augmentation');
+        rest.relationPost(req, res, 'bionic', 'augmentation');
     });
 
     router.delete(path + '/id/:id/augmentation/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'bionic', 'augmentation');
+        rest.relationDelete(req, res, 'bionic', 'augmentation');
     });
 };

@@ -10,7 +10,7 @@ var rest = require('./../rest'),
     onion = require('./../onion'),
     hasher = require('./../hasher');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -55,21 +55,21 @@ module.exports = function(pool, router, table, path) {
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NULL';
-        rest.QUERY(pool, req, res, call, null, {"displayname": "ASC"});
+        rest.QUERY(req, res, call, null, {"displayname": "ASC"});
     });
 
     router.get(path + '/deleted', function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
-        rest.QUERY(pool, req, res, call);
+        rest.QUERY(req, res, call);
     });
 
     router.get(path + '/all', function(req, res) {
-        rest.QUERY(pool, req, res, query);
+        rest.QUERY(req, res, query);
     });
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE user.id = ?';
-        rest.QUERY(pool, req, res, call, [req.params.id], {"displayname": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"displayname": "ASC"});
     });
 
     router.get(path + '/token', function(req, res) {
@@ -102,7 +102,7 @@ module.exports = function(pool, router, table, path) {
             'user_has_person.user_id = ? AND ' +
             'person.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"id":"DESC"});
+        rest.QUERY(req, res, call, [req.params.id], {"id":"DESC"});
     });
 
     router.get(path + '/id/:id/world', function(req, res) {
@@ -116,7 +116,7 @@ module.exports = function(pool, router, table, path) {
             'user_has_world.user_id = ? AND ' +
             'world.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"id":"DESC"});
+        rest.QUERY(req, res, call, [req.params.id], {"id":"DESC"});
     });
 
     router.get(path + '/id/:id/world/calculated', function(req, res) {
@@ -131,7 +131,7 @@ module.exports = function(pool, router, table, path) {
             'world.calculated = 1 AND ' +
             'world.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"id":"DESC"});
+        rest.QUERY(req, res, call, [req.params.id], {"id":"DESC"});
     });
 
     // USER
@@ -594,11 +594,11 @@ module.exports = function(pool, router, table, path) {
 
     // RELATIONSHIPS
 
-    require('./user_has_friend')(pool, router, table, path);
+    require('./user_has_friend')(router, table, path);
 
-    require('./user_has_person')(pool, router, table, path);
+    require('./user_has_person')(router, table, path);
 
-    require('./user_has_story')(pool, router, table, path);
+    require('./user_has_story')(router, table, path);
 
-    require('./user_has_world')(pool, router, table, path);
+    require('./user_has_world')(router, table, path);
 };

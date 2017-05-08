@@ -4,7 +4,7 @@ var mysql = require('mysql'),
     rest = require('./../rest'),
     hasher = require('./../hasher');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -20,7 +20,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'story_has_person.story_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"nickname":"ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"nickname":"ASC"});
     });
 
     // todo post/put/delete

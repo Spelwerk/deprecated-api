@@ -1,6 +1,6 @@
-module.exports = function(pool, router) {
+module.exports = function(router) {
 
-    require('./story')(pool, router, 'story');
-    require('./location')(pool, router, 'story');
+    require('./story')(router, 'story');
+    require('./location')(router, 'story');
 
 };

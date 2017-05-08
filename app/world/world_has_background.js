@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM world_has_background ' +
@@ -14,7 +14,7 @@ module.exports = function(pool, router, table, path) {
             'background.manifestation_id IS NULL AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/background/species/:id2', function(req, res) {
@@ -25,7 +25,7 @@ module.exports = function(pool, router, table, path) {
             'background.manifestation_id IS NULL AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/background/species/:id2/manifestation/:id3', function(req, res) {
@@ -36,14 +36,14 @@ module.exports = function(pool, router, table, path) {
             '(background.manifestation_id = ? OR background.manifestation_id IS NULL) AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2, req.params.id3]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
     router.post(path + '/id/:id/background', function(req, res) {
-        rest.relationPost(pool, req, res, 'world', 'background');
+        rest.relationPost(req, res, 'world', 'background');
     });
 
     router.delete(path + '/id/:id/background/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'world', 'background');
+        rest.relationDelete(req, res, 'world', 'background');
     });
 };

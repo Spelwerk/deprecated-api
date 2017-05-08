@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM focus';
@@ -11,7 +11,7 @@ module.exports = function(pool, router, table, path) {
 
     var allowsUser = true;
 
-    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
 
     router.get(path + '/manifestation/:id', function(req, res) {
         var call = query + ' WHERE ' +
@@ -19,6 +19,6 @@ module.exports = function(pool, router, table, path) {
             'manifestation_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 };

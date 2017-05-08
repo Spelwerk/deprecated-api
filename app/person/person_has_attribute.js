@@ -1,7 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -21,7 +21,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'person_has_attribute.person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/attribute/id/:id2', function(req, res) {
@@ -29,7 +29,7 @@ module.exports = function(pool, router, table, path) {
             'person_has_attribute.person_id = ? AND ' +
             'person_has_attribute.attribute_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/attribute/type/:id2', function(req, res) {
@@ -37,7 +37,7 @@ module.exports = function(pool, router, table, path) {
             'person_has_attribute.person_id = ? AND ' +
             'attribute.attributetype_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/attribute', function(req, res) {

@@ -3,7 +3,7 @@ var async = require('async'),
     moment = require('moment'),
     hasher = require('./../hasher');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM meeting';
@@ -13,7 +13,7 @@ module.exports = function(pool, router, table, path) {
             'story_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/meeting/:id2', function(req, res) {
@@ -22,7 +22,7 @@ module.exports = function(pool, router, table, path) {
             'id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/meeting', function(req, res) {

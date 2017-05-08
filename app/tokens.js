@@ -5,6 +5,12 @@ var jwt = require('jsonwebtoken'),
 function generate(req, user, permissions) {
     permissions = permissions || null;
 
+    var permissionsList = [];
+
+    for(var p in permissions) {
+        permissionsList.push(permissions[p].name);
+    }
+
     var now = Math.floor(Date.now() / 1000),
         end = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
 
@@ -18,7 +24,7 @@ function generate(req, user, permissions) {
             displayname: user.displayname,
             admin: user.admin,
             verified: user.verify,
-            permissions: permissions
+            permissions: permissionsList
         },
         agent: req.headers['user-agent']
     };

@@ -1,19 +1,17 @@
 var express = require('express'),
     bodyParser = require('body-parser'),
-    mysql = require('mysql'),
     logger = require('./app/logger'),
     config = require('./app/config');
 
 var app = express(),
-    router = express.Router(),
-    pool = mysql.createPool(config.pool);
+    router = express.Router();
 
 app.use(require('morgan')('combined', {'stream':logger.stream}));
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-router.use(function(req, res, next) {
+app.use(function(req, res, next) {
     if(req.headers.apikey != config.secrets.api) {
         var ip = req.headers['x-forwarded-for'] ||
             req.connection.remoteAddress ||
@@ -28,7 +26,7 @@ router.use(function(req, res, next) {
     }
 });
 
-router.use(function(req, res, next) {
+app.use(function(req, res, next) {
     if(req.headers.debug !== undefined) {
         config.debugMode = req.headers.debug;
     }
@@ -36,7 +34,7 @@ router.use(function(req, res, next) {
     next();
 });
 
-require('./app/index')(pool, router);
+require('./app/index')(router);
 
 app.use('/', router);
 

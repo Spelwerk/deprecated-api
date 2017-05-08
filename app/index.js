@@ -1,13 +1,13 @@
-module.exports = function(pool, router) {
+module.exports = function(router) {
 
-    require('./asset/index')(pool, router);
-    require('./companion/index')(pool, router);
-    require('./feature/index')(pool, router);
-    require('./npc/index')(pool, router);
-    require('./person/index')(pool, router);
-    require('./site/index')(pool, router);
-    require('./story/index')(pool, router);
-    require('./user/index')(pool, router);
-    require('./world/index')(pool, router);
+    require('./asset/index')(router);
+    require('./companion/index')(router);
+    require('./feature/index')(router);
+    require('./npc/index')(router);
+    require('./person/index')(router);
+    require('./site/index')(router);
+    require('./story/index')(router);
+    require('./user/index')(router);
+    require('./world/index')(router);
 
 };

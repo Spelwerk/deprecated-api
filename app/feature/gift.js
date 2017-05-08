@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM gift';
@@ -11,7 +11,7 @@ module.exports = function(pool, router, table, path) {
 
     var allowsUser = true;
 
-    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' +
@@ -21,7 +21,7 @@ module.exports = function(pool, router, table, path) {
             'manifestation_id IS NULL AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call);
+        rest.QUERY(req, res, call);
     });
 
     router.get(path + '/manifestation/:id', function(req, res) {
@@ -31,7 +31,7 @@ module.exports = function(pool, router, table, path) {
             'manifestation_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/species/:id', function(req, res) {
@@ -41,7 +41,7 @@ module.exports = function(pool, router, table, path) {
             'manifestation_id IS NULL AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/skill/:id', function(req, res) {
@@ -52,6 +52,6 @@ module.exports = function(pool, router, table, path) {
             'manifestation_id IS NULL AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 };

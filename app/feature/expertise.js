@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -9,12 +9,17 @@ module.exports = function(pool, router, table, path) {
         'expertise.name, ' +
         'expertise.description, ' +
         'expertise.skill_id, ' +
+        'skill.name AS skill_name, ' +
         'expertise.species_id, ' +
+        'species.name AS species_name, ' +
         'expertise.manifestation_id, ' +
+        'manifestation.name AS manifestation_name, ' +
         'expertise.doctrine_id, ' +
         'skill.icon ' +
         'FROM expertise ' +
-        'LEFT JOIN skill ON skill.id = expertise.skill_id';
+        'LEFT JOIN skill ON skill.id = expertise.skill_id ' +
+        'LEFT JOIN species ON species.id = expertise.species_id ' +
+        'LEFT JOIN manifestation ON manifestation.id = expertise.manifestation_id';
 
     var allowedPost = ['name', 'description', 'skill_id', 'icon', 'species_id', 'manifestation_id'];
 
@@ -22,7 +27,7 @@ module.exports = function(pool, router, table, path) {
 
     var allowsUser = true;
 
-    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' +
@@ -32,7 +37,7 @@ module.exports = function(pool, router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call);
+        rest.QUERY(req, res, call, null, {"expertise.id":"ASC"});
     });
 
     router.get(path + '/skill/:id', function(req, res) {
@@ -44,7 +49,7 @@ module.exports = function(pool, router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id], {"expertise.id":"ASC"});
     });
 
     router.get(path + '/manifestation/:id', function(req, res) {
@@ -54,6 +59,6 @@ module.exports = function(pool, router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id], {"expertise.id":"ASC"});
     });
 };

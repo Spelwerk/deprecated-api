@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -28,14 +28,14 @@ module.exports = function(pool, router, table, path) {
             'world_has_bionic.world_id = ? AND ' +
             'bionic.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/bionic', function(req, res) {
-        rest.relationPost(pool, req, res, 'world', 'bionic');
+        rest.relationPost(req, res, 'world', 'bionic');
     });
 
     router.delete(path + '/id/:id/bionic/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'world', 'bionic');
+        rest.relationDelete(req, res, 'world', 'bionic');
     });
 };

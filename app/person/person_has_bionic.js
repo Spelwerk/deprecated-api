@@ -2,7 +2,7 @@ var async = require('async'),
     energyId = require('./../config').defaults.attribute.id.energy,
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -29,7 +29,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'person_has_bionic.person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/bionic/id/:id2', function(req, res) {
@@ -37,7 +37,7 @@ module.exports = function(pool, router, table, path) {
             'person_has_bionic.person_id = ? AND ' +
             'person_has_bionic.bionic_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/bionic/bodypart/:id2', function(req, res) {
@@ -45,7 +45,7 @@ module.exports = function(pool, router, table, path) {
             'person_has_bionic.person_id = ? AND ' +
             'bionic.bodypart_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/bionic', function(req, res) {
@@ -101,6 +101,6 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/bionic/:id2', function(req, res) {
-        rest.personCustomDescription(pool, req, res, 'bionic');
+        rest.personCustomDescription(req, res, 'bionic');
     });
 };

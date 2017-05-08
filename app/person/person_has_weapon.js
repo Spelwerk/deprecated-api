@@ -1,7 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -58,7 +58,7 @@ module.exports = function(pool, router, table, path) {
             'person_has_weapon.person_id = ? AND ' +
             'weapon.special = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
     });
 
     router.get(path + '/id/:id/weapon/equipped/:id2', function(req, res) {
@@ -66,7 +66,7 @@ module.exports = function(pool, router, table, path) {
             'person_has_weapon.person_id = ? AND ' +
             'person_has_weapon.equipped = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id, req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id, req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/weapon', function(req, res) {
@@ -96,7 +96,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/weapon/:id2', function(req, res) {
-        rest.personCustomDescription(pool, req, res, 'bionic');
+        rest.personCustomDescription(req, res, 'bionic');
     });
 
     router.put(path + '/id/:id/weapon/:id2/equip/:equip', function(req, res) {

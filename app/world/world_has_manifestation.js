@@ -1,7 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM world_has_manifestation ' +
@@ -13,7 +13,7 @@ module.exports = function(pool, router, table, path) {
             'world_has_manifestation.world_id = ? AND ' +
             'manifestation.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/manifestation', function(req, res) {
@@ -28,7 +28,7 @@ module.exports = function(pool, router, table, path) {
 
         async.series([
             function(callback) {
-                rest.userAuth(pool, req, table, false, callback);
+                rest.userAuth(req, table, false, callback);
             },
             function(callback) {
                 rest.query(pool, 'SELECT id FROM expertise WHERE manifestation_id = ? AND doctrine_id IS NOT NULL', [insert.id], function(err, result) {
@@ -64,6 +64,6 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.delete(path + '/id/:id/manifestation/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'world', 'manifestation');
+        rest.relationDelete(req, res, 'world', 'manifestation');
     });
 };

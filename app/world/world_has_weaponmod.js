@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM world_has_weaponmod ' +
@@ -12,7 +12,7 @@ module.exports = function(pool, router, table, path) {
             'world_has_weaponmod.world_id = ? AND ' +
             'weaponmod.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/weaponmod/type/:id2', function(req, res) {
@@ -22,14 +22,14 @@ module.exports = function(pool, router, table, path) {
             'weaponmod.weapontype_id = ? AND ' +
             'weaponmod.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/weaponmod', function(req, res) {
-        rest.relationPost(pool, req, res, 'world', 'weaponmod');
+        rest.relationPost(req, res, 'world', 'weaponmod');
     });
 
     router.delete(path + '/id/:id/weaponmod/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'world', 'weaponmod');
+        rest.relationDelete(req, res, 'world', 'weaponmod');
     });
 };

@@ -1,5 +1,5 @@
-module.exports = function(pool, router) {
+module.exports = function(router) {
 
-    require('./user')(pool, router, 'user');
+    require('./user')(router, 'user');
 
 };

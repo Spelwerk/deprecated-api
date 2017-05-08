@@ -1,7 +1,7 @@
 var mysql = require('mysql'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM species_has_weapon' +
@@ -11,14 +11,14 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'species_has_weapon.species_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"weapon_id": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"weapon_id": "ASC"});
     });
 
     router.post(path + '/id/:id/weapon', function(req, res) {
-        rest.relationPost(pool, req, res, 'species', 'weapon');
+        rest.relationPost(req, res, 'species', 'weapon');
     });
 
     router.delete(path + '/id/:id/weapon/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'species', 'weapon');
+        rest.relationDelete(req, res, 'species', 'weapon');
     });
 };

@@ -2,7 +2,7 @@ var mysql = require('mysql'),
     rest = require('./../rest'),
     tokens = require('./../tokens');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -24,7 +24,7 @@ module.exports = function(pool, router, table, path) {
             'world_has_attribute.world_id = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/attribute/value/:id2', function(req, res) {
@@ -32,7 +32,7 @@ module.exports = function(pool, router, table, path) {
             'world_id = ? AND ' +
             'attribute_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2],{"attribute_id":"ASC"});
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2],{"attribute_id":"ASC"});
     });
 
     router.get(path + '/id/:id/attribute/type/:id2', function(req, res) {
@@ -42,18 +42,18 @@ module.exports = function(pool, router, table, path) {
             'attribute.attributetype_id = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/attribute', function(req, res) {
-        rest.relationPostWithValue(pool, req, res, 'world', 'attribute');
+        rest.relationPostWithValue(req, res, 'world', 'attribute');
     });
 
     router.put(path + '/id/:id/attribute', function(req, res) {
-        rest.relationPutValue(pool, req, res, 'world', 'attribute');
+        rest.relationPutValue(req, res, 'world', 'attribute');
     });
 
     router.delete(path + '/id/:id/attribute/:id2', function(req, res) {
-        rest.relationDelete(pool, req, res, 'world', 'attribute');
+        rest.relationDelete(req, res, 'world', 'attribute');
     });
 };

@@ -5,25 +5,25 @@ var mysql = require('mysql'),
     hasher = require('./../hasher'),
     tokens = require('./../tokens');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT * FROM story';
 
     router.get(path, function(req, res) {
-        rest.QUERY(pool, req, res, query, null, {"name": "ASC"});
+        rest.QUERY(req, res, query, null, {"name": "ASC"});
     });
 
     router.get(path + '/id/:id', function(req, res) {
         var call = query + ' WHERE id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"id": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"id": "ASC"});
     });
 
     router.get(path + '/deleted', function(req, res) {
         var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
 
-        rest.QUERY(pool, req, res, call, null, {"id": "ASC"});
+        rest.QUERY(req, res, call, null, {"id": "ASC"});
     });
 
     // Story
@@ -104,16 +104,16 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(pool, req, res, 'story');
+        rest.REVIVE(req, res, 'story');
     });
 
     router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(pool, req, res, 'story');
+        rest.DELETE(req, res, 'story');
     });
 
     // RELATIONSHIPS
 
-    require('./story_has_meeting')(pool, router, table, path);
+    require('./story_has_meeting')(router, table, path);
 
-    require('./story_has_person')(pool, router, table, path);
+    require('./story_has_person')(router, table, path);
 };

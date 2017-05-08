@@ -1,7 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -19,7 +19,7 @@ module.exports = function(pool, router, table, path) {
         var call = query + ' WHERE ' +
             'person_has_gift.person_id = ?';
 
-        rest.QUERY(pool, req, res, call, [req.params.id], {"name": "ASC"});
+        rest.QUERY(req, res, call, [req.params.id], {"name": "ASC"});
     });
 
     router.post(path + '/id/:id/gift', function(req, res) {
@@ -67,7 +67,7 @@ module.exports = function(pool, router, table, path) {
     });
 
     router.put(path + '/id/:id/gift/:id2', function(req, res) {
-        rest.personCustomDescription(pool, req, res, 'gift');
+        rest.personCustomDescription(req, res, 'gift');
     });
 
     router.delete(path + '/id/:id/gift/:id2', function(req, res) {

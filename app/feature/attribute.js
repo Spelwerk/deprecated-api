@@ -1,6 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(pool, router, table, path) {
+module.exports = function(router, table, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
@@ -23,14 +23,14 @@ module.exports = function(pool, router, table, path) {
 
     var allowsUser = false;
 
-    require('./../default-protected')(pool, router, table, path, query, allowedPost, allowedPut, allowsUser);
+    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
 
     router.get(path, function(req, res) {
         var call = query + ' WHERE ' +
             'attribute.canon = 1 AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call);
+        rest.QUERY(req, res, call);
     });
 
     router.get(path + '/type/:id', function(req, res) {
@@ -39,6 +39,15 @@ module.exports = function(pool, router, table, path) {
             'attribute.attributetype_id = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(pool, req, res, call, [req.params.id]);
+        rest.QUERY(req, res, call, [req.params.id]);
+    });
+
+    router.get(path + '/special/:id', function(req, res) {
+        var call = query + ' WHERE ' +
+            'attribute.canon = 1 AND ' +
+            'attributetype.special = ? AND ' +
+            'attribute.deleted IS NULL';
+
+        rest.QUERY(req, res, call, [req.params.id]);
     });
 };
