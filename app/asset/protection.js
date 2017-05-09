@@ -1,36 +1,30 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT * FROM protection';
 
-    var allowedPost = ['name', 'description', 'price', 'bodypart_id', 'icon'];
+    require('./../default')(router, tableName, query, {admin: false, user: true});
 
-    var allowedPut = ['name', 'description', 'price', 'bodypart_id', 'icon'];
-
-    var allowsUser = true;
-
-    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
-
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/bodypart/:id', function(req, res) {
+    router.get(path + '/bodypart/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'bodypart_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
     // Attribute
 
-    require('./protection_has_attribute')(router, table, path);
+    require('./protection_has_attribute')(router, path);
 };

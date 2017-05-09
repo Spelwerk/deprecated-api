@@ -1,12 +1,10 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
+var async = require('async'),
     rest = require('./../rest'),
     hasher = require('./../hasher'),
     tokens = require('./../tokens');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT * FROM person ' +
         'LEFT JOIN person_playable ON person_playable.person_id = person.id ' +
@@ -16,40 +14,39 @@ module.exports = function(router, table, path) {
 
     // GET
 
-    router.get(path, function(req, res) {
-        rest.QUERY(req, res, query, null, {"nickname": "ASC"});
+    router.get(path, function(req, res, next) {
+        rest.QUERY(req, res, next, query);
     });
 
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' WHERE person.id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id], {"person.id": "ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/popular', function(req, res) {
+    router.get(path + '/popular', function(req, res, next) {
         var call = 'SELECT id,nickname,occupation FROM person WHERE ' +
             'playable = 1 AND ' +
             'calculated = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call);
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/deleted', function(req, res) {
+    router.get(path + '/deleted', function(req, res, next) {
         var call = query + ' WHERE person.deleted is NOT NULL';
 
-        rest.QUERY(req, res, call, null, {"id": "ASC"});
+        rest.QUERY(req, res, next, call, null, {"id": "ASC"});
     });
 
     // PERSON
 
-    router.post(path, function(req, res) {
+    router.post(path, function(req, res, next) {
         var person = {},
             insert = {},
             world = {},
             species = {},
-            points = {},
-            user = {};
+            points = {};
 
         person.secret = hasher(32);
 
@@ -63,32 +60,29 @@ module.exports = function(router, table, path) {
 
         world.id = parseInt(req.body.world_id);
 
-        user.token = tokens.decode(req);
-        user.id = user.token.sub.id;
-
         async.series([
             function(callback) {
                 async.parallel([
                     function (callback) {
-                        rest.query(pool, 'SELECT * FROM world WHERE id = ?', [world.id], callback);
+                        rest.query('SELECT * FROM world WHERE id = ?', [world.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, value FROM world_has_attribute WHERE world_id = ?', [world.id], callback);
+                        rest.query('SELECT attribute_id, value FROM world_has_attribute WHERE world_id = ?', [world.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT skill_id FROM world_has_skill WHERE world_id = ?', [world.id], callback);
+                        rest.query('SELECT skill_id FROM world_has_skill WHERE world_id = ?', [world.id], callback);
                     },
                     function (callback) {
-                        rest.query(pool, 'SELECT * FROM species WHERE id = ?', [species.id], callback);
+                        rest.query('SELECT * FROM species WHERE id = ?', [species.id], callback);
                     },
                     function (callback) {
-                        rest.query(pool, 'SELECT attribute_id, value FROM species_has_attribute WHERE species_id = ?', [species.id], callback);
+                        rest.query('SELECT attribute_id, value FROM species_has_attribute WHERE species_id = ?', [species.id], callback);
                     },
                     function (callback) {
-                        rest.query(pool, 'SELECT id FROM skill WHERE species_id = ?', [species.id], callback);
+                        rest.query('SELECT id FROM skill WHERE species_id = ?', [species.id], callback);
                     },
                     function (callback) {
-                        rest.query(pool, 'SELECT weapon_id FROM species_has_weapon WHERE species_id = ?', [species.id], callback);
+                        rest.query('SELECT weapon_id FROM species_has_weapon WHERE species_id = ?', [species.id], callback);
                     }
                 ], function (err, results) {
                     world.select = results[0][0];
@@ -159,7 +153,7 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person (secret,playable,nickname,occupation,world_id) VALUES (?,?,?,?,?)', [person.secret, insert.playable, insert.nickname, insert.occupation, world.id], function(err,result) {
+                rest.query('INSERT INTO person (secret,playable,nickname,occupation,world_id) VALUES (?,?,?,?,?)', [person.secret, insert.playable, insert.nickname, insert.occupation, world.id], function(err,result) {
                     person.id = result.insertId;
 
                     callback(err);
@@ -168,16 +162,16 @@ module.exports = function(router, table, path) {
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query(pool, 'INSERT INTO person_playable (person_id, supernatural, age) VALUES (?,?,?)', [person.id, insert.supernatural, insert.age], callback);
+                        rest.query('INSERT INTO person_playable (person_id, supernatural, age) VALUES (?,?,?)', [person.id, insert.supernatural, insert.age], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'INSERT INTO person_description (person_id) VALUES (?)', [person.id], callback);
+                        rest.query('INSERT INTO person_description (person_id) VALUES (?)', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'INSERT INTO person_has_species (person_id, species_id, first) VALUES (?,?,?)', [person.id, species.id, 1], callback);
+                        rest.query('INSERT INTO person_has_species (person_id, species_id, first) VALUES (?,?,?)', [person.id, species.id, 1], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'INSERT INTO person_creation (person_id,point_expertise,point_gift,point_imperfection,' +
+                        rest.query('INSERT INTO person_creation (person_id,point_expertise,point_gift,point_imperfection,' +
                             'point_milestone,point_money,point_power,point_relationship,point_skill,point_supernatural) VALUES (?,?,?,?,?,?,?,?,?,?)',
                             [person.id, points.expertise, points.gift, points.imperfection, points.milestone, points.money, points.power,
                                 points.relationship, points.skill, points.supernatural], callback);
@@ -208,7 +202,7 @@ module.exports = function(router, table, path) {
 
                         call = call.slice(0, -1);
 
-                        rest.query(pool, call, null, callback);
+                        rest.query(call, null, callback);
                     },
                     function(callback) {
                         var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
@@ -236,40 +230,38 @@ module.exports = function(router, table, path) {
 
                         call = call.slice(0, -1);
 
-                        rest.query(pool, call, null, callback);
+                        rest.query(call, null, callback);
                     },
                     function(callback) {
-                        if(species.weapon[0] !== undefined) {
-                            var call = 'INSERT INTO person_has_weapon (person_id,weapon_id,species) VALUES ';
+                        if(species.weapon[0] !== undefined) return callback();
 
-                            for(var i in species.weapon) {
-                                call += '(' + person.id + ',' + species.weapon[i].weapon_id + ',1),';
-                            }
+                        var call = 'INSERT INTO person_has_weapon (person_id,weapon_id,species) VALUES ';
 
-                            call = call.slice(0, -1);
-
-                            rest.query(pool, call, null, callback);
-                        } else { callback(); }
-                    },
-                    function(callback) {
-                        if(!user.token) { callback(); } else {
-                            rest.query(pool, 'INSERT INTO user_has_person (user_id,person_id,secret,owner) VALUES (?,?,?,1)', [user.id, person.id, person.secret], callback);
+                        for(var i in species.weapon) {
+                            call += '(' + person.id + ',' + species.weapon[i].weapon_id + ',1),';
                         }
+
+                        call = call.slice(0, -1);
+
+                        rest.query(call, null, callback);
+                    },
+                    function(callback) {
+                        if(!req.user.id) callback();
+
+                        rest.query('INSERT INTO user_has_person (user_id,person_id,secret,owner) VALUES (?,?,?,1)', [req.user.id, person.id, person.secret], callback);
                     }
                 ],function(err) {
                     callback(err);
                 });
             }
         ],function(err) {
-            if (err) {
-                res.status(500).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send({id: person.id, secret: person.secret});
-            }
+            if(err) return next(err);
+
+            res.status(200).send({id: person.id, secret: person.secret});
         });
     });
 
-    router.put(path + '/id/:id', function(req, res) {
+    router.put(path + '/id/:id', function(req, res, next) {
         var person = {},
             insert = {},
             creation = {},
@@ -313,16 +305,14 @@ module.exports = function(router, table, path) {
 
         async.series([
             function (callback) {
-                rest.query(pool, 'SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err,result) {
+                rest.query('SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err, result) {
                     person.auth = !!result[0];
                     person.playable = !!result[0];
                     person.calculated = !!result[0];
 
-                    if(err) return callback(err);
+                    if(!person.auth) return callback('Forbidden');
 
-                    if(!person.auth) return callback({status: 403, code: 0, message: 'Forbidden'});
-
-                    callback();
+                    callback(err);
                 });
             },
             function (callback) {
@@ -338,66 +328,56 @@ module.exports = function(router, table, path) {
                     }
                 }
 
-                if(query_amount > 0) {
-                    call = call.slice(0, -2) + ', updated = CURRENT_TIMESTAMP WHERE id = ?';
-                    values_array.push(person.id);
+                if(query_amount === 0) return callback();
 
-                    rest.query(pool, call, values_array, callback);
-                } else {
-                    callback();
-                }
+                call = call.slice(0, -2) + ', updated = CURRENT_TIMESTAMP WHERE id = ?';
+                values_array.push(person.id);
+
+                rest.query(call, values_array, callback);
             },
             function (callback) {
-                if(person.playable && !person.calculated) {
-                    var call = 'UPDATE person_creation SET ',
-                        values_array = [],
-                        query_amount = 0;
+                if(!person.playable || person.calculated) return callback();
 
-                    for (var i in creation) {
-                        if(creation[i] !== null) {
-                            call += i + ' = ?, ';
-                            values_array.push(creation[i]);
-                            query_amount++;
-                        }
+                var call = 'UPDATE person_creation SET ',
+                    values_array = [],
+                    query_amount = 0;
+
+                for (var i in creation) {
+                    if(creation[i] !== null) {
+                        call += i + ' = ?, ';
+                        values_array.push(creation[i]);
+                        query_amount++;
                     }
-
-                    if(query_amount > 0) {
-                        call = call.slice(0, -2) + ' WHERE person_id = ?';
-                        values_array.push(person.id);
-
-                        rest.query(pool, call, values_array, callback);
-                    } else {
-                        callback();
-                    }
-                } else {
-                    callback();
                 }
+
+                if(query_amount === 0) return callback();
+
+                call = call.slice(0, -2) + ' WHERE person_id = ?';
+                values_array.push(person.id);
+
+                rest.query(call, values_array, callback);
             },
             function (callback) {
-                if(person.playable) {
-                    var call = 'UPDATE person_playable SET ',
-                        values_array = [],
-                        query_amount = 0;
+                if(!person.playable) return callback();
 
-                    for (var i in playable) {
-                        if(playable[i] !== null) {
-                            call += i + ' = ?, ';
-                            values_array.push(playable[i]);
-                            query_amount++;
-                        }
+                var call = 'UPDATE person_playable SET ',
+                    values_array = [],
+                    query_amount = 0;
+
+                for (var i in playable) {
+                    if(playable[i] !== null) {
+                        call += i + ' = ?, ';
+                        values_array.push(playable[i]);
+                        query_amount++;
                     }
-
-                    if(query_amount > 0) {
-                        call = call.slice(0, -2) + ' WHERE person_id = ?';
-                        values_array.push(person.id);
-
-                        rest.query(pool, call, values_array, callback);
-                    } else {
-                        callback();
-                    }
-                } else {
-                    callback();
                 }
+
+                if(query_amount === 0) return callback();
+
+                call = call.slice(0, -2) + ' WHERE person_id = ?';
+                values_array.push(person.id);
+
+                rest.query(call, values_array, callback);
             },
             function (callback) {
                 var call = 'UPDATE person_description SET ',
@@ -412,36 +392,37 @@ module.exports = function(router, table, path) {
                     }
                 }
 
-                if(query_amount > 0) {
-                    call = call.slice(0, -2) + ' WHERE person_id = ?';
-                    values_array.push(person.id);
+                if(query_amount === 0) return callback();
 
-                    rest.query(pool, call, values_array, callback);
-                } else {
-                    callback();
-                }
+                call = call.slice(0, -2) + ' WHERE person_id = ?';
+                values_array.push(person.id);
+
+                rest.query(call, values_array, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(req, res, 'person');
+    router.put(path + '/revive/:id', function(req, res, next) {
+        req.table.name = tableName;
+
+        rest.REVIVE(req, res, next, 'person');
     });
 
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(req, res, 'person');
+    router.delete(path + '/id/:id', function(req, res, next) {
+        req.table.name = tableName;
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.DELETE(req, res, next, 'person');
     });
 
     // SPECIAL
 
-    router.put(path + '/id/:id/background', function(req, res) {
+    router.put(path + '/id/:id/background', function(req, res, next) {
         var person = {},
             insert = {},
             current = {};
@@ -453,24 +434,24 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?', [insert.id], callback);
+                        rest.query('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT skill_id, value FROM background_has_skill WHERE background_id = ?', [insert.id], callback);
+                        rest.query('SELECT skill_id, value FROM background_has_skill WHERE background_id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT background_id FROM person_playable WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT background_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
                 ],function(err, results) {
                     person.attribute = results[0];
@@ -485,49 +466,46 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                if(!current.id) { callback(); } else {
-                    rest.query(pool, 'SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?', [current.id], function(err, result) {
-                        current.attribute = result;
+                if(!current.id) return callback();
 
-                        callback(err);
-                    });
-                }
-            },
-            function(callback) {
-                if(!current.id) { callback(); } else {
-                    rest.query(pool, 'SELECT skill_id, value FROM background_has_skill WHERE background_id = ?', [current.id], function(err, result) {
-                        current.skill = result;
+                rest.query('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?', [current.id], function(err, result) {
+                    current.attribute = result;
 
-                        callback(err);
-                    });
-                }
+                    callback(err);
+                });
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.query(pool, 'UPDATE person_playable SET background_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
-                }
+                if(!current.id) return callback();
+
+                rest.query('SELECT skill_id, value FROM background_has_skill WHERE background_id = ?', [current.id], function(err, result) {
+                    current.skill = result;
+
+                    callback(err);
+                });
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.personInsertAttribute(pool, person, insert, current, callback);
-                }
+                if(insert.id === current.id) return callback();
+
+                rest.query('UPDATE person_playable SET background_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.personInsertSkill(pool, person, insert, current, callback);
-                }
+                if(insert.id === current.id) return callback();
+
+                rest.personInsertAttribute(person, insert, current, callback);
+            },
+            function(callback) {
+                if(insert.id === current.id) return callback();
+
+                rest.personInsertSkill(person, insert, current, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.put(path + '/id/:id/focus', function(req, res) {
+    router.put(path + '/id/:id/focus', function(req, res, next) {
         var person = {},
             insert = {},
             current = {};
@@ -539,59 +517,54 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?', [insert.id], callback);
+                        rest.query('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT focus_id FROM person_playable WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT focus_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
                 ],function(err,results) {
                     person.attribute = results[1];
-
                     insert.attribute = results[2];
-
                     current.id = results[3][0].focus_id;
 
                     callback(err);
                 });
             },
             function(callback) {
-                if(!current.id) { callback(); } else {
-                    rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?', [current.id], function(err,result) {
-                        current.attribute = result;
+                if(!current.id) return callback();
 
-                        callback(err);
-                    });
-                }
+                rest.query('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?', [current.id], function(err, result) {
+                    current.attribute = result;
+
+                    callback(err);
+                });
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.query(pool, 'UPDATE person_playable SET focus_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
-                }
+                if(insert.id === current.id) return callback();
+
+                rest.query('UPDATE person_playable SET focus_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.personInsertAttribute(pool, person, insert, current, callback);
-                }
+                if(insert.id === current.id) return callback();
+
+                rest.personInsertAttribute(person, insert, current, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.put(path + '/id/:id/identity', function(req, res) {
+    router.put(path + '/id/:id/identity', function(req, res, next) {
         var person = {},
             insert = {},
             current = {};
@@ -603,59 +576,54 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?', [insert.id], callback);
+                        rest.query('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT identity_id FROM person_playable WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT identity_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
                 ],function(err,results) {
                     person.attribute = results[0];
-
                     insert.attribute = results[1];
-
                     current.id = results[2][0].identity_id;
 
                     callback(err);
                 });
             },
             function(callback) {
-                if(!current.id) { callback(); } else {
-                    rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?', [current.id], function(err,result) {
-                        current.attribute = result;
+                if(!current.id) return callback();
 
-                        callback(err);
-                    });
-                }
+                rest.query('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?', [current.id], function(err, result) {
+                    current.attribute = result;
+
+                    callback(err);
+                });
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.query(pool, 'UPDATE person_playable SET identity_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
-                }
+                if(insert.id === current.id) return callback();
+
+                rest.query('UPDATE person_playable SET identity_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.personInsertAttribute(pool, person, insert, current, callback);
-                }
+                if(insert.id === current.id) return callback();
+
+                rest.personInsertAttribute(person, insert, current, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.post(path + '/id/:id/manifestation', function(req, res) {
+    router.post(path + '/id/:id/manifestation', function(req, res, next) {
         var person = {},
             manifestation = {},
             insert = {};
@@ -667,13 +635,13 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
-                rest.query(pool, 'UPDATE person_playable SET manifestation_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
+                rest.query('UPDATE person_playable SET manifestation_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
             },
             function(callback) {
-                rest.query(pool, 'SELECT power_id, skill_id FROM manifestation WHERE id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT power_id, skill_id FROM manifestation WHERE id = ?', [insert.id], function(err, result) {
                     manifestation.power = result[0].power_id;
                     manifestation.skill = result[0].skill_id;
 
@@ -681,22 +649,19 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.power], callback)
+                rest.query('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.power], callback)
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES (?,?,0) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.skill], callback)
+                rest.query('INSERT INTO person_has_skill (person_id,skill_id,value) VALUES (?,?,0) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.skill], callback)
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.put(path + '/id/:id/nature', function(req, res) {
+    router.put(path + '/id/:id/nature', function(req, res, next) {
         var person = {},
             insert = {},
             current = {};
@@ -708,20 +673,20 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?', [insert.id], callback);
+                        rest.query('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        rest.query(pool, 'SELECT nature_id FROM person_playable WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT nature_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
-                ],function(err,results) {
+                ],function(err, results) {
                     person.attribute = results[0];
                     insert.attribute = results[1];
                     current.id = results[2][0].nature_id;
@@ -730,63 +695,60 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                if(!current.id) { callback(); } else {
-                    rest.query(pool, 'SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?', [current.id], function(err, result) {
-                        current.attribute = result;
+                if(!current.id) return callback();
 
-                        callback(err);
-                    });
-                }
+                rest.query('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?', [current.id], function(err, result) {
+                    current.attribute = result;
+
+                    callback(err);
+                });
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.query(pool, 'UPDATE person_playable SET nature_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
-                }
+                if(insert.id === current.id) return callback();
+
+                rest.query('UPDATE person_playable SET nature_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
             },
             function(callback) {
-                if(insert.id === current.id) { callback(); } else {
-                    rest.personInsertAttribute(pool, person, insert, current, callback);
-                }
+                if(insert.id === current.id) return callback();
+
+                rest.personInsertAttribute(person, insert, current, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+            
+            res.status(200).send();
         });
     });
 
     // RELATIONSHIPS
 
-    require('./person_has_attribute')(router, table, path);
+    require('./person_has_attribute')(router, path);
 
-    require('./person_has_augmentation')(router, table, path);
+    require('./person_has_augmentation')(router, path);
 
-    require('./person_has_bionic')(router, table, path);
+    require('./person_has_bionic')(router, path);
 
-    require('./person_has_disease')(router, table, path);
+    require('./person_has_disease')(router, path);
 
-    require('./person_has_doctrine')(router, table, path);
+    require('./person_has_doctrine')(router, path);
 
-    require('./person_has_expertise')(router, table, path);
+    require('./person_has_expertise')(router, path);
 
-    require('./person_has_gift')(router, table, path);
+    require('./person_has_gift')(router, path);
 
-    require('./person_has_imperfection')(router, table, path);
+    require('./person_has_imperfection')(router, path);
 
-    require('./person_has_milestone')(router, table, path);
+    require('./person_has_milestone')(router, path);
 
-    require('./person_has_protection')(router, table, path);
+    require('./person_has_protection')(router, path);
 
-    require('./person_has_sanity')(router, table, path);
+    require('./person_has_sanity')(router, path);
 
-    require('./person_has_skill')(router, table, path);
+    require('./person_has_skill')(router, path);
 
-    require('./person_has_species')(router, table, path);
+    require('./person_has_species')(router, path);
 
-    require('./person_has_weapon')(router, table, path);
+    require('./person_has_weapon')(router, path);
 
-    require('./person_has_wound')(router, table, path);
+    require('./person_has_wound')(router, path);
 };

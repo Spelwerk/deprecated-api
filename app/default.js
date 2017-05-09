@@ -1,45 +1,75 @@
-var rest = require('./rest');
+var rest = require('./rest'),
+    tokens = require('./tokens');
 
-module.exports = function(router, table, path, query) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, query, options) {
+    query = query || 'SELECT * FROM ' + tableName;
 
-    query = query || 'SELECT * FROM ' + table;
+    var path = '/' + tableName;
 
-    router.get(path, function(req, res) {
-        var call = query + ' WHERE ' + table + '.deleted is NULL';
-
-        rest.QUERY(req, res, call);
+    router.get(path + '/all', function(req, res, next) {
+        rest.QUERY(req, res, next, query);
     });
 
-    router.get(path + '/deleted', function(req, res) {
-        var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
+    router.get(path + '/id/:id', function(req, res, next) {
+        var call = query;
 
-        rest.QUERY(req, res, call, null, {"id": "ASC"});
+        var array = [];
+
+        if(req.table.user) {
+            call = query + ' ' +
+                'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
+                'WHERE ' + tableName + '.id = ?';
+
+            array = [req.user.id, req.params.id];
+        } else {
+            call = query + ' ' +
+                'WHERE ' + tableName + '.id = ?';
+
+            array = [req.params.id];
+        }
+
+        rest.QUERY(req, res, next, call, array);
     });
 
-    router.get(path + '/all', function(req, res) {
-        rest.QUERY(req, res, query, null, {"id": "ASC"});
+    router.get(path + '/deleted', function(req, res, next) {
+        var call = query + ' WHERE ' + tableName + '.deleted is NOT NULL';
+
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/id/:id', function(req, res) {
-        var call = query + ' WHERE ' + table + '.id = ?';
+    router.post(path, function(req, res, next) {
+        req.table.name = tableName;
+        req.table.admin = options.admin || req.table.admin;
+        req.table.user = options.user || req.table.user;
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.POST(req, res, next);
     });
 
-    router.post(path, function(req, res) {
-        rest.POST(req, res, table, null, true);
+    router.put(path + '/id/:id', function(req, res, next) {
+        req.table.name = tableName;
+        req.table.admin = options.admin || req.table.admin;
+        req.table.user = options.user || req.table.user;
+
+        rest.PUT(req, res, next);
     });
 
-    router.put(path + '/id/:id', function(req, res) {
-        rest.PUT(req, res, table, null, true);
+    router.put(path + '/id/:id/canon', function(req, res, next) {
+        req.table.name = tableName;
+
+        rest.CANON(req, res, next);
     });
 
-    router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(req, res, table);
+    router.put(path + '/id/:id/revive', function(req, res, next) {
+        req.table.name = tableName;
+
+        rest.REVIVE(req, res, next);
     });
 
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(req, res, table, true);
+    router.delete(path + '/id/:id', function(req, res, next) {
+        req.table.name = tableName;
+        req.table.admin = options.admin || req.table.admin;
+        req.table.user = options.user || req.table.user;
+
+        rest.DELETE(req, res, next);
     });
 };

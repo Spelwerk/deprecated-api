@@ -1,8 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT ' +
         'expertise.id, ' +
         'expertise.canon, ' +
@@ -17,7 +15,7 @@ module.exports = function(router, table, path) {
         'LEFT JOIN expertise ON expertise.id = world_has_expertise.expertise_id ' +
         'LEFT JOIN skill ON skill.id = expertise.skill_id';
 
-    router.get(path + '/id/:id/expertise', function(req, res) {
+    router.get(path + '/id/:id/expertise', function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
@@ -26,11 +24,11 @@ module.exports = function(router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
     // world creation
-    router.get(path + '/id/:id/expertise/skill/:id2', function(req, res) {
+    router.get(path + '/id/:id/expertise/skill/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
@@ -40,11 +38,11 @@ module.exports = function(router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     // world creation
-    router.get(path + '/id/:id/expertise/manifestation/:id2', function(req, res) {
+    router.get(path + '/id/:id/expertise/manifestation/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
@@ -53,11 +51,11 @@ module.exports = function(router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     // person creation
-    router.get(path + '/id/:id/expertise/skill/:id2/species/:id3', function(req, res) {
+    router.get(path + '/id/:id/expertise/skill/:id2/species/:id3', function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
@@ -67,11 +65,11 @@ module.exports = function(router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2, req.params.id3]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
     // person creation
-    router.get(path + '/id/:id/expertise/skill/:id2/species/:id3/manifestation/:id4', function(req, res) {
+    router.get(path + '/id/:id/expertise/skill/:id2/species/:id3/manifestation/:id4', function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
@@ -80,14 +78,26 @@ module.exports = function(router, table, path) {
             '(expertise.manifestation_id = ? OR expertise.manifestation_id IS NULL) AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
     });
 
-    router.post(path + '/id/:id/expertise', function(req, res) {
-        rest.relationPost(req, res, 'world', 'expertise');
+    router.post(path + '/id/:id/expertise', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'expertise';
+
+        rest.relationPost(req, res, next);
     });
 
-    router.delete(path + '/id/:id/expertise/:id2', function(req, res) {
-        rest.relationDelete(req, res, 'world', 'expertise');
+    router.delete(path + '/id/:id/expertise/:id2', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'expertise';
+
+        rest.relationDelete(req, res, next);
     });
 };

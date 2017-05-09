@@ -1,9 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT ' +
         'attribute.id, ' +
         'attribute.canon, ' +
@@ -17,30 +15,30 @@ module.exports = function(router, table, path) {
         'LEFT JOIN attribute ON attribute.id = person_has_attribute.attribute_id ' +
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id';
 
-    router.get(path + '/id/:id/attribute', function(req, res) {
+    router.get(path + '/id/:id/attribute', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_attribute.person_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id], {"name": "ASC"});
     });
 
-    router.get(path + '/id/:id/attribute/id/:id2', function(req, res) {
+    router.get(path + '/id/:id/attribute/id/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_attribute.person_id = ? AND ' +
             'person_has_attribute.attribute_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
-    router.get(path + '/id/:id/attribute/type/:id2', function(req, res) {
+    router.get(path + '/id/:id/attribute/type/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_attribute.person_id = ? AND ' +
             'attribute.attributetype_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
-    router.post(path + '/id/:id/attribute', function(req, res) {
+    router.post(path + '/id/:id/attribute', function(req, res, next) {
         var person = {},
             insert = {};
 
@@ -52,22 +50,19 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
+                rest.query('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.put(path + '/id/:id/attribute', function(req, res) {
+    router.put(path + '/id/:id/attribute', function(req, res, next) {
         var person = {},
             insert = {},
             current = {};
@@ -80,10 +75,10 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
-                rest.query(pool, 'SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, insert.id], function(err, result) {
+                rest.query('SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, insert.id], function(err, result) {
                     current.value = !!result[0] ? parseInt(result[0].value) : 0;
 
                     insert.value = insert.value + current.value;
@@ -92,15 +87,12 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
+                rest.query('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
             }
         ],function(err) {
-            if(err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 };

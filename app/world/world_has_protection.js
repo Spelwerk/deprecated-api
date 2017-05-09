@@ -1,25 +1,35 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT * FROM world_has_protection ' +
         'LEFT JOIN protection ON protection.id = world_has_protection.protection_id';
 
-    router.get(path + '/id/:id/protection', function(req, res) {
+    router.get(path + '/id/:id/protection', function(req, res, next) {
         var call = query + ' WHERE ' +
             'protection.canon = 1 AND ' +
             'world_has_protection.world_id = ? AND ' +
             'protection.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.post(path + '/id/:id/protection', function(req, res) {
-        rest.relationPost(req, res, 'world', 'protection');
+    router.post(path + '/id/:id/protection', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'protection';
+
+        rest.relationPost(req, res, next);
     });
 
-    router.delete(path + '/id/:id/protection/:id2', function(req, res) {
-        rest.relationDelete(req, res, 'world', 'protection');
+    router.delete(path + '/id/:id/protection/:id2', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'protection';
+
+        rest.relationDelete(req, res, next);
     });
 };

@@ -1,8 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT ' +
         'bionic.id, ' +
         'bionic.canon, ' +
@@ -22,20 +20,32 @@ module.exports = function(router, table, path) {
         'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
         'LEFT JOIN attribute ON attribute.id = bionic.attribute_id';
 
-    router.get(path + '/id/:id/bionic', function(req, res) {
+    router.get(path + '/id/:id/bionic', function(req, res, next) {
         var call = query + ' WHERE ' +
             'bionic.canon = 1 AND ' +
             'world_has_bionic.world_id = ? AND ' +
             'bionic.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.post(path + '/id/:id/bionic', function(req, res) {
-        rest.relationPost(req, res, 'world', 'bionic');
+    router.post(path + '/id/:id/bionic', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'bionic';
+
+        rest.relationPost(req, res, next);
     });
 
-    router.delete(path + '/id/:id/bionic/:id2', function(req, res) {
-        rest.relationDelete(req, res, 'world', 'bionic');
+    router.delete(path + '/id/:id/bionic/:id2', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'bionic';
+
+        rest.relationDelete(req, res, next);
     });
 };

@@ -2,9 +2,7 @@ var async = require('async'),
     energyId = require('./../config').defaults.attribute.id.energy,
     rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT ' +
         'bionic.id, ' +
         'bionic.canon, ' +
@@ -25,30 +23,30 @@ module.exports = function(router, table, path) {
         'LEFT JOIN bionic ON bionic.id = person_has_bionic.bionic_id ' +
         'LEFT JOIN bionicquality ON bionicquality.id = person_has_bionic.bionicquality_id';
 
-    router.get(path + '/id/:id/bionic', function(req, res) {
+    router.get(path + '/id/:id/bionic', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_bionic.person_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id], {"name": "ASC"});
     });
 
-    router.get(path + '/id/:id/bionic/id/:id2', function(req, res) {
+    router.get(path + '/id/:id/bionic/id/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_bionic.person_id = ? AND ' +
             'person_has_bionic.bionic_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
-    router.get(path + '/id/:id/bionic/bodypart/:id2', function(req, res) {
+    router.get(path + '/id/:id/bionic/bodypart/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_bionic.person_id = ? AND ' +
             'bionic.bodypart_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
-    router.post(path + '/id/:id/bionic', function(req, res) {
+    router.post(path + '/id/:id/bionic', function(req, res, next) {
         var person = {},
             energy = {},
             insert = {};
@@ -62,45 +60,40 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
-                rest.query(pool, 'SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, energy.id], function(err, result) {
-                    if(err) return callback(err);
-
+                rest.query('SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, energy.id], function(err, result) {
                     person.energy = parseInt(result[0].value);
 
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'SELECT energy FROM bionic WHERE id = ?', [insert.id], function(err, result) {
-                    if(err) return callback(err);
-
+                rest.query('SELECT energy FROM bionic WHERE id = ?', [insert.id], function(err, result) {
                     insert.energy = parseInt(result[0].energy);
 
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person_has_bionic (person_id,bionic_id) VALUES (?,?)', [person.id, insert.id], callback);
+                rest.query('INSERT INTO person_has_bionic (person_id,bionic_id) VALUES (?,?)', [person.id, insert.id], callback);
             },
             function(callback) {
                 insert.value = insert.energy + person.energy;
 
-                rest.query(pool, 'UPDATE person_has_attribute SET value = ? WHERE person_id = ? AND attribute_id = ?', [insert.value, person.id, energy.id], callback);
+                rest.query('UPDATE person_has_attribute SET value = ? WHERE person_id = ? AND attribute_id = ?', [insert.value, person.id, energy.id], callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.put(path + '/id/:id/bionic/:id2', function(req, res) {
-        rest.personCustomDescription(req, res, 'bionic');
+    router.put(path + '/id/:id/bionic/:id2', function(req, res, next) {
+        req.table.name = 'bionic';
+
+        rest.personCustomDescription(req, res, next);
     });
 };

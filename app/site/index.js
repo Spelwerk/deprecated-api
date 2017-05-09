@@ -1,6 +1,6 @@
 module.exports = function(router) {
 
-    require('./../default')(router, 'icon');
+    require('./icon')(router, 'icon');
     require('./system')(router);
 
 };

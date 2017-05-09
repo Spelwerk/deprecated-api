@@ -1,9 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT ' +
         'weapon.id, ' +
         'weapon.canon, ' +
@@ -53,23 +51,23 @@ module.exports = function(router, table, path) {
         'LEFT JOIN person_has_skill ON person_has_skill.person_id = ? AND person_has_skill.skill_id = expertise.skill_id ' +
         'LEFT JOIN person_has_expertise ON person_has_expertise.person_id = ? AND person_has_expertise.expertise_id = weapongroup.expertise_id';
 
-    router.get(path + '/id/:id/weapon', function(req, res) {
+    router.get(path + '/id/:id/weapon', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_weapon.person_id = ? AND ' +
             'weapon.special = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
     });
 
-    router.get(path + '/id/:id/weapon/equipped/:id2', function(req, res) {
+    router.get(path + '/id/:id/weapon/equipped/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_weapon.person_id = ? AND ' +
             'person_has_weapon.equipped = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id, req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id, req.params.id, req.params.id2]);
     });
 
-    router.post(path + '/id/:id/weapon', function(req, res) {
+    router.post(path + '/id/:id/weapon', function(req, res, next) {
         var person = {},
             insert = {};
 
@@ -80,30 +78,39 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person_has_weapon (person_id,weapon_id) VALUES (?,?)', [person.id, insert.id], callback);
+                rest.query('INSERT INTO person_has_weapon (person_id,weapon_id) VALUES (?,?)', [person.id, insert.id], callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.put(path + '/id/:id/weapon/:id2', function(req, res) {
-        rest.personCustomDescription(req, res, 'bionic');
+    router.put(path + '/id/:id/weapon/:id2', function(req, res, next) {
+        req.table.name = 'weapon';
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.personCustomDescription(req, res, next);
     });
 
-    router.put(path + '/id/:id/weapon/:id2/equip/:equip', function(req, res) {
-        rest.personEquip(req, res, 'weapon');
+    router.put(path + '/id/:id/weapon/:id2/equip/:equip', function(req, res, next) {
+        req.table.name = 'weapon';
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.personEquip(req, res, next);
     });
 
-    router.delete(path + '/id/:id/weapon/:id2', function(req, res) {
-        rest.personDeleteRelation(req, res, 'weapon');
+    router.delete(path + '/id/:id/weapon/:id2', function(req, res, next) {
+        req.table.name = 'weapon';
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.personDeleteRelation(req, res, next);
     });
 };

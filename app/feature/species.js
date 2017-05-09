@@ -1,62 +1,59 @@
 var async = require('async'),
-    rest = require('./../rest'),
-    tokens = require('./../tokens');
+    rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT * FROM species';
 
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'deleted is NULL';
 
-        rest.QUERY(req, res, call);
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/deleted', function(req, res) {
+    router.get(path + '/deleted', function(req, res, next) {
         var call = query + ' WHERE deleted is NOT NULL';
 
-        rest.QUERY(req, res, call, null, {"id": "ASC"});
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/all', function(req, res) {
-        rest.QUERY(req, res, query, null, {"id": "ASC"});
+    router.get(path + '/all', function(req, res, next) {
+        rest.QUERY(req, res, next, query);
     });
 
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' ' +
             'LEFT JOIN user_has_species ON (user_has_species.species_id = species.id AND user_has_species.owner = 1 AND user_has_species.user_id = ?) ' +
             'WHERE id = ?';
 
-        var token = tokens.decode(req),
-            userId = token ? token.sub.id : 0;
-
-        rest.QUERY(req, res, call, [userId, req.params.id]);
+        rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
     });
 
-    router.get(path + '/playable', function(req, res) {
+    router.get(path + '/playable', function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'playable = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/creature', function(req, res) {
+    router.get(path + '/creature', function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'playable = 0 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.post(path, function(req, res) {
-        var insert = {},
-            user = {};
+    router.post(path, function(req, res, next) {
+        if(!req.user.id) return next('Forbidden.');
+
+        var insert = {};
 
         insert.name = req.body.name;
         insert.description = req.body.description;
@@ -66,58 +63,60 @@ module.exports = function(router, table, path) {
         insert.multiply_expertise = req.body.multiply_expertise;
         insert.icon = req.body.icon;
 
-        user.token = tokens.decode(req);
-        user.id = user.token.sub.id;
-        user.admin = user.token.sub.admin;
+        async.series([
+            function(callback) {
+                rest.query('INSERT INTO species (name,description,playable,max_age,multiply_skill,multiply_expertise,icon) VALUES (?,?,?,?,?,?,?)', [insert.name, insert.description, insert.playable, insert.max_age, insert.multiply_skill, insert.multiply_expertise, insert.icon], function(err, result) {
+                    insert.id = result.insertId;
 
-        if(!user.token) {
-            res.status(400).send('User not logged in.');
-        } else {
-            async.series([
-                function(callback) {
-                    rest.query('INSERT INTO species (name,description,playable,max_age,multiply_skill,multiply_expertise,icon) VALUES (?,?,?,?,?,?,?)', [insert.name, insert.description, insert.playable, insert.max_age, insert.multiply_skill, insert.multiply_expertise, insert.icon], function(err,result) {
-                        insert.id = result.insertId;
+                    callback(err);
+                });
+            },
+            function(callback) {
+                var weapon = require('./../config/defaults.json').weapon.default;
 
-                        callback(err);
-                    });
-                },
-                function(callback) {
-                    var weapon = require('./../config/defaults.json').weapon.default;
+                rest.query('INSERT INTO species_has_weapon (species_id,weapon_id) VALUES (?,?)', [insert.id, weapon], callback);
+            },
+            function(callback) {
+                if(req.user.admin) return callback();
 
-                    if(!user.admin) { callback(); } else {
-                        rest.query('INSERT INTO species_has_weapon (species_id,weapon_id) VALUES (?,?)', [insert.id, weapon], callback);
-                    }
-                },
-                function(callback) {
-                    if(!user.admin) return callback();
+                rest.query('INSERT INTO user_has_species (user_id,species_id,owner) VALUES (?,?,1)', [req.user.id, insert.id], callback);
+            }
+        ],function(err) {
+            if(err) return next(err);
 
-                    rest.query('INSERT INTO user_has_species (user_id,species_id,owner) VALUES (?,?,1)', [user.id, insert.id], callback);
-                }
-            ],function(err) {
-                if(err) {
-                    res.status(500).send(err);
-                } else {
-                    res.status(200).send({id: insert.id});
-                }
-            });
-        }
+            res.status(200).send({id: insert.id});
+        });
     });
 
-    router.put(path + '/id/:id', function(req, res) {
-        var allowedKeys = ['name','description','max_age','multiply_skill','multiply_expertise','icon'];
+    router.put(path + '/id/:id', function(req, res, next) {
+        req.table.name = tableName;
+        req.table.admin = false;
+        req.table.user = true;
 
-        rest.PUT(req, res, table, allowedKeys);
+        rest.PUT(req, res, next);
     });
 
-    router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(req, res, table);
+    router.put(path + '/id/:id/canon', function(req, res, next) {
+        req.table.name = tableName;
+
+        rest.CANON(req, res, next);
     });
 
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(req, res, table);
+    router.put(path + '/revive/:id', function(req, res, next) {
+        req.table.name = tableName;
+
+        rest.REVIVE(req, res, next);
     });
 
-    require('./species_has_attribute')(router, table, path);
+    router.delete(path + '/id/:id', function(req, res, next) {
+        req.table.name = tableName;
+        req.table.admin = false;
+        req.table.user = true;
 
-    require('./species_has_weapon')(router, table, path);
+        rest.DELETE(req, res, next);
+    });
+
+    require('./species_has_attribute')(router, path);
+
+    require('./species_has_weapon')(router, path);
 };

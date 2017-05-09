@@ -1,7 +1,7 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT ' +
         'expertise.id, ' +
@@ -21,15 +21,9 @@ module.exports = function(router, table, path) {
         'LEFT JOIN species ON species.id = expertise.species_id ' +
         'LEFT JOIN manifestation ON manifestation.id = expertise.manifestation_id';
 
-    var allowedPost = ['name', 'description', 'skill_id', 'icon', 'species_id', 'manifestation_id'];
+    require('./../default')(router, tableName, query, {admin: false, user: true});
 
-    var allowedPut = ['name', 'description', 'skill_id', 'icon'];
-
-    var allowsUser = true;
-
-    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
-
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
             'expertise.species_id IS NULL AND ' +
@@ -37,10 +31,10 @@ module.exports = function(router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, call, null, {"expertise.id":"ASC"});
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/skill/:id', function(req, res) {
+    router.get(path + '/skill/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
             'expertise.skill_id = ? AND ' +
@@ -49,16 +43,16 @@ module.exports = function(router, table, path) {
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id], {"expertise.id":"ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/manifestation/:id', function(req, res) {
+    router.get(path + '/manifestation/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +
             'expertise.manifestation_id = ? AND ' +
             'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id], {"expertise.id":"ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 };

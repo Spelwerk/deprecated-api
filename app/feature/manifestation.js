@@ -1,44 +1,41 @@
 var async = require('async'),
-    rest = require('./../rest'),
-    tokens = require('./../tokens');
+    rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT * FROM manifestation';
 
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE deleted is NULL';
 
-        rest.QUERY(req, res, call);
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/deleted', function(req, res) {
+    router.get(path + '/deleted', function(req, res, next) {
         var call = query + ' WHERE deleted is NOT NULL';
 
-        rest.QUERY(req, res, call, null, {"id": "ASC"});
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/all', function(req, res) {
-        rest.QUERY(req, res, query, null, {"id": "ASC"});
+    router.get(path + '/all', function(req, res, next) {
+        rest.QUERY(req, res, next, query);
     });
 
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' ' +
             'LEFT JOIN user_has_manifestation ON (user_has_manifestation.manifestation_id = manifestation.id AND user_has_manifestation.owner = 1 AND user_has_manifestation.user_id = ?) ' +
             'WHERE id = ?';
 
-        var token = tokens.decode(req),
-            userId = token ? token.sub.id : 0;
-
-        rest.QUERY(req, res, call, [userId, req.params.id]);
+        rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
     });
 
-    router.post(path, function(req, res) {
+    router.post(path, function(req, res, next) {
+        if(!req.user.id) return next('Forbidden.');
+
         var power = {},
             skill = {},
-            insert = {},
-            user = {};
+            insert = {};
 
         insert.name = req.body.name;
         insert.description = req.body.description;
@@ -47,71 +44,75 @@ module.exports = function(router, table, path) {
         power.name = req.body.power;
         skill.name = req.body.skill;
 
-        user.token = tokens.decode(req);
-        user.id = user.token.sub.id;
-        user.admin = user.token.sub.admin;
+        async.series([
+            function(callback) {
+                rest.query('INSERT INTO skill (name,manifestation) VALUES (?,1)', [skill.name], function(err, result) {
+                    skill.id = result.insertId;
 
-        if(!user.token) {
-            res.status(400).send('User not logged in.');
-        } else {
-            async.series([
-                function(callback) {
-                    rest.query('INSERT INTO skill (name,manifestation) VALUES (?,1)', [skill.name], function(err,result) {
-                        skill.id = result.insertId;
+                    callback(err);
+                });
+            },
+            function(callback) {
+                if(!req.user.admin) return callback();
 
-                        callback(err);
-                    });
-                },
-                function (callback) {
-                    rest.query('INSERT INTO attribute (name,attributetype_id) VALUES (?,9)', [power.name], function(err,result) {
-                        power.id = result.insertId;
+                rest.query('INSERT INTO user_has_skill (user_id,skill_id,owner) VALUES (?,?,1)', [req.user.id, skill.id], callback);
+            },
+            function (callback) {
+                rest.query('INSERT INTO attribute (name,attributetype_id) VALUES (?,9)', [power.name], function(err, result) {
+                    power.id = result.insertId;
 
-                        callback(err);
-                    })
-                },
-                function (callback) {
-                    rest.query('INSERT INTO manifestation (name,description,icon,power_id,skill_id) VALUES (?,?,?,?,?)', [insert.name, insert.description, insert.icon, power.id, skill.id], function(err,result) {
-                        insert.id = result.insertId;
+                    callback(err);
+                })
+            },
+            function(callback) {
+                if(!req.user.admin) return callback();
 
-                        callback(err);
-                    });
-                },
-                function(callback) {
-                    if(!user.admin) return callback();
+                rest.query('INSERT INTO user_has_attribute (user_id,attribute_id,owner) VALUES (?,?,1)', [req.user.id, power.id], callback);
+            },
+            function (callback) {
+                rest.query('INSERT INTO manifestation (name,description,icon,power_id,skill_id) VALUES (?,?,?,?,?)', [insert.name, insert.description, insert.icon, power.id, skill.id], function(err, result) {
+                    insert.id = result.insertId;
 
-                    rest.query('INSERT INTO user_has_skill (user_id,skill_id,owner) VALUES (?,?,1)', [user.id, skill.id], callback);
-                },
-                function(callback) {
-                    if(!user.admin) return callback();
+                    callback(err);
+                });
+            },
+            function(callback) {
+                if(!req.user.admin) return callback();
 
-                    rest.query('INSERT INTO user_has_attribute (user_id,attribute_id,owner) VALUES (?,?,1)', [user.id, power.id], callback);
-                },
-                function(callback) {
-                    if(!user.admin) return callback();
+                rest.query('INSERT INTO user_has_manifestation (user_id,manifestation_id,owner) VALUES (?,?,1)', [req.user.id, insert.id], callback);
+            }
+        ],function(err) {
+            if(err) return next(err);
 
-                    rest.query('INSERT INTO user_has_manifestation (user_id,manifestation_id,owner) VALUES (?,?,1)', [user.id, insert.id], callback);
-                }
-            ],function(err) {
-                if(err) {
-                    res.status(500).send(err);
-                } else {
-                    res.status(200).send({id: insert.id});
-                }
-            });
-        }
+            res.status(200).send({id: insert.id});
+        });
     });
 
-    router.put(path + '/id/:id', function(req, res) {
-        var allowedKeys = ['name','description','icon'];
+    router.put(path + '/id/:id', function(req, res, next) {
+        req.table.name = tableName;
+        req.table.admin = false;
+        req.table.user = true;
 
-        rest.PUT(req, res, table, allowedKeys);
+        rest.PUT(req, res, next);
     });
 
-    router.put(path + '/revive/:id', function(req, res) {
-        rest.REVIVE(req, res, table);
+    router.put(path + '/id/:id/canon', function(req, res, next) {
+        req.table.name = tableName;
+
+        rest.CANON(req, res, next);
     });
 
-    router.delete(path + '/id/:id', function(req, res) {
-        rest.DELETE(req, res, table);
+    router.put(path + '/revive/:id', function(req, res, next) {
+        req.table.name = tableName;
+
+        rest.REVIVE(req, res, next);
+    });
+
+    router.delete(path + '/id/:id', function(req, res, next) {
+        req.table.name = tableName;
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.DELETE(req, res, next, table);
     });
 };

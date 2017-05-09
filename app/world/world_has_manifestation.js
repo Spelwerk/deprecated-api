@@ -1,22 +1,20 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT * FROM world_has_manifestation ' +
         'LEFT JOIN manifestation ON manifestation.id = world_has_manifestation.manifestation_id';
 
-    router.get(path + '/id/:id/manifestation', function(req, res) {
+    router.get(path + '/id/:id/manifestation', function(req, res, next) {
         var call = query + ' WHERE ' +
             'manifestation.canon = 1 AND ' +
             'world_has_manifestation.world_id = ? AND ' +
             'manifestation.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.post(path + '/id/:id/manifestation', function(req, res) {
+    router.post(path + '/id/:id/manifestation', function(req, res, next) {
         var table = {},
             insert = {},
             manifestation = {};
@@ -28,17 +26,17 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.userAuth(req, table, false, callback);
+                rest.userAuth(req, callback);
             },
             function(callback) {
-                rest.query(pool, 'SELECT id FROM expertise WHERE manifestation_id = ? AND doctrine_id IS NOT NULL', [insert.id], function(err, result) {
+                rest.query( 'SELECT id FROM expertise WHERE manifestation_id = ? AND doctrine_id IS NOT NULL', [insert.id], function(err, result) {
                     manifestation.expertise = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO world_has_manifestation (world_id,manifestation_id) VALUES (?,?)', [table.id, insert.id], callback);
+                rest.query( 'INSERT INTO world_has_manifestation (world_id,manifestation_id) VALUES (?,?)', [table.id, insert.id], callback);
             },
             function(callback) {
                 if(!manifestation.expertise[0]) return callback();
@@ -51,19 +49,22 @@ module.exports = function(router, table, path) {
 
                 call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE expertise_id = VALUES(expertise_id)';
 
-                rest.query(pool, call, null, callback);
+                rest.query( call, null, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.delete(path + '/id/:id/manifestation/:id2', function(req, res) {
-        rest.relationDelete(req, res, 'world', 'manifestation');
+    router.delete(path + '/id/:id/manifestation/:id2', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'manifestation';
+
+        rest.relationDelete(req, res, next);
     });
 };

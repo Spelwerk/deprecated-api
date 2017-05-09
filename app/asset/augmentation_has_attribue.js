@@ -1,23 +1,33 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT * FROM augmentation_has_attribute ' +
         'LEFT JOIN attribute ON attribute.id = augmentation_has_attribute.attribute_id';
 
-    router.get(path + '/id/:id/attribute', function(req, res) {
+    router.get(path + '/id/:id/attribute', function(req, res, next) {
         var call = query + ' WHERE ' +
             'augmentation_has_attribute.augmentation_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id], {"attribute_id": "ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.post(path + '/id/:id/attribute', function(req, res) {
-        rest.relationPostWithValue(req, res, 'augmentation', 'attribute');
+    router.post(path + '/id/:id/attribute', function(req, res, next) {
+        req.table.name = 'augmentation';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'attribute';
+
+        rest.relationPostWithValue(req, res, next);
     });
 
-    router.delete(path + '/id/:id/attribute/:id2', function(req, res) {
-        rest.relationDelete(req, res, 'augmentation', 'attribute');
+    router.delete(path + '/id/:id/attribute/:id2', function(req, res, next) {
+        req.table.name = 'augmentation';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'attribute';
+
+        rest.relationDelete(req, res, next);
     });
 };

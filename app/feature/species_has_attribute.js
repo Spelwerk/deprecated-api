@@ -1,8 +1,6 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT ' +
         'attribute.id, ' +
         'attribute.canon, ' +
@@ -16,18 +14,30 @@ module.exports = function(router, table, path) {
         'LEFT JOIN attribute ON attribute.id = species_has_attribute.attribute_id ' +
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id';
 
-    router.get(path + '/id/:id/attribute', function(req, res) {
+    router.get(path + '/id/:id/attribute', function(req, res, next) {
         var call = query + ' WHERE ' +
             'species_has_attribute.species_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id], {"attribute_id": "ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.post(path + '/id/:id/attribute', function(req, res) {
-        rest.relationPostWithValue(req, res, 'species', 'attribute');
+    router.post(path + '/id/:id/attribute', function(req, res, next) {
+        req.table.name = 'species';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'attribute';
+
+        rest.relationPostWithValue(req, res, next);
     });
 
-    router.delete(path + '/id/:id/attribute/:id2', function(req, res) {
-        rest.relationDelete(req, res, 'species', 'attribute');
+    router.delete(path + '/id/:id/attribute/:id2', function(req, res, next) {
+        req.table.name = 'species';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'attribute';
+
+        rest.relationDelete(req, res, next);
     });
 };

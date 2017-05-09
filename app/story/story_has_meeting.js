@@ -8,24 +8,24 @@ module.exports = function(router, table, path) {
 
     var query = 'SELECT * FROM meeting';
 
-    router.get(path + '/id/:id/meeting', function(req, res) {
+    router.get(path + '/id/:id/meeting', function(req, res, next) {
         var call = query + ' WHERE ' +
             'story_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id/meeting/:id2', function(req, res) {
+    router.get(path + '/id/:id/meeting/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'story_id = ? AND ' +
             'id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
-    router.post(path + '/id/:id/meeting', function(req, res) {
+    router.post(path + '/id/:id/meeting', function(req, res, next) {
         var story = {},
             insert = {};
 
@@ -61,7 +61,7 @@ module.exports = function(router, table, path) {
         });
     });
 
-    router.put(path + '/id/:id/meeting/:id2', function(req, res) {
+    router.put(path + '/id/:id/meeting/:id2', function(req, res, next) {
         var story = {},
             meeting = {},
             insert = {};

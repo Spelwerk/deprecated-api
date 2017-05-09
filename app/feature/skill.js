@@ -3,36 +3,30 @@ var async = require('async'),
     rest = require('./../rest'),
     tokens = require('./../tokens');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT * FROM skill';
 
-    var allowedPost = ['name', 'description', 'icon', 'species_id', 'manifestation_id'];
+    require('./../default')(router, tableName, query);
 
-    var allowedPut = ['name', 'description', 'icon'];
-
-    var allowsUser = true;
-
-    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
-
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'skill.canon = 1 AND ' +
             'skill.species_id IS NULL AND ' +
             'skill.manifestation = 0 AND ' +
             'skill.deleted IS NULL';
 
-        rest.QUERY(req, res, call);
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/species/:id', function(req, res) {
+    router.get(path + '/species/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'skill.canon = 1 AND ' +
             'skill.species_id = ? AND ' +
             'skill.manifestation = 0 AND ' +
             'skill.deleted IS NULL';
 
-        rest.QUERY(req, res, call);
+        rest.QUERY(req, res, next, call);
     });
 };

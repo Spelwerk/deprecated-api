@@ -1,32 +1,26 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT * FROM weaponmod';
 
-    var allowedPost = ['name', 'description', 'short', 'price', 'damage_d12', 'damage_bonus', 'critical_d12', 'initiative', 'hit', 'distance', 'weapontype_id'];
+    require('./../default')(router, tableName, query, {admin: false, user: true});
 
-    var allowedPut = ['name', 'description', 'price', 'damage_d12', 'damage_bonus', 'critical_d12', 'initiative', 'hit', 'distance'];
-
-    var allowsUser = true;
-
-    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
-
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/type/:id', function(req, res) {
+    router.get(path + '/type/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'weapontype_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 };

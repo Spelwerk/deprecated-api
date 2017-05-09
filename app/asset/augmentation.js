@@ -1,29 +1,21 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT * FROM augmentation';
 
-    var allowedPost = ['name', 'description', 'price', 'energy', 'legal'];
+    require('./../default')(router, tableName, query, {admin: false, user: true});
 
-    var allowedPut = ['name', 'description', 'price', 'energy', 'legal'];
-
-    var allowsUser = true;
-
-    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
-
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    // Augmentation
+    require('./augmentation_has_attribue')(router, path);
 
-    require('./augmentation_has_attribue')(router, table, path);
-
-    require('./augmentation_has_skill')(router, table, path);
+    require('./augmentation_has_skill')(router, path);
 };

@@ -1,7 +1,7 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT ' +
         'weapon.id, ' +
@@ -30,25 +30,19 @@ module.exports = function(router, table, path) {
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
         'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id';
 
-    var allowedPost = ['name', 'description', 'price', 'legal', 'weapontype_id'];
+    require('./../default')(router, tableName, query, {admin: false, user: true});
 
-    var allowedPut = ['name', 'description', 'price', 'legal', 'weapontype_id'];
-
-    var allowsUser = true;
-
-    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
-
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'weapon.canon = 1 AND ' +
             'weapon.species = 0 AND ' +
             'weapon.augmentation = 0 AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/type/:id', function(req, res) {
+    router.get(path + '/type/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'weapon.canon = 1 AND ' +
             'weapon.species = 0 AND ' +
@@ -56,26 +50,26 @@ module.exports = function(router, table, path) {
             'weapon.weapontype_id = ? AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/species', function(req, res) {
+    router.get(path + '/species', function(req, res, next) {
         var call = query + ' WHERE ' +
             'weapon.canon = 1 AND ' +
             'weapon.species = 1 AND ' +
             'weapon.augmentation = 0 AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/augmentation', function(req, res) {
+    router.get(path + '/augmentation', function(req, res, next) {
         var call = query + ' WHERE ' +
             'weapon.canon = 1 AND ' +
             'weapon.species = 0 AND ' +
             'weapon.augmentation = 1 AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 };

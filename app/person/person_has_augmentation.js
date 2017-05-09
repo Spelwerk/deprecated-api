@@ -2,9 +2,7 @@ var async = require('async'),
     energyId = require('./../config').defaults.attribute.id.energy,
     rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT ' +
         'augmentation.id, ' +
         'augmentation.canon, ' +
@@ -21,22 +19,22 @@ module.exports = function(router, table, path) {
         'LEFT JOIN augmentation ON augmentation.id = person_has_augmentation.augmentation_id ' +
         'LEFT JOIN augmentationquality ON augmentationquality.id = person_has_augmentation.augmentationquality_id';
 
-    router.get(path + '/id/:id/augmentation', function(req, res) {
+    router.get(path + '/id/:id/augmentation', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_augmentation.person_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id], {"bionic_id":"ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id], {"name": "ASC"});
     });
 
-    router.get(path + '/id/:id/augmentation/bionic/:id2', function(req, res) {
+    router.get(path + '/id/:id/augmentation/bionic/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_augmentation.person_id = ? AND ' +
             'person_has_augmentation.bionic_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
-    router.post(path + '/id/:id/augmentation', function(req, res) {
+    router.post(path + '/id/:id/augmentation', function(req, res, next) {
         var person = {},
             current = {},
             energy = {},
@@ -52,87 +50,80 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
-                rest.query(pool, 'SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
+                rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
                     person.attribute = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
+                rest.query('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
                     person.skill = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'SELECT attribute_id, value FROM augmentation_has_attribute WHERE augmentation_id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT attribute_id, value FROM augmentation_has_attribute WHERE augmentation_id = ?', [insert.id], function(err, result) {
                     insert.attribute = !!result[0] ? result : null;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'SELECT skill_id, value FROM augmentation_has_skill WHERE augmentation_id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT skill_id, value FROM augmentation_has_skill WHERE augmentation_id = ?', [insert.id], function(err, result) {
                     insert.skill = !!result[0] ? result : null;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'SELECT weapon_id FROM augmentation WHERE id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT weapon_id FROM augmentation WHERE id = ?', [insert.id], function(err, result) {
                     insert.weapon = !!result[0] ? result[0].weapon_id : null;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person_has_augmentation (person_id,bionic_id,augmentation_id) VALUES (?,?,?)', [person.id, insert.bionic, insert.id], callback);
+                rest.query('INSERT INTO person_has_augmentation (person_id,bionic_id,augmentation_id) VALUES (?,?,?)', [person.id, insert.bionic, insert.id], callback);
             },
             function(callback) {
-                rest.personInsertAttribute(pool, person, insert, current, callback);
+                rest.personInsertAttribute(person, insert, current, callback);
             },
             function(callback) {
-                rest.personInsertSkill(pool, person, insert, current, callback);
+                rest.personInsertSkill(person, insert, current, callback);
             },
             function(callback) {
-                if(!insert.weapon) { callback(); } else {
-                    rest.query(pool, 'INSERT INTO person_has_weapon (person_id,weapon_id) VALUES (?,?)', [person.id, insert.weapon], callback);
-                }
-            },
-            function(callback) {
-                rest.query(pool, 'SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, energy.id], function(err, result) {
-                    if(err) return callback(err);
+                if(!insert.weapon) return callback();
 
+                rest.query('INSERT INTO person_has_weapon (person_id,weapon_id) VALUES (?,?)', [person.id, insert.weapon], callback);
+            },
+            function(callback) {
+                rest.query('SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, energy.id], function(err, result) {
                     person.energy = parseInt(result[0].value);
 
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'SELECT energy FROM augmentation WHERE id = ?', [insert.id], function(err, result) {
-                    if(err) return callback(err);
-
+                rest.query('SELECT energy FROM augmentation WHERE id = ?', [insert.id], function(err, result) {
                     insert.energy = parseInt(result[0].energy);
 
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
                 insert.value = insert.energy + person.energy;
 
-                rest.query(pool, 'UPDATE person_has_attribute SET value = ? WHERE person_id = ? AND attribute_id = ?', [insert.value, person.id, energy.id], callback);
+                rest.query('UPDATE person_has_attribute SET value = ? WHERE person_id = ? AND attribute_id = ?', [insert.value, person.id, energy.id], callback);
             }
         ],function(err) {
-            if(err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 };

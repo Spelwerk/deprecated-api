@@ -1,9 +1,7 @@
 var async = require('async'),
     rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT ' +
         'protection.id, ' +
         'protection.canon, ' +
@@ -21,22 +19,22 @@ module.exports = function(router, table, path) {
         'LEFT JOIN protection ON protection.id = person_has_protection.protection_id ' +
         'LEFT JOIN protectionquality ON protectionquality.id = person_has_protection.protectionquality_id';
 
-    router.get(path + '/id/:id/protection', function(req, res) {
+    router.get(path + '/id/:id/protection', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_protection.person_id = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2], {"equipped": "DESC", "name": "ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2], {"equipped": "DESC", "name": "ASC"});
     });
 
-    router.get(path + '/id/:id/protection/equipped/:id2', function(req, res) {
+    router.get(path + '/id/:id/protection/equipped/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_protection.person_id = ? AND ' +
             'person_has_protection.equipped = ?';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
-    router.post(path + '/id/:id/protection', function(req, res) {
+    router.post(path + '/id/:id/protection', function(req, res, next) {
         var person = {},
             insert = {};
 
@@ -47,30 +45,39 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(pool, person, callback);
+                rest.personAuth(person, callback);
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO person_has_protection (person_id,protection_id) VALUES (?,?)', [person.id, insert.id], callback);
+                rest.query('INSERT INTO person_has_protection (person_id,protection_id) VALUES (?,?)', [person.id, insert.id], callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
-    router.put(path + '/id/:id/protection/:id2', function(req, res) {
-        rest.personCustomDescription(req, res, 'protection');
+    router.put(path + '/id/:id/protection/:id2', function(req, res, next) {
+        req.table.name = 'protection';
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.personCustomDescription(req, res, next);
     });
 
-    router.put(path + '/id/:id/protection/:id2/equip/:equip', function(req, res) {
-        rest.personEquip(req, res, 'protection');
+    router.put(path + '/id/:id/protection/:id2/equip/:equip', function(req, res, next) {
+        req.table.name = 'protection';
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.personEquip(req, res, next);
     });
 
-    router.delete(path + '/id/:id/protection/:id2', function(req, res) {
-        rest.personDeleteRelation(req, res, 'protection');
+    router.delete(path + '/id/:id/protection/:id2', function(req, res, next) {
+        req.table.name = 'protection';
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.personDeleteRelation(req, res, next);
     });
 };

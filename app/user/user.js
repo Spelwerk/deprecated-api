@@ -10,8 +10,8 @@ var rest = require('./../rest'),
     onion = require('./../onion'),
     hasher = require('./../hasher');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT ' +
         'id, ' +
@@ -33,62 +33,70 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'SELECT * FROM user WHERE id = ? AND deleted IS NULL', [user.id], callback);
+                rest.query('SELECT email FROM user WHERE id = ? AND deleted IS NULL', [user.id], function(err, result) {
+                    if(err) return callback(err);
+
+                    if(!result[0]) return callback({status: 404, code: 0, message: 'User not found.'});
+
+                    user.email = result[0].email;
+
+                    callback();
+                });
             },
             function(callback) {
-                rest.query(pool, 'SELECT permission.name FROM user_has_permission LEFT JOIN permission ON permission.id = user_has_permission.permission_id WHERE user_has_permission.user_id = ?', [user.id], callback);
+                user.token = tokens.generate(req, user.email);
+
+                callback();
             },
             function(callback) {
-                rest.query(pool, 'UPDATE user SET login_secret = NULL, login_timeout = NULL WHERE id = ?', [user.id], callback);
+                rest.query('INSERT INTO usertoken (user_id,token) VALUES (?,?) ON DUPLICATE KEY UPDATE token = VALUES (token)', [user.id, user.token], callback);
+            },
+            function(callback) {
+                rest.query('UPDATE user SET login_secret = NULL, login_timeout = NULL WHERE id = ?', [user.id], callback);
             }
-        ],function(err,results) {
-            user.select = results[0][0];
-            user.permissions = results[1];
-
-            user.token = tokens.generate(req, user.select, user.permissions);
-
+        ],function(err) {
             callback(err, user.token);
         });
     }
 
     // GET
 
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' + table + '.deleted is NULL';
-        rest.QUERY(req, res, call, null, {"displayname": "ASC"});
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/deleted', function(req, res) {
+    router.get(path + '/deleted', function(req, res, next) {
         var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
-        rest.QUERY(req, res, call);
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/all', function(req, res) {
-        rest.QUERY(req, res, query);
+    router.get(path + '/all', function(req, res, next) {
+        rest.QUERY(req, res, next, query);
     });
 
-    router.get(path + '/id/:id', function(req, res) {
+    router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' WHERE user.id = ?';
-        rest.QUERY(req, res, call, [req.params.id], {"displayname": "ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/token', function(req, res) {
-        if(!req.headers.token) {
-            res.status(404).send({header: 'Missing Token', message: 'missing token'});
-        } else {
-            var token = tokens.decode(req);
+    router.get(path + '/validate', function(req, res, next) {
+        if(!req.user) return next({status: 403, message: 'Forbidden'});
 
-            if(!token) {
-                res.status(400).send({header: 'Invalid Token', message: 'invalid token'});
-            } else {
-                res.status(200).send({user: token.sub});
-            }
-        }
+        res.status(200).send({user: req.user.select});
+    });
+
+    router.get(path + '/tokens', function(req, res, next) {
+        rest.query('SELECT token FROM usertoken WHERE user_id = ?', [req.user.id], function(err, result) {
+            if(err) return next(err);
+
+            res.status(200).send({data: result});
+        });
     });
 
     // GET RELATIONS
 
-    router.get(path + '/id/:id/person', function(req, res) {
+    router.get(path + '/id/:id/person', function(req, res, next) {
         var call = 'SELECT ' +
             'user_has_person.person_id AS id, ' +
             'user_has_person.secret, ' +
@@ -102,10 +110,10 @@ module.exports = function(router, table, path) {
             'user_has_person.user_id = ? AND ' +
             'person.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id], {"id":"DESC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id/world', function(req, res) {
+    router.get(path + '/id/:id/world', function(req, res, next) {
         var call = 'SELECT ' +
             'user_has_world.world_id AS id, ' +
             'user_has_world.owner, ' +
@@ -116,10 +124,10 @@ module.exports = function(router, table, path) {
             'user_has_world.user_id = ? AND ' +
             'world.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id], {"id":"DESC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id/world/calculated', function(req, res) {
+    router.get(path + '/id/:id/world/calculated', function(req, res, next) {
         var call = 'SELECT ' +
             'user_has_world.world_id AS id, ' +
             'user_has_world.owner, ' +
@@ -131,12 +139,12 @@ module.exports = function(router, table, path) {
             'world.calculated = 1 AND ' +
             'world.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id], {"id":"DESC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
     // USER
 
-    router.post(path, function(req, res) {
+    router.post(path, function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -163,7 +171,7 @@ module.exports = function(router, table, path) {
                 insert.verify.secret = hasher(128);
                 insert.verify.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
-                rest.query(pool, 'INSERT INTO user (email,password,displayname,firstname,surname,verify_secret,verify_timeout) VALUES (?,?,?,?,?,?,?)', [insert.email, insert.encrypted, insert.displayname, insert.firstname, insert.surname, insert.verify.secret, insert.verify.timeout], function(err, result) {
+                rest.query('INSERT INTO user (email,password,displayname,firstname,surname,verify_secret,verify_timeout) VALUES (?,?,?,?,?,?,?)', [insert.email, insert.encrypted, insert.displayname, insert.firstname, insert.surname, insert.verify.secret, insert.verify.timeout], function(err, result) {
                     user.id = result.insertId;
 
                     callback(err);
@@ -190,91 +198,61 @@ module.exports = function(router, table, path) {
                 });
             }
         ],function(err) {
-            if(err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send({token: user.token});
-            }
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send({token: user.token});
         });
     });
 
-    router.put(path + '/id/:id', function(req, res) {
-        var user = {},
-            insert = {};
-
-        user.token = tokens.decode(req);
+    router.put(path + '/id/:id', function(req, res, next) {
+        var insert = {};
 
         insert.id = req.params.id;
         insert.displayname = req.body.displayname;
         insert.firstname = req.body.firstname;
         insert.surname = req.body.surname;
 
-        if(!user.token) {
-            res.status(400).send({code: 0, message: 'User not logged in.'});
-        } else if(!user.token.sub.admin && user.token.sub.id !== insert.id) {
-            res.status(403).send({code: 0, message: 'Forbidden.'});
-        } else {
-            rest.query(pool, 'INSERT INTO user (displayname,firstname,surname) VALUES (?,?,?) WHERE id = ?', [insert.displayname, insert.firstname, insert.surname, insert.id], function(err) {
-                if (err) {
-                    res.status(500).send({code: err.code, message: err.message});
-                } else {
-                    res.status(200).send();
-                }
-            });
-        }
+        if(!req.user.token || (!req.user.admin && req.user.id !== insert.id)) return next({status: 403, message: 'Forbidden.'});
+
+        rest.query('INSERT INTO user (displayname,firstname,surname) VALUES (?,?,?) WHERE id = ?', [insert.displayname, insert.firstname, insert.surname, insert.id], function(err) {
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send();
+        });
     });
 
-    router.put(path + '/id/:id/admin', function(req, res) {
-        var admin = {},
-            insert = {};
+    router.put(path + '/id/:id/admin', function(req, res, next) {
+        var insert = {};
 
         insert.id = req.params.id;
         insert.admin = req.body.admin;
 
-        admin.token = tokens.decode(req);
+        if(!req.user.admin) return next({status: 403, message: 'Forbidden.'});
 
-        if(!admin.token) {
-            res.status(400).send({code: 0, message: 'User not logged in.'});
-        } else if(!admin.token.sub.admin) {
-            res.status(403).send({code: 0, message: 'Forbidden.'});
-        } else {
-            rest.query(pool, 'UPDATE user SET admin = ? WHERE id = ?', [insert.admin, insert.id], function(err) {
-                if (err) {
-                    res.status(500).send({code: err.code, message: err.message});
-                } else {
-                    res.status(200).send();
-                }
-            });
-        }
+        rest.query('UPDATE user SET admin = ? WHERE id = ?', [insert.admin, insert.id], function(err) {
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send();
+        });
     });
 
-    router.delete(path + '/id/:id', function(req, res) {
-        var user = {},
-            insert = {};
+    router.delete(path + '/id/:id', function(req, res, next) {
+        var insert = {};
 
         insert.id = req.params.id;
 
-        user.token = tokens.decode(req);
+        if(!req.user.admin && req.user.id !== insert.id) return next({status: 403, message: 'Forbidden'});
 
-        if(!user.token) {
-            res.status(400).send({code: 0, message: 'User not logged in.'});
-        } else if(!user.token.sub.admin && user.token.sub.id !== insert.id) {
-            res.status(403).send({code: 0, message: 'Forbidden.'});
-        } else {
-            rest.query(pool, 'UPDATE user SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [insert.id], function(err) {
-                if (err) {
-                    res.status(500).send({code: err.code, message: err.message});
-                } else {
-                    res.status(200).send();
-                }
-            });
-        }
+        rest.query('UPDATE user SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [insert.id], function(err) {
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send();
+        });
     });
 
     // VERIFY
 
-    router.post(path + '/verify/email', function(req, res) {
+    router.post(path + '/verify/email', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -286,7 +264,7 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'UPDATE user SET verify_secret = ?, verify_timeout = ? WHERE email = ?', [insert.verify.secret, insert.verify.timeout, insert.email], callback);
+                rest.query('UPDATE user SET verify_secret = ?, verify_timeout = ? WHERE email = ?', [insert.verify.secret, insert.verify.timeout, insert.email], callback);
             },
             function(callback) {
                 var subject = 'User Verification';
@@ -300,16 +278,13 @@ module.exports = function(router, table, path) {
                 rest.sendMail(insert.email, subject, text, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send();
         });
     });
 
-    router.post(path + '/verify/verify', function(req, res) {
+    router.post(path + '/verify/verify', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -319,10 +294,10 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'SELECT id, verify_timeout AS timeout FROM user WHERE verify_secret = ?', [insert.secret], function(err,result) {
+                rest.query('SELECT id, verify_timeout AS timeout FROM user WHERE verify_secret = ?', [insert.secret], function(err,result) {
                     if(err) return callback(err);
 
-                    if(!result[0]) return callback({status: 403, code: 0, message: 'Wrong Secret.'});
+                    if(!result[0]) return callback('Wrong Secret.');
 
                     user.id = result[0].id;
                     user.timeout = result[0].timeout;
@@ -331,12 +306,12 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                if(user.now < user.timeout) return callback({status: 400, code: 0, message: 'Timeout Expired.'});
+                if(user.now < user.timeout) return callback('Timeout Expired.');
 
                 callback();
             },
             function(callback) {
-                rest.query(pool, 'UPDATE user SET verify = 1, verify_secret = NULL, verify_timeout = NULL WHERE id = ?', [user.id], callback);
+                rest.query('UPDATE user SET verify = 1, verify_secret = NULL, verify_timeout = NULL WHERE id = ?', [user.id], callback);
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
@@ -348,18 +323,15 @@ module.exports = function(router, table, path) {
                 });
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send({token: user.token});
-            }
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send({token: user.token});
         });
     });
 
     // LOGIN
 
-    router.post(path + '/login/password', function(req, res) {
+    router.post(path + '/login/password', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -368,10 +340,10 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'SELECT id,password,twofactor FROM user WHERE email = ? AND deleted IS NULL', [insert.email], function(err, result) {
+                rest.query('SELECT id,password,twofactor FROM user WHERE email = ? AND deleted IS NULL', [insert.email], function(err, result) {
                     if(err) return callback(err);
 
-                    if(!result[0]) return callback({status: 404, code: 0, message: 'Missing Email.'});
+                    if(!result[0]) return callback('Missing Email.');
 
                     user.id = result[0].id;
                     user.password = result[0].password;
@@ -388,7 +360,7 @@ module.exports = function(router, table, path) {
 
                     user.accepted = result;
 
-                    if(!user.accepted) return callback({status: 401, code: 0, message: 'Wrong Password.'});
+                    if(!user.accepted) return callback('Wrong Password.');
 
                     callback(err);
                 });
@@ -403,16 +375,13 @@ module.exports = function(router, table, path) {
                 });
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send({token: user.token});
-            }
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send({token: user.token});
         });
     });
 
-    router.post(path + '/login/email', function(req, res) {
+    router.post(path + '/login/email', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -424,7 +393,7 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'UPDATE user SET login_secret = ?, login_timeout = ? WHERE email = ? AND deleted IS NULL', [insert.login.secret, insert.login.timeout, insert.email], callback);
+                rest.query('UPDATE user SET login_secret = ?, login_timeout = ? WHERE email = ? AND deleted IS NULL', [insert.login.secret, insert.login.timeout, insert.email], callback);
             },
             function (callback) {
                 var subject = 'User Verification';
@@ -438,16 +407,13 @@ module.exports = function(router, table, path) {
                 rest.sendMail(insert.email, subject, text, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send();
         });
     });
 
-    router.post(path + '/login/verify', function(req, res) {
+    router.post(path + '/login/verify', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -457,10 +423,10 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'SELECT id, login_timeout AS timeout FROM user WHERE login_secret = ?', [insert.secret], function(err, result) {
+                rest.query('SELECT id, login_timeout AS timeout FROM user WHERE login_secret = ?', [insert.secret], function(err, result) {
                     if(err) return callback(err);
 
-                    if(!result[0]) return callback({status: 403, code: 0, message: 'Wrong Secret.'});
+                    if(!result[0]) return callback('Wrong Secret.');
 
                     user.id = result[0].id;
                     user.timeout = result[0].timeout;
@@ -469,12 +435,12 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                if(user.now > user.timeout) return callback({status: 403, code: 0, message: 'Timeout Expired.'});
+                if(user.now > user.timeout) return callback('Timeout Expired.');
 
                 callback();
             },
             function(callback) {
-                rest.query(pool, 'UPDATE user SET login_secret = NULL, login_timeout = NULL WHERE id = ?', [user.id], callback);
+                rest.query('UPDATE user SET login_secret = NULL, login_timeout = NULL WHERE id = ?', [user.id], callback);
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
@@ -486,18 +452,15 @@ module.exports = function(router, table, path) {
                 });
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send({token: user.token});
-            }
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send({token: user.token});
         });
     });
 
     // PASSWORD
 
-    router.post(path + '/reset/email', function(req, res) {
+    router.post(path + '/reset/email', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -509,7 +472,7 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'UPDATE user SET reset_secret = ?, reset_timeout = ? WHERE email = ? AND deleted IS NULL', [insert.reset.secret, insert.reset.timeout, insert.email], callback);
+                rest.query('UPDATE user SET reset_secret = ?, reset_timeout = ? WHERE email = ? AND deleted IS NULL', [insert.reset.secret, insert.reset.timeout, insert.email], callback);
             },
             function(callback) {
                 var subject = 'Password Reset';
@@ -523,16 +486,13 @@ module.exports = function(router, table, path) {
                 rest.sendMail(insert.email, subject, text, callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send();
         });
     });
 
-    router.post(path + '/reset/verify', function(req, res) {
+    router.post(path + '/reset/verify', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -545,10 +505,10 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'SELECT id, reset_timeout AS timeout FROM user WHERE reset_secret = ?', [insert.secret], function(err, result) {
+                rest.query('SELECT id, reset_timeout AS timeout FROM user WHERE reset_secret = ?', [insert.secret], function(err, result) {
                     if(err) return callback(err);
 
-                    if(!result[0]) return callback({status: 403, code: 0, message: 'Wrong Secret.'});
+                    if(!result[0]) return callback('Wrong Secret.');
 
                     user.id = result[0].id;
                     user.timeout = result[0].timeout;
@@ -557,12 +517,12 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                if(user.now > user.timeout) return callback({status: 403, code: 0, message: 'Timeout Expired.'});
+                if(user.now > user.timeout) return callback('Timeout Expired.');
 
                 callback();
             },
             function(callback) {
-                bcrypt.hash(insert.hashed, config.salt, function(err,result) {
+                bcrypt.hash(insert.hashed, config.salt, function(err, result) {
                     if(err) return callback(err);
 
                     insert.encrypted = onion.encrypt(result);
@@ -571,10 +531,10 @@ module.exports = function(router, table, path) {
                 });
             },
             function(callback) {
-                rest.query(pool, 'UPDATE user SET password = ?, reset_secret = NULL, reset_timeout = NULL WHERE id = ?', [insert.encrypted, user.id], callback);
+                rest.query('UPDATE user SET password = ?, reset_secret = NULL, reset_timeout = NULL WHERE id = ?', [insert.encrypted, user.id], callback);
             },
             function(callback) {
-                loginToken(req, user.id, function(err,result) {
+                loginToken(req, user.id, function(err, result) {
                     if(err) return callback(err);
 
                     user.token = result;
@@ -583,22 +543,21 @@ module.exports = function(router, table, path) {
                 });
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send({token: user.token});
-            }
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send({token: user.token});
         });
     });
 
     // RELATIONSHIPS
 
-    require('./user_has_friend')(router, table, path);
+    require('./user_has_friend')(router, path);
 
-    require('./user_has_person')(router, table, path);
+    require('./user_has_person')(router, path);
 
-    require('./user_has_story')(router, table, path);
+    require('./user_has_species')(router, path);
 
-    require('./user_has_world')(router, table, path);
+    require('./user_has_story')(router, path);
+
+    require('./user_has_world')(router, path);
 };

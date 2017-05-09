@@ -1,12 +1,10 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT * FROM world_has_background ' +
         'LEFT JOIN background ON background.id = world_has_background.background_id';
 
-    router.get(path + '/id/:id/background', function(req, res) {
+    router.get(path + '/id/:id/background', function(req, res, next) {
         var call = query + ' WHERE ' +
             'background.canon = 1 AND ' +
             'world_has_background.world_id = ? AND ' +
@@ -14,10 +12,10 @@ module.exports = function(router, table, path) {
             'background.manifestation_id IS NULL AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id/background/species/:id2', function(req, res) {
+    router.get(path + '/id/:id/background/species/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'background.canon = 1 AND ' +
             'world_has_background.world_id = ? AND ' +
@@ -25,10 +23,10 @@ module.exports = function(router, table, path) {
             'background.manifestation_id IS NULL AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
-    router.get(path + '/id/:id/background/species/:id2/manifestation/:id3', function(req, res) {
+    router.get(path + '/id/:id/background/species/:id2/manifestation/:id3', function(req, res, next) {
         var call = query + ' WHERE ' +
             'background.canon = 1 AND ' +
             'world_has_background.world_id = ? AND ' +
@@ -36,14 +34,26 @@ module.exports = function(router, table, path) {
             '(background.manifestation_id = ? OR background.manifestation_id IS NULL) AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id, req.params.id2, req.params.id3]);
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
-    router.post(path + '/id/:id/background', function(req, res) {
-        rest.relationPost(req, res, 'world', 'background');
+    router.post(path + '/id/:id/background', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'background';
+
+        rest.relationPost(req, res, next);
     });
 
-    router.delete(path + '/id/:id/background/:id2', function(req, res) {
-        rest.relationDelete(req, res, 'world', 'background');
+    router.delete(path + '/id/:id/background/:id2', function(req, res, next) {
+        req.table.name = 'world';
+        req.table.admin = false;
+        req.table.user = true;
+
+        req.relation.name = 'background';
+
+        rest.relationDelete(req, res, next);
     });
 };

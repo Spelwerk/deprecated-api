@@ -1,7 +1,7 @@
 var rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT ' +
         'attribute.id, ' +
@@ -17,37 +17,31 @@ module.exports = function(router, table, path) {
         'FROM attribute ' +
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id';
 
-    var allowedPost = ['name', 'description', 'attributetype_id', 'icon'];
+    require('./../default')(router, tableName, query, {admin: false, user: true});
 
-    var allowedPut = ['name', 'description', 'attributetype_id', 'icon'];
-
-    var allowsUser = false;
-
-    require('./../default-protected')(router, table, path, query, allowedPost, allowedPut, allowsUser);
-
-    router.get(path, function(req, res) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'attribute.canon = 1 AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, call);
+        rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/type/:id', function(req, res) {
+    router.get(path + '/type/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'attribute.canon = 1 AND ' +
             'attribute.attributetype_id = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/special/:id', function(req, res) {
+    router.get(path + '/special/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'attribute.canon = 1 AND ' +
             'attributetype.special = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 };
