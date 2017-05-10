@@ -29,7 +29,7 @@ module.exports = function(router, path) {
                 rest.userAuth(req, callback);
             },
             function(callback) {
-                rest.query( 'SELECT id FROM expertise WHERE manifestation_id = ? AND doctrine_id IS NOT NULL', [insert.id], function(err, result) {
+                rest.query( 'SELECT id FROM expertise WHERE canon = 1 AND manifestation_id = ? AND doctrine_id IS NOT NULL', [insert.id], function(err, result) {
                     manifestation.expertise = result;
 
                     callback(err);

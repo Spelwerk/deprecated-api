@@ -113,6 +113,6 @@ module.exports = function(router, tableName, path) {
         req.table.admin = false;
         req.table.user = true;
 
-        rest.DELETE(req, res, next, table);
+        rest.DELETE(req, res, next);
     });
 };

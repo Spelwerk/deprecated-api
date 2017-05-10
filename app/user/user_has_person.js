@@ -1,15 +1,7 @@
 var rest = require('./../rest');
 
 module.exports = function(router, path) {
-    var query = 'SELECT ' +
-        'user_has_person.user_id, ' +
-        'user_has_person.person_id, ' +
-        'user_has_person.owner, ' +
-        'user_has_person.secret, ' +
-        'user_has_person.favorite, ' +
-        'person.nickname AS nickname, ' +
-        'person.occupation AS occupation ' +
-        'FROM user_has_person ' +
+    var query = 'SELECT person.id FROM user_has_person ' +
         'LEFT JOIN person ON person.id = user_has_person.person_id';
 
     router.get(path + '/id/:id/person', function(req, res, next) {
@@ -17,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_person.user_id = ? AND ' +
             'person.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id], {"person_id": "ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/person/favorite', function(req, res, next) {
@@ -26,7 +18,7 @@ module.exports = function(router, path) {
             'user_has_person.favorite = 1 AND ' +
             'person.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id], {"person_id": "ASC"});
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/person', function(req, res, next) {

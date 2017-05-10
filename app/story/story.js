@@ -89,11 +89,17 @@ module.exports = function(router, table, path) {
     });
 
     router.put(path + '/revive/:id', function(req, res, next) {
-        rest.REVIVE(req, res, next, 'story');
+        req.table.name = 'story';
+
+        rest.REVIVE(req, res, next);
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        rest.DELETE(req, res, next, 'story');
+        req.table.name = 'story';
+        req.table.admin = false;
+        req.table.user = true;
+
+        rest.DELETE(req, res, next);
     });
 
     // RELATIONSHIPS

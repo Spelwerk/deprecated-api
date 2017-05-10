@@ -1,12 +1,7 @@
 var rest = require('./../rest');
 
 module.exports = function(router, path) {
-    var query = 'SELECT ' +
-        'user_has_world.user_id, ' +
-        'user_has_world.world_id, ' +
-        'user_has_world.owner, ' +
-        'world.name AS world_name ' +
-        'FROM user_has_world ' +
+    var query = 'SELECT world.id FROM user_has_world ' +
         'LEFT JOIN world ON world.id = user_has_world.world_id';
 
     router.get(path + '/id/:id/world', function(req, res, next) {
@@ -20,10 +15,10 @@ module.exports = function(router, path) {
     router.get(path + '/id/:id/world/calculated', function(req, res, next) {
         var call = query + ' WHERE ' +
             'user_has_world.user_id = ? AND ' +
-            'world.calculated = ? AND ' +
+            'world.calculated = 1 AND ' +
             'world.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, 1]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/world', function(req, res, next) {

@@ -49,14 +49,14 @@ module.exports = function(router, path) {
                 rest.userAuth(req, callback);
             },
             function(callback) {
-                rest.query('SELECT id FROM skill WHERE species_id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT id FROM skill WHERE canon = 1 AND species_id = ?', [insert.id], function(err, result) {
                     species.skill = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query('SELECT id FROM expertise WHERE species_id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT id FROM expertise WHERE canon = 1 AND species_id = ?', [insert.id], function(err, result) {
                     species.expertise = result;
 
                     callback(err);
@@ -105,6 +105,6 @@ module.exports = function(router, path) {
 
         req.relation.name = 'species';
 
-        rest.relationDelete(req, res, next, 'world', 'species');
+        rest.relationDelete(req, res, next);
     });
 };

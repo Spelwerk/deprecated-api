@@ -32,7 +32,9 @@ function personAuth(person, callback) {
 }
 
 function userAuth(req, callback) {
-    if(!req.user.id || (req.table.admin && !req.user.admin)) return callback('Forbidden.');
+    if(req.table.user && !req.user.id) return callback('Forbidden.');
+
+    if(req.table.admin && !req.user.admin) return callback('Forbidden.');
 
     if(req.user.admin) return callback();
 
@@ -75,11 +77,10 @@ module.exports.sendMail = sendMail;
 
 // IMPROVED DEFAULT
 
-exports.POST = function(req, res, next, tableName, allowedKeys, adminOnly) {
-    req.table.name = req.table.name || tableName;
-    req.table.admin = req.table.admin || adminOnly;
+exports.POST = function(req, res, next) {
+    if(req.table.admin && !req.user.admin) return next('Forbidden.');
 
-    if(!req.user.id || (req.table.admin && !req.user.admin)) return next('Forbidden.');
+    if(req.table.user && !req.user.id) return next('Forbidden.');
 
     var insert = {};
 
@@ -121,10 +122,8 @@ exports.POST = function(req, res, next, tableName, allowedKeys, adminOnly) {
     });
 };
 
-exports.PUT = function(req, res, next, tableName, allowedKeys, adminOnly) {
+exports.PUT = function(req, res, next) {
     req.table.id = parseInt(req.params.id);
-    req.table.name = req.table.name || tableName;
-    req.table.admin = req.table.admin || adminOnly;
 
     async.series([
         function(callback) {
@@ -155,10 +154,8 @@ exports.PUT = function(req, res, next, tableName, allowedKeys, adminOnly) {
     });
 };
 
-exports.DELETE = function(req, res, next, tableName, adminOnly) {
+exports.DELETE = function(req, res, next) {
     req.table.id = parseInt(req.params.id);
-    req.table.name = req.table.name || tableName;
-    req.table.admin = req.table.admin || adminOnly;
 
     async.series([
         function(callback) {
@@ -174,9 +171,8 @@ exports.DELETE = function(req, res, next, tableName, adminOnly) {
     });
 };
 
-exports.REVIVE = function(req, res, next, tableName) {
+exports.REVIVE = function(req, res, next) {
     req.table.id = parseInt(req.params.id);
-    req.table.name = req.table.name || tableName;
 
     async.series([
         function(callback) {
@@ -192,10 +188,8 @@ exports.REVIVE = function(req, res, next, tableName) {
     });
 };
 
-exports.CANON = function(req, res, next, tableName) {
+exports.CANON = function(req, res, next) {
     req.table.id = parseInt(req.params.id);
-    req.table.name = req.table.name || tableName;
-    req.table.admin = req.table.admin || adminOnly;
 
     async.series([
         function(callback) {
@@ -262,13 +256,9 @@ exports.QUERY = function(req, res, next, call, params, order) {
 
 // RELATIONS
 
-exports.relationPost = function(req, res, next, tableName, relationName, adminOnly) {
+exports.relationPost = function(req, res, next) {
     req.table.id = parseInt(req.params.id);
-    req.table.name = req.table.name || tableName;
-    req.table.admin = req.table.admin || adminOnly;
-
     req.relation.id = parseInt(req.body.insert_id);
-    req.relation.name = req.relation.name || relationName;
 
     async.series([
         function (callback) {
@@ -284,13 +274,9 @@ exports.relationPost = function(req, res, next, tableName, relationName, adminOn
     });
 };
 
-exports.relationPostWithValue = function(req, res, next, tableName, relationName, adminOnly) {
+exports.relationPostWithValue = function(req, res, next) {
     req.table.id = parseInt(req.params.id);
-    req.table.name = req.table.name || tableName;
-    req.table.admin = req.table.admin || adminOnly;
-
     req.relation.id = parseInt(req.body.insert_id);
-    req.relation.name = req.relation.name || relationName;
     req.relation.value = parseInt(req.body.value);
 
     async.series([
@@ -307,13 +293,9 @@ exports.relationPostWithValue = function(req, res, next, tableName, relationName
     });
 };
 
-exports.relationPutValue = function(req, res, next, tableName, relationName, adminOnly) {
+exports.relationPutValue = function(req, res, next) {
     req.table.id = parseInt(req.params.id);
-    req.table.name = req.table.name || tableName;
-    req.table.admin = req.table.admin || adminOnly;
-
     req.relation.id = parseInt(req.body.insert_id);
-    req.relation.name = req.relation.name || relationName;
     req.relation.value = parseInt(req.body.value);
 
     async.series([
@@ -330,14 +312,9 @@ exports.relationPutValue = function(req, res, next, tableName, relationName, adm
     });
 };
 
-exports.relationDelete = function(req, res, next, tableName, relationName, adminOnly) {
+exports.relationDelete = function(req, res, next) {
     req.table.id = parseInt(req.params.id);
-    req.table.name = req.table.name || tableName;
-    req.table.admin = req.table.admin || adminOnly;
-
-    req.relation.id = parseInt(req.body.insert_id);
-    req.relation.name = req.relation.name || relationName;
-    req.relation.value = parseInt(req.body.value);
+    req.relation.id = parseInt(req.params.id2);
 
     async.series([
         function(callback) {
@@ -437,9 +414,7 @@ exports.personInsertSkill = function(person, insert, current, callback) {
     query(call, null, callback);
 };
 
-exports.personCustomDescription = function(req, res, next, tableName) {
-    req.table.name = req.table.name || tableName;
-
+exports.personCustomDescription = function(req, res, next) {
     var person = {},
         insert = {};
 
@@ -463,9 +438,7 @@ exports.personCustomDescription = function(req, res, next, tableName) {
     });
 };
 
-exports.personEquip = function(req, res, next, tableName) {
-    req.table.name = req.table.name || tableName;
-
+exports.personEquip = function(req, res, next) {
     var person = {},
         insert = {};
 
@@ -489,9 +462,7 @@ exports.personEquip = function(req, res, next, tableName) {
     });
 };
 
-exports.personDeleteRelation = function(req, res, next, tableName) {
-    req.table.name = req.table.name || tableName;
-
+exports.personDeleteRelation = function(req, res, next) {
     var person = {},
         insert = {};
 
@@ -516,11 +487,10 @@ exports.personDeleteRelation = function(req, res, next, tableName) {
 
 // USER
 
-exports.userRelationPost = function(req, res, next, relationName) {
-    req.relation.id = parseInt(req.params.id2);
-    req.relation.name = req.relation.name || relationName;
-
+exports.userRelationPost = function(req, res, next) {
     if(!req.user.id) return next('Forbidden.');
+
+    req.relation.id = parseInt(req.params.id2);
 
     query('INSERT INTO user_has_' + req.relation.name + ' (user_id,' + req.relation.name + '_id) VALUES (?,?)', [req.user.id, req.relation.id], function(err) {
         if(err) return next(err);
@@ -529,11 +499,10 @@ exports.userRelationPost = function(req, res, next, relationName) {
     });
 };
 
-exports.userRelationDelete = function(req, res, next, relationName) {
-    req.relation.id = parseInt(req.params.id2);
-    req.relation.name = req.relation.name || relationName;
-
+exports.userRelationDelete = function(req, res, next) {
     if(!req.user.id) return next('Forbidden.');
+
+    req.relation.id = parseInt(req.params.id2);
 
     query('DELETE FROM user_has_' + req.relation.name + ' WHERE user_id = ? AND ' + req.relation.name + '_id = ?', [req.user.id, req.relation.id], function(err) {
         if(err) return next(err);

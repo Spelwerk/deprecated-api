@@ -94,54 +94,6 @@ module.exports = function(router, tableName, path) {
         });
     });
 
-    // GET RELATIONS
-
-    router.get(path + '/id/:id/person', function(req, res, next) {
-        var call = 'SELECT ' +
-            'user_has_person.person_id AS id, ' +
-            'user_has_person.secret, ' +
-            'user_has_person.owner, ' +
-            'user_has_person.favorite, ' +
-            'person.nickname AS nickname, ' +
-            'person.occupation AS occupation ' +
-            'FROM user_has_person ' +
-            'LEFT JOIN person ON person.id = user_has_person.person_id ' +
-            'WHERE ' +
-            'user_has_person.user_id = ? AND ' +
-            'person.deleted IS NULL';
-
-        rest.QUERY(req, res, next, call, [req.params.id]);
-    });
-
-    router.get(path + '/id/:id/world', function(req, res, next) {
-        var call = 'SELECT ' +
-            'user_has_world.world_id AS id, ' +
-            'user_has_world.owner, ' +
-            'world.name ' +
-            'FROM user_has_world ' +
-            'LEFT JOIN world ON world.id = user_has_world.world_id ' +
-            'WHERE ' +
-            'user_has_world.user_id = ? AND ' +
-            'world.deleted IS NULL';
-
-        rest.QUERY(req, res, next, call, [req.params.id]);
-    });
-
-    router.get(path + '/id/:id/world/calculated', function(req, res, next) {
-        var call = 'SELECT ' +
-            'user_has_world.world_id AS id, ' +
-            'user_has_world.owner, ' +
-            'world.name ' +
-            'FROM user_has_world ' +
-            'LEFT JOIN world ON world.id = user_has_world.world_id ' +
-            'WHERE ' +
-            'user_has_world.user_id = ? AND ' +
-            'world.calculated = 1 AND ' +
-            'world.deleted IS NULL';
-
-        rest.QUERY(req, res, next, call, [req.params.id]);
-    });
-
     // USER
 
     router.post(path, function(req, res, next) {

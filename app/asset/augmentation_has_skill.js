@@ -18,7 +18,7 @@ module.exports = function(router, path) {
 
         req.relation.name = 'skill';
 
-        rest.relationPostWithValue(req, res, next, 'augmentation', 'skill');
+        rest.relationPostWithValue(req, res, next);
     });
 
     router.delete(path + '/id/:id/skill/:id2', function(req, res, next) {
@@ -28,6 +28,6 @@ module.exports = function(router, path) {
 
         req.relation.name = 'skill';
 
-        rest.relationDelete(req, res, next, 'augmentation', 'skill');
+        rest.relationDelete(req, res, next);
     });
 };

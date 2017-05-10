@@ -55,19 +55,15 @@ app.use(function(req, res, next) {
     async.series([
         function(callback) {
             rest.query('SELECT user_id FROM usertoken WHERE token = ?', [req.user.token], function(err, result) {
-                if(err) return callback(err);
-
                 if(!result[0]) return callback('Token missing from database.');
 
                 req.user.id = result[0].user_id;
 
-                callback();
+                callback(err);
             });
         },
         function(callback) {
-            rest.query('SELECT id,email,displayname,firstname,surname,admin,verify FROM user WHERE id = ? AND email = ?',[req.user.id, req.user.email],function(err, result) {
-                if(err) return callback(err);
-
+            rest.query('SELECT id,email,displayname,firstname,surname,admin,verify FROM user WHERE id = ? AND email = ?',[req.user.id, req.user.email], function(err, result) {
                 if(!result[0]) return callback({status: 400, code: 0, message: 'User missing from database.'});
 
                 req.user.select = result[0];
@@ -76,8 +72,18 @@ app.use(function(req, res, next) {
                 req.user.admin = req.user.select.admin;
                 req.user.verify = req.user.select.verify;
 
-                callback();
+                callback(err);
             });
+        },
+        function(callback) {
+            callback();
+            /*
+            rest.query('SELECT permission.name FROM user_has_permission LEFT JOIN permission ON permission.id = user_has_permission.permission_id WHERE user_id = ?', [req.user.id], function(err, result) {
+                req.user.permissions = result;
+
+                callback(err);
+            });
+            */
         }
     ],function(err) {
         next(err);
@@ -89,9 +95,9 @@ require('./app/index')(router);
 app.use('/', router);
 
 app.use(function(err, req, res) {
-    //console.error(err);
+    console.log(err);
 
-    res.status(err.status).send(err.message);
+    res.status(500).send(err);
 });
 
 var listeningMessage = 'server.js listening on port: ' + config.port;
