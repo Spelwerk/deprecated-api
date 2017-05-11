@@ -47,8 +47,8 @@ module.exports = function(router, tableName, query, options) {
 
     router.put(path + '/id/:id', function(req, res, next) {
         req.table.name = tableName;
-        req.table.admin = options.admin || req.table.admin;
-        req.table.user = options.user || req.table.user;
+        req.table.admin = !!options ? options.admin : req.table.admin;
+        req.table.user = !!options ? options.user : req.table.user;
 
         rest.PUT(req, res, next);
     });

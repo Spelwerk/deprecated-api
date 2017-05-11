@@ -503,13 +503,41 @@ module.exports = function(router, tableName, path) {
 
     // RELATIONSHIPS
 
+    require('./user_has_augmentation')(router, path);
+
+    require('./user_has_background')(router, path);
+
+    require('./user_has_bionic')(router, path);
+
+    require('./user_has_doctrine')(router, path);
+
+    require('./user_has_expertise')(router, path);
+
+    require('./user_has_focus')(router, path);
+
     require('./user_has_friend')(router, path);
 
+    require('./user_has_gift')(router, path);
+
+    require('./user_has_imperfection')(router, path);
+
+    require('./user_has_location')(router, path);
+
+    require('./user_has_manifestation')(router, path);
+
+    require('./user_has_milestone')(router, path);
+
     require('./user_has_person')(router, path);
+
+    require('./user_has_protection')(router, path);
+
+    require('./user_has_skill')(router, path);
 
     require('./user_has_species')(router, path);
 
     require('./user_has_story')(router, path);
+
+    require('./user_has_weapon')(router, path);
 
     require('./user_has_world')(router, path);
 };

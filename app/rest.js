@@ -38,7 +38,7 @@ function userAuth(req, callback) {
 
     if(req.user.admin) return callback();
 
-    query(pool, 'SELECT owner FROM user_has_' + req.table.name + ' WHERE user_id = ? AND ' + req.table.name + '_id = ?',[req.user.id, req.table.id], function(err, result) {
+    query('SELECT owner FROM user_has_' + req.table.name + ' WHERE user_id = ? AND ' + req.table.name + '_id = ?',[req.user.id, req.table.id], function(err, result) {
         req.user.owner = !!result[0];
 
         if(!req.user.owner) return callback('Forbidden.');
@@ -92,7 +92,7 @@ exports.POST = function(req, res, next) {
                 varr = [];
 
             for(var key in body) {
-                if(body.hasOwnProperty(key)) {
+                if(body.hasOwnProperty(key) && body[key] !== '') {
                     call += key + ',';
                     vals += '?,';
                     varr.push(body[key]);
@@ -135,7 +135,7 @@ exports.PUT = function(req, res, next) {
                 varr = [];
 
             for(var key in body) {
-                if(body.hasOwnProperty(key)) {
+                if(body.hasOwnProperty(key) && body[key] !== '') {
                     call += key + ' = ?,';
                     varr.push(body[key]);
                 }
