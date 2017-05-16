@@ -24,7 +24,7 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    // Augmentation
+    require('./bionic_has_attribute')(router, path);
 
     require('./bionic_has_augmentation')(router, path);
 };

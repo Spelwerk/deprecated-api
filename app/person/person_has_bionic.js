@@ -63,6 +63,19 @@ module.exports = function(router, path) {
                 rest.personAuth(person, callback);
             },
             function(callback) {
+                rest.query('SELECT attribute_id, value FROM bionic_has_attribute WHERE bionic_id = ?', [insert.id], function(err, result) {
+                    insert.attribute = !!result[0] ? result : null;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query('INSERT INTO person_has_bionic (person_id,bionic_id) VALUES (?,?)', [person.id, insert.id], callback);
+            },
+            function(callback) {
+                rest.personInsertAttribute(person, insert, current, callback);
+            },
+            function(callback) {
                 rest.query('SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, energy.id], function(err, result) {
                     person.energy = parseInt(result[0].value);
 
@@ -75,9 +88,6 @@ module.exports = function(router, path) {
 
                     callback(err);
                 });
-            },
-            function(callback) {
-                rest.query('INSERT INTO person_has_bionic (person_id,bionic_id) VALUES (?,?)', [person.id, insert.id], callback);
             },
             function(callback) {
                 insert.value = insert.energy + person.energy;

@@ -46,6 +46,18 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
+    router.get(path + '/species/:id', function(req, res, next) {
+        var call = query + ' WHERE ' +
+            'expertise.canon = 1 AND ' +
+            'expertise.skill_id IS NULL AND ' +
+            'expertise.species_id = ? AND ' +
+            'expertise.manifestation_id IS NULL AND ' +
+            'expertise.doctrine_id IS NULL AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(req, res, next, call, [req.params.id]);
+    });
+
     router.get(path + '/manifestation/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
             'expertise.canon = 1 AND ' +

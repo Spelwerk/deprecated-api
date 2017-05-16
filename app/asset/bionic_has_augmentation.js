@@ -9,7 +9,7 @@ module.exports = function(router, path) {
         'augmentation.price, ' +
         'augmentation.energy, ' +
         'augmentation.legal, ' +
-        'augmentation.weapon_id, ' +
+        'augmentation.weapon_id ' +
         'FROM bionic_has_augmentation ' +
         'LEFT JOIN augmentation ON augmentation.id = bionic_has_augmentation.augmentation_id';
 
