@@ -1,5 +1,4 @@
 var async = require('async'),
-    logger = require('./../logger'),
     rest = require('./../rest'),
     hasher = require('./../hasher');
 
@@ -38,7 +37,7 @@ module.exports = function(router, table, path) {
         insert.world = parseInt(req.body.world_id);
 
         async.series([
-            function (callback) {
+            function(callback) {
                 rest.query('INSERT INTO story (secret,name,description,plot,world_id) VALUES (?,?,?,?,?)', [story.secret, insert.name, insert.description, insert.plot, insert.world], function(err, result) {
                     story.id = result.insertId;
 
@@ -104,7 +103,9 @@ module.exports = function(router, table, path) {
 
     // RELATIONSHIPS
 
-    require('./story_has_meeting')(router, table, path);
+    require('./story_has_location')(router, path);
 
-    require('./story_has_person')(router, table, path);
+    require('./story_has_meeting')(router, path);
+
+    require('./story_has_person')(router, path);
 };

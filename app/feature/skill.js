@@ -27,6 +27,6 @@ module.exports = function(router, tableName, path) {
             'skill.manifestation = 0 AND ' +
             'skill.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call);
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 };

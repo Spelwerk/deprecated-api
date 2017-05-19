@@ -7,7 +7,7 @@ module.exports = function(router, tableName, path) {
     var query = 'SELECT * FROM manifestation';
 
     router.get(path, function(req, res, next) {
-        var call = query + ' WHERE deleted is NULL';
+        var call = query + ' WHERE canon = 1 AND deleted is NULL';
 
         rest.QUERY(req, res, next, call);
     });

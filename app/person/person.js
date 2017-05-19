@@ -1,7 +1,6 @@
 var async = require('async'),
     rest = require('./../rest'),
-    hasher = require('./../hasher'),
-    tokens = require('./../tokens');
+    hasher = require('./../hasher');
 
 module.exports = function(router, tableName, path) {
     path = path || '/' + tableName;

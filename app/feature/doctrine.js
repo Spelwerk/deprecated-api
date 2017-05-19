@@ -6,12 +6,19 @@ module.exports = function(router, tableName, path) {
 
     var query = 'SELECT * FROM doctrine';
 
-    router.get(path + '/manifestation/:id', function(req, res, next) {
+    router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
-            'doctrine.manifestation_id = ? AND ' +
-            'doctrine.deleted IS NULL';
+            'deleted IS NULL';
 
         rest.QUERY(req, res, next, call);
+    });
+
+    router.get(path + '/manifestation/:id', function(req, res, next) {
+        var call = query + ' WHERE ' +
+            'manifestation_id = ? AND ' +
+            'deleted IS NULL';
+
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/all', function(req, res, next) {
@@ -61,7 +68,7 @@ module.exports = function(router, tableName, path) {
                 rest.query('SELECT owner FROM user_has_manifestation WHERE user_id = ? AND manifestation_id = ?', [req.user.id, manifestation.id], function(err, result) {
                     req.user.owner = !!result[0];
 
-                    if(!req.user.owner) return callback('User not allowed to post to this table row.');
+                    if(!req.user.owner) return callback('Forbidden.');
 
                     callback(err);
                 });

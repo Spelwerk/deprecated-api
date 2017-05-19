@@ -1,11 +1,7 @@
 var async = require('async'),
-    rest = require('./../rest'),
-    moment = require('moment'),
-    hasher = require('./../hasher');
+    rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
-
+module.exports = function(router, path) {
     var query = 'SELECT * FROM meeting';
 
     router.get(path + '/id/:id/meeting', function(req, res, next) {
@@ -38,26 +34,19 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'SELECT secret FROM story WHERE id = ? AND secret = ?', [story.id, story.secret], function(err, result) {
-                    story.auth = !!result[0];
+                rest.query('SELECT secret FROM story WHERE id = ? AND secret = ?', [story.id, story.secret], function(err, result) {
+                    if(!!result[0]) return callback('Forbidden');
 
-                    if(err) return callback(err);
-
-                    if(!story.auth) return callback({status: 403, code: 0, message: 'Forbidden'});
-
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'INSERT INTO meeting (name,description,notes,story_id) VALUES (?,?,?,?)', [insert.name, insert.description, insert.notes, story.id], callback);
+                rest.query('INSERT INTO meeting (name,description,notes,story_id) VALUES (?,?,?,?)', [insert.name, insert.description, insert.notes, story.id], callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 
@@ -77,26 +66,19 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query(pool, 'SELECT secret FROM story WHERE id = ? AND secret = ?', [story.id, story.secret], function(err, result) {
-                    story.auth = !!result[0];
+                rest.query('SELECT secret FROM story WHERE id = ? AND secret = ?', [story.id, story.secret], function(err, result) {
+                    if(!!result[0]) return callback('Forbidden');
 
-                    if(err) return callback(err);
-
-                    if(!story.auth) return callback({status: 403, code: 0, message: 'Forbidden'});
-
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
-                rest.query(pool, 'UPDATE meeting SET name = ?, description = ?, notes = ? WHERE id = ?', [insert.name, insert.description, insert.notes, meeting.id], callback);
+                rest.query('UPDATE meeting SET name = ?, description = ?, notes = ? WHERE id = ?', [insert.name, insert.description, insert.notes, meeting.id], callback);
             }
         ],function(err) {
-            if (err) {
-                var status = err.status ? err.status : 500;
-                res.status(status).send({code: err.code, message: err.message});
-            } else {
-                res.status(200).send();
-            }
+            if(err) return next(err);
+
+            res.status(200).send();
         });
     });
 };

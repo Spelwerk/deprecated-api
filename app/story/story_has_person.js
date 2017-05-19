@@ -1,10 +1,7 @@
-var mysql = require('mysql'),
-    async = require('async'),
-    logger = require('./../logger'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+var async = require('async'),
+    rest = require('./../rest');
 
-module.exports = function(router, table, path) {
+module.exports = function(router, path) {
     path = path || '/' + table;
 
     var query = 'SELECT ' +
