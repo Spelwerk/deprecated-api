@@ -25,22 +25,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/skill', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'skill';
-
-        rest.relationPost(req, res, next);
+        rest.relationPost(req, res, next, 'world', req.params.id, 'skill', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/skill/:id2', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'skill';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'world', req.params.id, 'skill', req.params.id2);
     });
 };

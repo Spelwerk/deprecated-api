@@ -116,8 +116,6 @@ module.exports = function(router, tableName, path) {
                 rest.query(call, null, callback);
             },
             function(callback) {
-                if(req.user.admin) return callback();
-
                 rest.query('INSERT INTO user_has_world (user_id,world_id,owner) VALUES (?,?,1)', [req.user.id, world.id], callback);
             }
         ],function(err) {
@@ -158,7 +156,7 @@ module.exports = function(router, tableName, path) {
 
         async.series([
             function(callback) {
-                rest.userAuth(req, callback);
+                rest.userAuth(req, 'NAME', ID, callback);
             },
             function(callback) {
                 var call = 'UPDATE world SET ',
@@ -190,19 +188,11 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/revive/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.REVIVE(req, res, next);
+        rest.REVIVE(req, res, next, tableName, req.params.id);
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.DELETE(req, res, next);
+        rest.DELETE(req, res, next, tableName, req.params.id);
     });
 
     // RELATIONSHIPS

@@ -24,22 +24,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/weaponmod', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'weaponmod';
-
-        rest.relationPost(req, res, next);
+        rest.relationPost(req, res, next, 'world', req.params.id, 'weaponmod', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/weaponmod/:id2', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'weaponmod';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'world', req.params.id, 'weaponmod', req.params.id2);
     });
 };

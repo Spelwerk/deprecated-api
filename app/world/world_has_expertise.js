@@ -81,23 +81,23 @@ module.exports = function(router, path) {
         rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
     });
 
+    // person creation (manifestation expertise select)
+    router.get(path + '/id/:id/expertise/manifestation/:id2/doctrine', function(req, res, next) {
+        var call = query + ' WHERE ' +
+            'expertise.canon = 1 AND ' +
+            'world_has_expertise.world_id = ? AND ' +
+            'expertise.manifestation_id = ? AND ' +
+            'expertise.doctrine_id IS NOT NULL AND ' +
+            'expertise.deleted IS NULL';
+
+        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
+    });
+
     router.post(path + '/id/:id/expertise', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'expertise';
-
-        rest.relationPost(req, res, next);
+        rest.relationPost(req, res, next, 'world', req.params.id, 'expertise', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/expertise/:id2', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'expertise';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'world', req.params.id, 'expertise', req.params.id2);
     });
 };

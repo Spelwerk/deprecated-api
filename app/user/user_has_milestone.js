@@ -13,14 +13,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/milestone', function(req, res, next) {
-        req.relation.name = 'milestone';
-
-        rest.userRelationPost(req, res, next);
+        rest.userRelationPost(req, res, next, req.params.id, 'milestone', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/milestone/:id2', function(req, res, next) {
-        req.relation.name = 'milestone';
-
-        rest.userRelationDelete(req, res, next);
+        rest.userRelationDelete(req, res, next, req.params.id, 'milestone', req.params.id2);
     });
 };

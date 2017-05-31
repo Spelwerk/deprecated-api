@@ -53,8 +53,6 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(!req.user.admin) return callback();
-
                 rest.query('INSERT INTO user_has_skill (user_id,skill_id,owner) VALUES (?,?,1)', [req.user.id, skill.id], callback);
             },
             function (callback) {
@@ -65,8 +63,6 @@ module.exports = function(router, tableName, path) {
                 })
             },
             function(callback) {
-                if(!req.user.admin) return callback();
-
                 rest.query('INSERT INTO user_has_attribute (user_id,attribute_id,owner) VALUES (?,?,1)', [req.user.id, power.id], callback);
             },
             function (callback) {
@@ -77,8 +73,6 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(!req.user.admin) return callback();
-
                 rest.query('INSERT INTO user_has_manifestation (user_id,manifestation_id,owner) VALUES (?,?,1)', [req.user.id, insert.id], callback);
             }
         ],function(err) {
@@ -89,30 +83,18 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.PUT(req, res, next);
+        rest.PUT(req, res, next, tableName, req.params.id);
     });
 
     router.put(path + '/id/:id/canon', function(req, res, next) {
-        req.table.name = tableName;
-
-        rest.CANON(req, res, next);
+        rest.CANON(req, res, next, tableName, req.params.id);
     });
 
     router.put(path + '/revive/:id', function(req, res, next) {
-        req.table.name = tableName;
-
-        rest.REVIVE(req, res, next);
+        rest.REVIVE(req, res, next, tableName, req.params.id);
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.DELETE(req, res, next);
+        rest.DELETE(req, res, next, tableName, req.params.id);
     });
 };

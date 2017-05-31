@@ -77,8 +77,6 @@ module.exports = function(router, tableName, path) {
                 rest.query('INSERT INTO species_has_weapon (species_id,weapon_id) VALUES (?,?)', [insert.id, weapon], callback);
             },
             function(callback) {
-                if(req.user.admin) return callback();
-
                 rest.query('INSERT INTO user_has_species (user_id,species_id,owner) VALUES (?,?,1)', [req.user.id, insert.id], callback);
             }
         ],function(err) {
@@ -89,31 +87,19 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.PUT(req, res, next);
+        rest.PUT(req, res, next, tableName, req.params.id);
     });
 
     router.put(path + '/id/:id/canon', function(req, res, next) {
-        req.table.name = tableName;
-
-        rest.CANON(req, res, next);
+        rest.CANON(req, res, next, tableName, req.params.id);
     });
 
     router.put(path + '/revive/:id', function(req, res, next) {
-        req.table.name = tableName;
-
-        rest.REVIVE(req, res, next);
+        rest.REVIVE(req, res, next, tableName, req.params.id);
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.DELETE(req, res, next);
+        rest.DELETE(req, res, next, tableName, req.params.id);
     });
 
     require('./species_has_attribute')(router, path);

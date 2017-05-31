@@ -23,22 +23,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/augmentation', function(req, res, next) {
-        req.table.name = 'bionic';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'augmentation';
-
-        rest.relationPost(req, res, next);
+        rest.relationPost(req, res, next, 'bionic', req.params.id, 'augmentation', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/augmentation/:id2', function(req, res, next) {
-        req.table.name = 'bionic';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'augmentation';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'bionic', req.params.id, 'augmentation', req.params.id2);
     });
 };

@@ -35,6 +35,18 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.query('INSERT INTO person_has_doctrine (person_id,doctrine_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
+            },
+            function(callback) {
+                rest.query('SELECT calculated FROM person WHERE id = ?', [person.id], function(err, result) {
+                    person.calculated = result[0].calculated;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                if(!person.calculated) return callback();
+
+                rest.query('UPDATE person_creation SET point_supernatural = 0 WHERE person_id = ?', [person.id], callback);
             }
         ],function(err) {
             if(err) return next(err);

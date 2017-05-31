@@ -38,22 +38,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/background', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'background';
-
-        rest.relationPost(req, res, next);
+        rest.relationPost(req, res, next, 'world', req.params.id, 'background', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/background/:id2', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'background';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'world', req.params.id, 'background', req.params.id2);
     });
 };

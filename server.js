@@ -34,7 +34,6 @@ app.use(function(req, res, next) {
 
     req.table.name = null;
     req.table.admin = true;
-    req.table.user = false;
 
     req.relation.name = null;
 

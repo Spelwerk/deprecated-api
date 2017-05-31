@@ -46,7 +46,7 @@ module.exports = function(router, path) {
 
         async.series([
             function(callback) {
-                rest.userAuth(req, callback);
+                rest.userAuth(req, 'NAME', ID, callback);
             },
             function(callback) {
                 rest.query('SELECT id FROM skill WHERE canon = 1 AND species_id = ?', [insert.id], function(err, result) {
@@ -99,12 +99,6 @@ module.exports = function(router, path) {
     });
 
     router.delete(path + '/id/:id/species/:id2', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'species';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'world', req.params.id, 'species', req.params.id2);
     });
 };

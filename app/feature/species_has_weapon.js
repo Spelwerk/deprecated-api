@@ -13,22 +13,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/weapon', function(req, res, next) {
-        req.table.name = 'species';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'weapon';
-
-        rest.relationPost(req, res, next);
+        rest.relationPost(req, res, next, 'species', req.params.id, 'weapon', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/weapon/:id2', function(req, res, next) {
-        req.table.name = 'species';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'weapon';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'species', req.params.id, 'weapon', req.params.id2);
     });
 };

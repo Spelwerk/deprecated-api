@@ -1,6 +1,5 @@
 var async = require('async'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+    rest = require('./../rest');
 
 module.exports = function(router, tableName, path) {
     path = path || '/' + tableName;
@@ -46,8 +45,6 @@ module.exports = function(router, tableName, path) {
             world = {},
             species = {},
             points = {};
-
-        person.secret = hasher(32);
 
         insert.playable = parseInt(req.body.playable) || 1;
         insert.supernatural = parseInt(req.body.supernatural) || 0;
@@ -152,7 +149,7 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                rest.query('INSERT INTO person (secret,playable,nickname,occupation,world_id) VALUES (?,?,?,?,?)', [person.secret, insert.playable, insert.nickname, insert.occupation, world.id], function(err,result) {
+                rest.query('INSERT INTO person (playable,nickname,occupation,world_id) VALUES (?,?,?,?)', [insert.playable, insert.nickname, insert.occupation, world.id], function(err,result) {
                     person.id = result.insertId;
 
                     callback(err);
@@ -247,7 +244,7 @@ module.exports = function(router, tableName, path) {
                     function(callback) {
                         if(!req.user.id) callback();
 
-                        rest.query('INSERT INTO user_has_person (user_id,person_id,secret,owner) VALUES (?,?,?,1)', [req.user.id, person.id, person.secret], callback);
+                        rest.query('INSERT INTO user_has_person (user_id,person_id,owner) VALUES (?,?,1)', [req.user.id, person.id], callback);
                     }
                 ],function(err) {
                     callback(err);
@@ -268,7 +265,6 @@ module.exports = function(router, tableName, path) {
             description = {};
 
         person.id = parseInt(req.params.id);
-        person.secret = req.body.secret;
 
         insert.playable = parseInt(req.body.playable) || null;
         insert.calculated = parseInt(req.body.calculated) || null;
@@ -285,7 +281,6 @@ module.exports = function(router, tableName, path) {
         creation.point_skill = parseInt(req.body.point_skill) || null;
         creation.point_supernatural = parseInt(req.body.point_supernatural) || null;
 
-        playable.cheated = parseInt(req.body.cheated) || null;
         playable.supernatural = parseInt(req.body.supernatural) || null;
         playable.age = parseInt(req.body.age) || null;
 
@@ -303,8 +298,11 @@ module.exports = function(router, tableName, path) {
         description.picture_path = req.body.picture_path || null;
 
         async.series([
-            function (callback) {
-                rest.query('SELECT secret,playable,calculated FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err, result) {
+            function(callback) {
+                rest.userAuth(req, 'person', req.params.id, callback);
+            },
+            function(callback) {
+                rest.query('SELECT playable,calculated FROM person WHERE id = ?', [person.id], function(err, result) {
                     person.auth = !!result[0];
                     person.playable = !!result[0];
                     person.calculated = !!result[0];
@@ -314,7 +312,7 @@ module.exports = function(router, tableName, path) {
                     callback(err);
                 });
             },
-            function (callback) {
+            function(callback) {
                 var call = 'UPDATE person SET ',
                     values_array = [],
                     query_amount = 0;
@@ -334,7 +332,7 @@ module.exports = function(router, tableName, path) {
 
                 rest.query(call, values_array, callback);
             },
-            function (callback) {
+            function(callback) {
                 if(!person.playable || person.calculated) return callback();
 
                 var call = 'UPDATE person_creation SET ',
@@ -356,7 +354,7 @@ module.exports = function(router, tableName, path) {
 
                 rest.query(call, values_array, callback);
             },
-            function (callback) {
+            function(callback) {
                 if(!person.playable) return callback();
 
                 var call = 'UPDATE person_playable SET ',
@@ -378,7 +376,7 @@ module.exports = function(router, tableName, path) {
 
                 rest.query(call, values_array, callback);
             },
-            function (callback) {
+            function(callback) {
                 var call = 'UPDATE person_description SET ',
                     values_array = [],
                     query_amount = 0;
@@ -406,20 +404,48 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/revive/:id', function(req, res, next) {
-        req.table.name = tableName;
-
-        rest.REVIVE(req, res, next);
+        rest.REVIVE(req, res, next, tableName, req.params.id);
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.DELETE(req, res, next);
+        rest.DELETE(req, res, next, tableName, req.params.id);
     });
 
     // SPECIAL
+
+
+    router.put(path + '/id/:id/cheat', function(req, res, next) {
+        var person = {};
+
+        person.id = parseInt(req.params.id);
+
+        async.series([
+            function(callback) {
+                rest.userAuth(req, 'person', req.params.id, callback);
+            },
+            function(callback) {
+                rest.query('SELECT playable,calculated FROM person WHERE id = ?', [person.id], function(err, result) {
+                    person.auth = !!result[0];
+                    person.playable = !!result[0];
+                    person.calculated = !!result[0];
+
+                    if(!person.auth) return callback('Forbidden');
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query('UPDATE person SET popularity = 0, thumbsup = 0, thumbsdown = 0 WHERE id = ?', [person.id], callback);
+            },
+            function(callback) {
+                rest.query('UPDATE person_playable SET cheated = 1 WHERE person_id = ?', [person.id], callback);
+            }
+        ],function(err) {
+            if(err) return next(err);
+
+            res.status(200).send();
+        });
+    });
 
     router.put(path + '/id/:id/background', function(req, res, next) {
         var person = {},
@@ -427,13 +453,11 @@ module.exports = function(router, tableName, path) {
             current = {};
 
         person.id = parseInt(req.params.id);
-        person.secret = req.body.secret;
-
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, 'person', req.params.id, callback);
             },
             function(callback) {
                 async.parallel([
@@ -509,14 +533,12 @@ module.exports = function(router, tableName, path) {
             insert = {},
             current = {};
 
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
+        person.id = parseInt(req.params.id);
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, 'person', req.params.id, callback);
             },
             function(callback) {
                 async.parallel([
@@ -568,14 +590,12 @@ module.exports = function(router, tableName, path) {
             insert = {},
             current = {};
 
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
+        person.id = parseInt(req.params.id);
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, 'person', req.params.id, callback);
             },
             function(callback) {
                 async.parallel([
@@ -627,14 +647,12 @@ module.exports = function(router, tableName, path) {
             manifestation = {},
             insert = {};
 
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
+        person.id = parseInt(req.params.id);
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, 'person', req.params.id, callback);
             },
             function(callback) {
                 rest.query('UPDATE person_playable SET manifestation_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
@@ -665,14 +683,12 @@ module.exports = function(router, tableName, path) {
             insert = {},
             current = {};
 
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
+        person.id = parseInt(req.params.id);
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, 'person', req.params.id, callback);
             },
             function(callback) {
                 async.parallel([

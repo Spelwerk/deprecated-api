@@ -52,22 +52,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/milestone', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'milestone';
-
-        rest.relationPost(req, res, next);
+        rest.relationPost(req, res, next, 'world', req.params.id, 'milestone', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/milestone/:id2', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'milestone';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'world', req.params.id, 'milestone', req.params.id2);
     });
 };

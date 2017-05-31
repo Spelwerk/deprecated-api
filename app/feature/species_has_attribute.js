@@ -22,22 +22,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/attribute', function(req, res, next) {
-        req.table.name = 'species';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'attribute';
-
-        rest.relationPostWithValue(req, res, next);
+        rest.relationPostWithValue(req, res, next, 'species', req.params.id, 'attribute', req.body.insert_id, req.body.value);
     });
 
     router.delete(path + '/id/:id/attribute/:id2', function(req, res, next) {
-        req.table.name = 'species';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'attribute';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'species', req.params.id, 'attribute', req.params.id2);
     });
 };

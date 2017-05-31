@@ -13,22 +13,14 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/attribute', function(req, res, next) {
-        req.table.name = 'background';
-        req.table.admin = false;
-        req.table.user = true;
+        rest.relationPostWithValue(req, res, next, 'background', req.params.id, 'attribute', req.body.insert_id, req.body.value);
+    });
 
-        req.relation.name = 'attribute';
-
-        rest.relationPostWithValue(req, res, next);
+    router.put(path + '/id/:id/attribute', function(req, res, next) {
+        rest.relationPutValue(req, res, next, 'background', req.params.id, 'attribute', req.body.insert_id, req.body.value);
     });
 
     router.delete(path + '/id/:id/attribute/:id2', function(req, res, next) {
-        req.table.name = 'background';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'attribute';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'background', req.params.id, 'attribute', req.params.id2);
     });
 };

@@ -30,22 +30,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/bionic', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'bionic';
-
-        rest.relationPost(req, res, next);
+        rest.relationPost(req, res, next, 'world', req.params.id, 'bionic', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/bionic/:id2', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'bionic';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'world', req.params.id, 'bionic', req.params.id2);
     });
 };

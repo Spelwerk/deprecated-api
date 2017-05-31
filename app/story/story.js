@@ -1,9 +1,8 @@
 var async = require('async'),
-    rest = require('./../rest'),
-    hasher = require('./../hasher');
+    rest = require('./../rest');
 
-module.exports = function(router, table, path) {
-    path = path || '/' + table;
+module.exports = function(router, tableName, path) {
+    path = path || '/' + tableName;
 
     var query = 'SELECT * FROM story';
 
@@ -18,7 +17,7 @@ module.exports = function(router, table, path) {
     });
 
     router.get(path + '/deleted', function(req, res, next) {
-        var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
+        var call = query + ' WHERE ' + tableName + '.deleted is NOT NULL';
 
         rest.QUERY(req, res, next, call);
     });
@@ -29,8 +28,6 @@ module.exports = function(router, table, path) {
         var story = {},
             insert = {};
 
-        story.secret = hasher(32);
-
         insert.name = req.body.name;
         insert.description = req.body.description;
         insert.plot = req.body.plot;
@@ -38,7 +35,7 @@ module.exports = function(router, table, path) {
 
         async.series([
             function(callback) {
-                rest.query('INSERT INTO story (secret,name,description,plot,world_id) VALUES (?,?,?,?,?)', [story.secret, insert.name, insert.description, insert.plot, insert.world], function(err, result) {
+                rest.query('INSERT INTO story (name,description,plot,world_id) VALUES (?,?,?,?)', [insert.name, insert.description, insert.plot, insert.world], function(err, result) {
                     story.id = result.insertId;
 
                     callback(err);
@@ -47,7 +44,7 @@ module.exports = function(router, table, path) {
             function(callback) {
                 if(!req.user.id) return callback();
 
-                rest.query('INSERT INTO user_has_story (user_id,person_id,secret,owner) VALUES (?,?,?,1)', [req.user.id, story.id, story.secret], callback);
+                rest.query('INSERT INTO user_has_story (user_id,story_id,owner) VALUES (?,?,1)', [req.user.id, story.id], callback);
             }
         ],function(err) {
             if(err) return next(err);
@@ -61,7 +58,6 @@ module.exports = function(router, table, path) {
             insert = {};
 
         story.id = parseInt(req.params.id);
-        story.secret = req.body.secret;
 
         insert.name = req.body.name;
         insert.description = req.body.description;
@@ -88,17 +84,11 @@ module.exports = function(router, table, path) {
     });
 
     router.put(path + '/revive/:id', function(req, res, next) {
-        req.table.name = 'story';
-
-        rest.REVIVE(req, res, next);
+        rest.REVIVE(req, res, next, tableName, req.params.id);
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        req.table.name = 'story';
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.DELETE(req, res, next);
+        rest.DELETE(req, res, next, tableName, req.params.id);
     });
 
     // RELATIONSHIPS

@@ -22,14 +22,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/world', function(req, res, next) {
-        req.relation.name = 'world';
-
-        rest.userRelationPost(req, res, next);
+        rest.userRelationPost(req, res, next, req.params.id, 'world', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/world/:id2', function(req, res, next) {
-        req.relation.name = 'world';
-
-        rest.userRelationDelete(req, res, next);
+        rest.userRelationDelete(req, res, next, req.params.id, 'world', req.params.id2);
     });
 };

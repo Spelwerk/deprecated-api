@@ -17,14 +17,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/friend', function(req, res, next) {
-        req.relation.name = 'friend';
-
-        rest.userRelationPost(req, res, next);
+        rest.userRelationPost(req, res, next, req.params.id, 'friend', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/friend/:id2', function(req, res, next) {
-        req.relation.name = 'friend';
-
-        rest.userRelationDelete(req, res, next);
+        rest.userRelationDelete(req, res, next, req.params.id, 'friend', req.params.id2);
     });
 };

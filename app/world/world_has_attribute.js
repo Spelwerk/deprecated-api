@@ -3,16 +3,7 @@ var mysql = require('mysql'),
     tokens = require('./../tokens');
 
 module.exports = function(router, path) {
-    var query = 'SELECT ' +
-        'attribute.id, ' +
-        'attribute.canon, ' +
-        'attribute.name, ' +
-        'attribute.description, ' +
-        'attribute.icon, ' +
-        'attribute.attributetype_id, ' +
-        'attributetype.maximum ' +
-        'world_has_attribute.value, ' +
-        'FROM world_has_attribute ' +
+    var query = 'SELECT * FROM world_has_attribute ' +
         'LEFT JOIN attribute ON attribute.id = world_has_attribute.attribute_id ' +
         'LEFT JOIN attributetype ON attributetype.id = attribute.attributetype_id';
 
@@ -44,23 +35,11 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/attribute', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'attribute';
-
-        rest.relationPostWithValue(req, res, next);
+        rest.relationPostWithValue(req, res, next, 'world', req.params.id, 'attribute', req.body.insert_id, req.body.value);
     });
 
     router.put(path + '/id/:id/attribute', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'attribute';
-
-        rest.relationPutValue(req, res, next);
+        rest.relationPutValue(req, res, next, 'world', req.params.id, 'attribute', req.body.insert_id, req.body.value);
     });
 
     router.delete(path + '/id/:id/attribute/:id2', function(req, res, next) {
@@ -70,6 +49,6 @@ module.exports = function(router, path) {
 
         req.relation.name = 'attribute';
 
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'world', req.params.id, 'attribute', req.params.id2);
     });
 };

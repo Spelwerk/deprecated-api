@@ -54,8 +54,6 @@ module.exports = function(router, tableName, path) {
 
         async.series([
             function(callback) {
-                if(req.user.admin) return callback();
-
                 rest.query('SELECT * FROM manifestation WHERE id = ?', [manifestation.id], function(err, result) {
                     manifestation.skill = result[0].skill_id;
 
@@ -81,20 +79,16 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(req.user.admin) return callback();
-
                 rest.query('INSERT INTO user_has_doctrine (user_id,doctrine_id,owner) VALUES (?,?,1)', [req.user.id, doctrine.id], callback);
             },
             function(callback) {
-                rest.query('INSERT INTO expertise (name,description,icon,skill_id,manifestation_id,doctrine_id) VALUES (?,?,?,?,?,?)', [insert.name, insert.description, insert.icon, manifestation.skill, manifestation.id, insert.id], function(err, result) {
+                rest.query('INSERT INTO expertise (name,description,skill_id,manifestation_id,doctrine_id) VALUES (?,?,?,?,?)', [insert.name, insert.description, manifestation.skill, manifestation.id, insert.id], function(err, result) {
                     expertise.id = result.insertId;
 
                     callback(err);
                 })
             },
             function(callback) {
-                if(req.user.admin) return callback();
-
                 rest.query('INSERT INTO user_has_expertise (user_id,expertise_id,owner) VALUES (?,?,1)', [req.user.id, expertise.id], callback);
             }
         ],function(err) {
@@ -105,30 +99,18 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.PUT(req, res, next);
+        rest.PUT(req, res, next, tableName, req.params.id);
     });
 
     router.put(path + '/id/:id/canon', function(req, res, next) {
-        req.table.name = tableName;
-
-        rest.CANON(req, res, next);
+        rest.CANON(req, res, next, tableName, req.params.id);
     });
 
     router.put(path + '/id/:id/revive', function(req, res, next) {
-        req.table.name = tableName;
-
-        rest.REVIVE(req, res, next);
+        rest.REVIVE(req, res, next, tableName, req.params.id);
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.DELETE(req, res, next);
+        rest.DELETE(req, res, next, tableName, req.params.id);
     });
 };

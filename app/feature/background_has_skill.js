@@ -13,22 +13,10 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/skill', function(req, res, next) {
-        req.table.name = 'background';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'skill';
-
-        rest.relationPostWithValue(req, res, next);
+        rest.relationPostWithValue(req, res, next, 'background', req.params.id, 'skill', req.body.insert_id, req.body.value);
     });
 
     router.delete(path + '/id/:id/skill/:id2', function(req, res, next) {
-        req.table.name = 'background';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'skill';
-
-        rest.relationDelete(req, res, next);
+        rest.relationDelete(req, res, next, 'background', req.params.id, 'skill', req.params.id2);
     });
 };

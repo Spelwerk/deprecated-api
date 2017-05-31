@@ -5,7 +5,8 @@ var async = require('async'),
     mailgun = require('mailgun-js')({apiKey: config.mailgun.apikey, domain: config.mailgun.domain}),
     mailcomposer = require('mailcomposer'),
     logger = require('./logger'),
-    tokens = require('./tokens');
+    tokens = require('./tokens'),
+    base = require('./base');
 
 var file = 'rest.js';
 
@@ -21,24 +22,14 @@ function query(call, params, callback) {
     });
 }
 
-function personAuth(person, callback) {
-    query('SELECT secret FROM person WHERE id = ? AND secret = ?', [person.id, person.secret], function(err, result) {
-        person.auth = !!result[0];
-
-        if(!person.auth) return callback('Forbidden.');
-
-        callback(err);
-    });
-}
-
-function userAuth(req, callback) {
-    if(req.table.user && !req.user.id) return callback('Forbidden.');
+function userAuth(req, tableName, tableId, callback) {
+    if(!req.user.id) return callback('Forbidden.');
 
     if(req.table.admin && !req.user.admin) return callback('Forbidden.');
 
     if(req.user.admin) return callback();
 
-    query('SELECT owner FROM user_has_' + req.table.name + ' WHERE user_id = ? AND ' + req.table.name + '_id = ?',[req.user.id, req.table.id], function(err, result) {
+    query('SELECT owner FROM user_has_' + tableName + ' WHERE user_id = ? AND ' + tableName + '_id = ?', [req.user.id, tableId], function(err, result) {
         req.user.owner = !!result[0];
 
         if(!req.user.owner) return callback('Forbidden.');
@@ -72,15 +63,14 @@ function sendMail(email, subject, text, callback) {
 
 module.exports.query = query;
 module.exports.userAuth = userAuth;
-module.exports.personAuth = personAuth;
 module.exports.sendMail = sendMail;
 
 // IMPROVED DEFAULT
 
 exports.POST = function(req, res, next) {
-    if(req.table.admin && !req.user.admin) return next('Forbidden.');
+    if(!req.user.id) return next('Forbidden.');
 
-    if(req.table.user && !req.user.id) return next('Forbidden.');
+    if(req.table.admin && !req.user.admin) return next('Forbidden.');
 
     var insert = {};
 
@@ -106,32 +96,29 @@ exports.POST = function(req, res, next) {
 
             query(call, varr, function(err, result) {
                 insert.id = parseInt(result.insertId);
+                insert.cs = base.encode(insert.id);
 
                 callback(err);
             });
         },
         function(callback) {
-            if(req.user.admin) return callback();
-
             query('INSERT INTO user_has_' + req.table.name + ' (user_id,' + req.table.name + '_id,owner) VALUES (?,?,1)', [req.user.id, insert.id], callback);
         }
     ],function(err) {
         if(err) return next(err);
 
-        res.status(200).send({id: insert.id});
+        res.status(200).send({id: insert.id, cs: insert.cs});
     });
 };
 
-exports.PUT = function(req, res, next) {
-    req.table.id = parseInt(req.params.id);
-
+exports.PUT = function(req, res, next, tableName, tableId) {
     async.series([
         function(callback) {
-            userAuth(req, callback);
+            userAuth(req, tableName, tableId, callback);
         },
         function(callback) {
             var body = req.body,
-                call = 'UPDATE ' + req.table.name + ' SET ',
+                call = 'UPDATE ' + tableName + ' SET ',
                 varr = [];
 
             for(var key in body) {
@@ -143,7 +130,7 @@ exports.PUT = function(req, res, next) {
 
             call = call.slice(0, -1) + ' WHERE id = ?';
 
-            varr.push(req.table.id);
+            varr.push(tableId);
 
             query(call, varr, callback);
         }
@@ -154,15 +141,13 @@ exports.PUT = function(req, res, next) {
     });
 };
 
-exports.DELETE = function(req, res, next) {
-    req.table.id = parseInt(req.params.id);
-
+exports.DELETE = function(req, res, next, tableName, tableId) {
     async.series([
         function(callback) {
-            userAuth(req, callback);
+            userAuth(req, tableName, tableId, callback);
         },
         function(callback) {
-            query('UPDATE ' + req.table.name + ' SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [req.table.id], callback);
+            query('UPDATE ' + tableName + ' SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [tableId], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -171,15 +156,13 @@ exports.DELETE = function(req, res, next) {
     });
 };
 
-exports.REVIVE = function(req, res, next) {
-    req.table.id = parseInt(req.params.id);
-
+exports.REVIVE = function(req, res, next, tableName, tableId) {
     async.series([
         function(callback) {
-            userAuth(req, callback);
+            userAuth(req, tableName, tableId, callback);
         },
         function(callback) {
-            query('UPDATE ' + req.table.name + ' SET deleted = NULL WHERE id = ?', [req.table.id], callback);
+            query('UPDATE ' + tableName + ' SET deleted = NULL WHERE id = ?', [tableId], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -188,15 +171,13 @@ exports.REVIVE = function(req, res, next) {
     });
 };
 
-exports.CANON = function(req, res, next) {
-    req.table.id = parseInt(req.params.id);
-
+exports.CANON = function(req, res, next, tableName, tableId) {
     async.series([
         function(callback) {
-            userAuth(req, callback);
+            userAuth(req, tableName, tableId, callback);
         },
         function(callback) {
-            query('UPDATE ' + req.table.name + ' SET canon = 1 WHERE id = ?', [req.table.id], callback);
+            query('UPDATE ' + tableName + ' SET canon = 1 WHERE id = ?', [tableId], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -256,16 +237,17 @@ exports.QUERY = function(req, res, next, call, params, order) {
 
 // RELATIONS
 
-exports.relationPost = function(req, res, next) {
-    req.table.id = parseInt(req.params.id);
-    req.relation.id = parseInt(req.body.insert_id);
+exports.relationPost = function(req, res, next, tableName, tableId, relationName, relationId) {
+    if(!parseInt(tableId)) return next('Parsing Error.');
+
+    if(!parseInt(relationId)) return next('Parsing Error.');
 
     async.series([
         function (callback) {
-            userAuth(req, callback);
+            userAuth(req, tableName, tableId, callback);
         },
         function (callback) {
-            query('INSERT INTO ' + req.table.name + '_has_' + req.relation.name + ' (' + req.table.name + '_id,' + req.relation.name + '_id) VALUES (?,?)', [req.table.id, req.relation.id], callback);
+            query('INSERT INTO ' + tableName + '_has_' + relationName + ' (' + tableName + '_id,' + relationName + '_id) VALUES (?,?)', [parseInt(tableId), parseInt(relationId)], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -274,17 +256,19 @@ exports.relationPost = function(req, res, next) {
     });
 };
 
-exports.relationPostWithValue = function(req, res, next) {
-    req.table.id = parseInt(req.params.id);
-    req.relation.id = parseInt(req.body.insert_id);
-    req.relation.value = parseInt(req.body.value);
+exports.relationPostWithValue = function(req, res, next, tableName, tableId, relationName, relationId, relationValue) {
+    if(!parseInt(tableId)) return next('Parsing Error.');
+
+    if(!parseInt(relationId)) return next('Parsing Error.');
+
+    if(!parseInt(relationValue)) return next('Parsing Error.');
 
     async.series([
         function (callback) {
-            userAuth(req, callback);
+            userAuth(req, tableName, tableId, callback);
         },
         function (callback) {
-            query('INSERT INTO ' + req.table.name + '_has_' + req.relation.name + ' (' + req.table.name + '_id,' + req.relation.name + '_id,value) VALUES (?,?,?)', [req.table.id, req.relation.id, req.relation.value], callback);
+            query('INSERT INTO ' + tableName + '_has_' + relationName + ' (' + tableName + '_id,' + relationName + '_id,value) VALUES (?,?,?)', [parseInt(tableId), parseInt(relationId), parseInt(relationValue)], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -293,17 +277,19 @@ exports.relationPostWithValue = function(req, res, next) {
     });
 };
 
-exports.relationPutValue = function(req, res, next) {
-    req.table.id = parseInt(req.params.id);
-    req.relation.id = parseInt(req.body.insert_id);
-    req.relation.value = parseInt(req.body.value);
+exports.relationPutValue = function(req, res, next, tableName, tableId, relationName, relationId, relationValue) {
+    if(!parseInt(tableId)) return next('Parsing Error.');
+
+    if(!parseInt(relationId)) return next('Parsing Error.');
+
+    if(!parseInt(relationValue)) return next('Parsing Error.');
 
     async.series([
         function(callback) {
-            userAuth(req, callback);
+            userAuth(req, tableName, tableId, callback);
         },
         function(callback) {
-            query('UPDATE ' + req.table.name + '_has_' + req.relation.name + ' SET value = ? WHERE ' + req.table.name + '_id = ? AND ' + req.relation.name + '_id = ?', [req.relation.value, req.table.id, req.relation.id], callback);
+            query('UPDATE ' + tableName + '_has_' + relationName + ' SET value = ? WHERE ' + tableName + '_id = ? AND ' + relationName + '_id = ?', [parseInt(relationValue), parseInt(tableId), parseInt(relationId)], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -312,16 +298,17 @@ exports.relationPutValue = function(req, res, next) {
     });
 };
 
-exports.relationDelete = function(req, res, next) {
-    req.table.id = parseInt(req.params.id);
-    req.relation.id = parseInt(req.params.id2);
+exports.relationDelete = function(req, res, next, tableName, tableId, relationName, relationId) {
+    if(!parseInt(tableId)) return next('Parsing Error.');
+
+    if(!parseInt(relationId)) return next('Parsing Error.');
 
     async.series([
         function(callback) {
-            userAuth(req, callback);
+            userAuth(req, tableName, tableId, callback);
         },
         function(callback) {
-            query('DELETE FROM ' + req.table.name + '_has_' + req.relation.name + ' WHERE ' + req.table.name + '_id = ? AND ' + req.relation.name + '_id = ?', [req.table.id, req.relation.id], callback);
+            query('DELETE FROM ' + tableName + '_has_' + relationName + ' WHERE ' + tableName + '_id = ? AND ' + relationName + '_id = ?', [parseInt(tableId), parseInt(relationId)], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -414,22 +401,17 @@ exports.personInsertSkill = function(person, insert, current, callback) {
     query(call, null, callback);
 };
 
-exports.personCustomDescription = function(req, res, next) {
-    var person = {},
-        insert = {};
+exports.personCustomDescription = function(req, res, next, personId, tableName, tableId, tableCustom) {
+    if(!parseInt(personId)) return next('Parsing Error.');
 
-    person.id = parseInt(req.params.id);
-    person.secret = req.body.secret;
-
-    insert.id = parseInt(req.params.id2);
-    insert.custom = req.body.custom;
+    if(!parseInt(tableId)) return next('Parsing Error.');
 
     async.series([
         function(callback) {
-            personAuth(person, callback);
+            userAuth(req, 'person', personId, callback);
         },
         function(callback) {
-            query('UPDATE person_has_' + req.table.name + ' SET custom = ? WHERE person_id = ? AND ' + req.table.name + '_id = ?', [insert.custom, person.id, insert.id], callback);
+            query('UPDATE person_has_' + tableName + ' SET custom = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [tableCustom, personId, tableId], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -438,22 +420,19 @@ exports.personCustomDescription = function(req, res, next) {
     });
 };
 
-exports.personEquip = function(req, res, next) {
-    var person = {},
-        insert = {};
+exports.personEquip = function(req, res, next, personId, tableName, tableId, tableEquip) {
+    if(!parseInt(personId)) return next('Parsing Error.');
 
-    person.id = parseInt(req.params.id);
-    person.secret = req.body.secret;
+    if(!parseInt(tableId)) return next('Parsing Error.');
 
-    insert.id = parseInt(req.params.id2);
-    insert.equip = parseInt(req.params.equip);
+    if(!parseInt(tableEquip)) return next('Parsing Error.');
 
     async.series([
         function(callback) {
-            personAuth(person, callback);
+            userAuth(req, 'person', personId, callback);
         },
         function(callback) {
-            query('UPDATE person_has_' + req.table.name + ' SET equipped = ? WHERE person_id = ? AND ' + req.table.name + '_id = ?', [insert.equip, person.id, insert.id], callback);
+            query('UPDATE person_has_' + tableName + ' SET equipped = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [tableEquip, personId, tableId], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -462,21 +441,17 @@ exports.personEquip = function(req, res, next) {
     });
 };
 
-exports.personDeleteRelation = function(req, res, next) {
-    var person = {},
-        insert = {};
+exports.personDeleteRelation = function(req, res, next, personId, tableName, tableId) {
+    if(!parseInt(personId)) return next('Parsing Error.');
 
-    person.id = parseInt(req.params.id);
-    person.secret = req.body.secret;
-
-    insert.id = parseInt(req.params.id2);
+    if(!parseInt(tableId)) return next('Parsing Error.');
 
     async.series([
         function(callback) {
-            personAuth(person, callback);
+            userAuth(req, 'person', personId, callback);
         },
         function(callback) {
-            query('DELETE FROM person_has_' + req.table.name + ' WHERE person_id = ? AND ' + req.table.name + '_id = ?', [person.id, insert.id], callback);
+            query('DELETE FROM person_has_' + tableName + ' WHERE person_id = ? AND ' + tableName + '_id = ?', [personId, tableId], callback);
         }
     ],function(err) {
         if(err) return next(err);
@@ -487,24 +462,32 @@ exports.personDeleteRelation = function(req, res, next) {
 
 // USER
 
-exports.userRelationPost = function(req, res, next) {
+exports.userRelationPost = function(req, res, next, userId, relationName, relationId) {
     if(!req.user.id) return next('Forbidden.');
 
-    req.relation.id = parseInt(req.params.id2);
+    if(req.user.id !== userId && !req.user.admin) return next('Forbidden.');
 
-    query('INSERT INTO user_has_' + req.relation.name + ' (user_id,' + req.relation.name + '_id) VALUES (?,?)', [req.user.id, req.relation.id], function(err) {
+    if(!parseInt(userId)) return next('Parsing Error.');
+
+    if(!parseInt(relationId)) return next('Parsing Error.');
+
+    query('INSERT INTO user_has_' + relationName + ' (user_id,' + relationName + '_id) VALUES (?,?)', [parseInt(userId), parseInt(relationId)], function(err) {
         if(err) return next(err);
 
         res.status(200).send();
     });
 };
 
-exports.userRelationDelete = function(req, res, next) {
+exports.userRelationDelete = function(req, res, next, userId, relationName, relationId) {
     if(!req.user.id) return next('Forbidden.');
 
-    req.relation.id = parseInt(req.params.id2);
+    if(req.user.id !== userId && !req.user.admin) return next('Forbidden.');
 
-    query('DELETE FROM user_has_' + req.relation.name + ' WHERE user_id = ? AND ' + req.relation.name + '_id = ?', [req.user.id, req.relation.id], function(err) {
+    if(!parseInt(userId)) return next('Parsing Error.');
+
+    if(!parseInt(relationId)) return next('Parsing Error.');
+
+    query('DELETE FROM user_has_' + relationName + ' WHERE user_id = ? AND ' + relationName + '_id = ?', [parseInt(userId), parseInt(relationId)], function(err) {
         if(err) return next(err);
 
         res.status(202).send();
