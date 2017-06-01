@@ -11,13 +11,15 @@ module.exports = function(router, tableName, path) {
     });
 
     router.get(path + '/id/:id', function(req, res, next) {
-        var call = query + ' WHERE id = ?';
+        var call = query + ' ' +
+            'LEFT JOIN user_has_story ON (user_has_story.story_id = story.id AND user_has_story.owner = 1 AND user_has_story.user_id = ?) ' +
+            'WHERE id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
     });
 
     router.get(path + '/deleted', function(req, res, next) {
-        var call = query + ' WHERE ' + tableName + '.deleted is NOT NULL';
+        var call = query + ' WHERE deleted is NOT NULL';
 
         rest.QUERY(req, res, next, call);
     });
@@ -25,6 +27,8 @@ module.exports = function(router, tableName, path) {
     // Story
 
     router.post(path, function(req, res, next) {
+        if(!req.user.id) return next('Forbidden.');
+
         var story = {},
             insert = {};
 
@@ -65,13 +69,7 @@ module.exports = function(router, tableName, path) {
 
         async.series([
             function(callback) {
-                rest.query('SELECT secret FROM story WHERE id = ? AND secret = ?', [story.id, story.secret], function(err, result) {
-                    story.auth = !!result[0];
-
-                    if(!story.auth) return callback('Forbidden.');
-
-                    callback(err);
-                });
+                rest.userAuth(req, false, 'story', req.params.id, callback);
             },
             function(callback) {
                 rest.query('UPDATE story SET name = ?, description = ?, plot = ? WHERE id = ?', [insert.name, insert.description, insert.plot, story.id], callback);
@@ -88,7 +86,7 @@ module.exports = function(router, tableName, path) {
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        rest.DELETE(req, res, next, tableName, req.params.id);
+        rest.DELETE(req, res, next, false, tableName, req.params.id);
     });
 
     // RELATIONSHIPS

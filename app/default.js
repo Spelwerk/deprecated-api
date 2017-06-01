@@ -1,5 +1,4 @@
 var rest = require('./rest'),
-    tokens = require('./tokens'),
     base = require('./base');
 
 module.exports = function(router, tableName, query, options) {
@@ -11,45 +10,42 @@ module.exports = function(router, tableName, query, options) {
         rest.QUERY(req, res, next, query);
     });
 
-    router.get(path + '/id/:id', function(req, res, next) {
-        var call = query;
-
-        var array = [];
-
-        if(req.table.user) {
-            call = query + ' ' +
-                'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
-                'WHERE ' + tableName + '.id = ?';
-
-            array = [req.user.id, req.params.id];
-        } else {
-            call = query + ' ' +
-                'WHERE ' + tableName + '.id = ?';
-
-            array = [req.params.id];
-        }
-
-        rest.QUERY(req, res, next, call, array);
-    });
-
     router.get(path + '/deleted', function(req, res, next) {
         var call = query + ' WHERE ' + tableName + '.deleted is NOT NULL';
 
         rest.QUERY(req, res, next, call);
     });
 
-    router.post(path, function(req, res, next) {
-        req.table.name = tableName;
-        req.table.admin = options.admin || req.table.admin;
-        req.table.user = options.user || req.table.user;
+    // POST
 
-        rest.POST(req, res, next);
+    router.post(path, function(req, res, next) {
+        var adminRequired = options.admin || true,
+            userSave = options.user || false;
+
+        rest.POST(req, res, next, adminRequired, userSave, tableName);
+    });
+
+    // ID
+
+    router.get(path + '/id/:id', function(req, res, next) {
+        var call = query + ' WHERE ' + tableName + '.id = ?',
+            array = [req.params.id];
+
+        if(options.user) {
+            call = query + ' ' +
+                'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
+                'WHERE ' + tableName + '.id = ?';
+
+            array = [req.user.id, req.params.id];
+        }
+
+        rest.QUERY(req, res, next, call, array);
     });
 
     router.put(path + '/id/:id', function(req, res, next) {
-        req.table.admin = !!options ? options.admin : req.table.admin;
+        var adminRequired = options.admin || true;
 
-        rest.PUT(req, res, next, tableName, req.params.id);
+        rest.PUT(req, res, next, adminRequired, tableName, req.params.id);
     });
 
     router.put(path + '/id/:id/canon', function(req, res, next) {
@@ -61,38 +57,32 @@ module.exports = function(router, tableName, query, options) {
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        req.table.admin = options.admin || req.table.admin;
+        var adminRequired = options.admin || true;
 
-        rest.DELETE(req, res, next, tableName, req.params.id);
+        rest.DELETE(req, res, next, adminRequired, tableName, req.params.id);
     });
 
     // BASE
 
     router.get(path + '/base/:base', function(req, res, next) {
-        var call = query;
+        var call = query + ' WHERE ' + tableName + '.id = ?',
+            array = [base.unique(req.params.base)];
 
-        var array = [];
-
-        if(req.table.user) {
+        if(options.user) {
             call = query + ' ' +
                 'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
                 'WHERE ' + tableName + '.id = ?';
 
             array = [req.user.id, base.unique(req.params.base)];
-        } else {
-            call = query + ' ' +
-                'WHERE ' + tableName + '.id = ?';
-
-            array = [base.unique(req.params.base)];
         }
 
         rest.QUERY(req, res, next, call, array);
     });
 
     router.put(path + '/base/:base', function(req, res, next) {
-        req.table.admin = !!options ? options.admin : req.table.admin;
+        var adminRequired = options.admin || true;
 
-        rest.PUT(req, res, next, tableName, req.params.base);
+        rest.PUT(req, res, next, adminRequired, tableName, req.params.base);
     });
 
     router.put(path + '/base/:base/canon', function(req, res, next) {
@@ -104,8 +94,8 @@ module.exports = function(router, tableName, query, options) {
     });
 
     router.delete(path + '/base/:base', function(req, res, next) {
-        req.table.admin = options.admin || req.table.admin;
+        var adminRequired = options.admin || true;
 
-        rest.DELETE(req, res, next, tableName, req.params.base);
+        rest.DELETE(req, res, next, adminRequired, tableName, req.params.base);
     });
 };

@@ -37,8 +37,6 @@ module.exports = function(router, path) {
             doctrine = {};
 
         person.id = req.params.id;
-        person.secret = req.body.secret;
-
         insert.id = parseInt(req.body.insert_id);
         insert.value = 0;
 
@@ -48,7 +46,7 @@ module.exports = function(router, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, false, 'expertise', req.params.id, callback);
             },
             function(callback) {
                 rest.query('SELECT doctrine_id FROM expertise WHERE id = ?', [insert.id], function(err, result) {
@@ -82,10 +80,6 @@ module.exports = function(router, path) {
     });
 
     router.put(path + '/id/:id/expertise/:id2', function(req, res, next) {
-        req.table.name = 'expertise';
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.personCustomDescription(req, res, next);
+        rest.personCustomDescription(req, res, next, req.params.id, 'expertise', req.params.id2, req.body.custom);
     });
 };

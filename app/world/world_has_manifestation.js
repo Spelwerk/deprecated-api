@@ -21,12 +21,11 @@ module.exports = function(router, path) {
 
         table.id = parseInt(req.params.id);
         table.name = 'world';
-
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.userAuth(req, 'NAME', ID, callback);
+                rest.userAuth(req, false, 'world', ID, callback);
             },
             function(callback) {
                 rest.query( 'SELECT id FROM expertise WHERE canon = 1 AND manifestation_id = ? AND doctrine_id IS NOT NULL', [insert.id], function(err, result) {

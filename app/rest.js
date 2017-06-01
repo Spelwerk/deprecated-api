@@ -8,24 +8,22 @@ var async = require('async'),
     tokens = require('./tokens'),
     base = require('./base');
 
-var file = 'rest.js';
-
 function query(call, params, callback) {
     if(params) {
         call = mysql.format(call, params);
     }
 
     pool.query(call, function(err, result) {
-        logger.logCall(file, call, err);
+        logger.logCall('rest.js', call, err);
 
         callback(err, result);
     });
 }
 
-function userAuth(req, tableName, tableId, callback) {
+function userAuth(req, adminRequired, tableName, tableId, callback) {
     if(!req.user.id) return callback('Forbidden.');
 
-    if(req.table.admin && !req.user.admin) return callback('Forbidden.');
+    if(adminRequired && !req.user.admin) return callback('Forbidden.');
 
     if(req.user.admin) return callback();
 
@@ -65,126 +63,7 @@ module.exports.query = query;
 module.exports.userAuth = userAuth;
 module.exports.sendMail = sendMail;
 
-// IMPROVED DEFAULT
-
-exports.POST = function(req, res, next) {
-    if(!req.user.id) return next('Forbidden.');
-
-    if(req.table.admin && !req.user.admin) return next('Forbidden.');
-
-    var insert = {};
-
-    async.series([
-        function(callback) {
-            var body = req.body,
-                call = 'INSERT INTO ' + req.table.name + ' (',
-                vals = ' VALUES (',
-                varr = [];
-
-            for(var key in body) {
-                if(body.hasOwnProperty(key) && body[key] !== '') {
-                    call += key + ',';
-                    vals += '?,';
-                    varr.push(body[key]);
-                }
-            }
-
-            call = call.slice(0, -1) + ')';
-            vals = vals.slice(0, -1) + ')';
-
-            call += vals;
-
-            query(call, varr, function(err, result) {
-                insert.id = parseInt(result.insertId);
-                insert.cs = base.encode(insert.id);
-
-                callback(err);
-            });
-        },
-        function(callback) {
-            query('INSERT INTO user_has_' + req.table.name + ' (user_id,' + req.table.name + '_id,owner) VALUES (?,?,1)', [req.user.id, insert.id], callback);
-        }
-    ],function(err) {
-        if(err) return next(err);
-
-        res.status(200).send({id: insert.id, cs: insert.cs});
-    });
-};
-
-exports.PUT = function(req, res, next, tableName, tableId) {
-    async.series([
-        function(callback) {
-            userAuth(req, tableName, tableId, callback);
-        },
-        function(callback) {
-            var body = req.body,
-                call = 'UPDATE ' + tableName + ' SET ',
-                varr = [];
-
-            for(var key in body) {
-                if(body.hasOwnProperty(key) && body[key] !== '') {
-                    call += key + ' = ?,';
-                    varr.push(body[key]);
-                }
-            }
-
-            call = call.slice(0, -1) + ' WHERE id = ?';
-
-            varr.push(tableId);
-
-            query(call, varr, callback);
-        }
-    ],function(err) {
-        if(err) return next(err);
-
-        res.status(200).send();
-    });
-};
-
-exports.DELETE = function(req, res, next, tableName, tableId) {
-    async.series([
-        function(callback) {
-            userAuth(req, tableName, tableId, callback);
-        },
-        function(callback) {
-            query('UPDATE ' + tableName + ' SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [tableId], callback);
-        }
-    ],function(err) {
-        if(err) return next(err);
-
-        res.status(200).send();
-    });
-};
-
-exports.REVIVE = function(req, res, next, tableName, tableId) {
-    async.series([
-        function(callback) {
-            userAuth(req, tableName, tableId, callback);
-        },
-        function(callback) {
-            query('UPDATE ' + tableName + ' SET deleted = NULL WHERE id = ?', [tableId], callback);
-        }
-    ],function(err) {
-        if(err) return next(err);
-
-        res.status(200).send();
-    });
-};
-
-exports.CANON = function(req, res, next, tableName, tableId) {
-    async.series([
-        function(callback) {
-            userAuth(req, tableName, tableId, callback);
-        },
-        function(callback) {
-            query('UPDATE ' + tableName + ' SET canon = 1 WHERE id = ?', [tableId], callback);
-        }
-    ],function(err) {
-        if(err) return next(err);
-
-        res.status(200).send();
-    });
-};
+// GET
 
 exports.QUERY = function(req, res, next, call, params, order) {
     params = params || null;
@@ -235,6 +114,131 @@ exports.QUERY = function(req, res, next, call, params, order) {
     });
 };
 
+// POST / PUT
+
+exports.POST = function(req, res, next, adminRequired, userSave, tableName) {
+    if(!req.user.id) return next('Forbidden.');
+
+    if(adminRequired && !req.user.admin) return next('Forbidden.');
+
+    var insert = {};
+
+    async.series([
+        function(callback) {
+            var body = req.body,
+                call = 'INSERT INTO ' + tableName + ' (',
+                vals = ' VALUES (',
+                varr = [];
+
+            for(var key in body) {
+                if(body.hasOwnProperty(key) && body[key] !== '') {
+                    call += key + ',';
+                    vals += '?,';
+                    varr.push(body[key]);
+                }
+            }
+
+            call = call.slice(0, -1) + ')';
+            vals = vals.slice(0, -1) + ')';
+
+            call += vals;
+
+            query(call, varr, function(err, result) {
+                insert.id = parseInt(result.insertId);
+                insert.cs = base.encode(insert.id);
+
+                callback(err);
+            });
+        },
+        function(callback) {
+            if(!userSave) return callback();
+
+            query('INSERT INTO user_has_' + tableName + ' (user_id,' + tableName + '_id,owner) VALUES (?,?,1)', [req.user.id, insert.id], callback);
+        }
+    ],function(err) {
+        if(err) return next(err);
+
+        res.status(200).send({id: insert.id, cs: insert.cs});
+    });
+};
+
+exports.PUT = function(req, res, next, adminRequired, tableName, tableId) {
+    async.series([
+        function(callback) {
+            userAuth(req, adminRequired, tableName, tableId, callback);
+        },
+        function(callback) {
+            var body = req.body,
+                call = 'UPDATE ' + tableName + ' SET ',
+                varr = [];
+
+            for(var key in body) {
+                if(body.hasOwnProperty(key) && body[key] !== '') {
+                    call += key + ' = ?,';
+                    varr.push(body[key]);
+                }
+            }
+
+            call = call.slice(0, -1) + ' WHERE id = ?';
+
+            varr.push(tableId);
+
+            query(call, varr, callback);
+        }
+    ],function(err) {
+        if(err) return next(err);
+
+        res.status(200).send();
+    });
+};
+
+exports.CANON = function(req, res, next, tableName, tableId) {
+    async.series([
+        function(callback) {
+            userAuth(req, true, tableName, tableId, callback);
+        },
+        function(callback) {
+            query('UPDATE ' + tableName + ' SET canon = 1 WHERE id = ?', [tableId], callback);
+        }
+    ],function(err) {
+        if(err) return next(err);
+
+        res.status(200).send();
+    });
+};
+
+// DELETE / REVIVE
+
+exports.DELETE = function(req, res, next, adminRequired, tableName, tableId) {
+    async.series([
+        function(callback) {
+            userAuth(req, adminRequired, tableName, tableId, callback);
+        },
+        function(callback) {
+            query('UPDATE ' + tableName + ' SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [tableId], callback);
+        }
+    ],function(err) {
+        if(err) return next(err);
+
+        res.status(200).send();
+    });
+};
+
+exports.REVIVE = function(req, res, next, tableName, tableId) {
+    async.series([
+        function(callback) {
+            userAuth(req, true, tableName, tableId, callback);
+        },
+        function(callback) {
+            query('UPDATE ' + tableName + ' SET deleted = NULL WHERE id = ?', [tableId], callback);
+        }
+    ],function(err) {
+        if(err) return next(err);
+
+        res.status(200).send();
+    });
+};
+
 // RELATIONS
 
 exports.relationPost = function(req, res, next, tableName, tableId, relationName, relationId) {
@@ -244,7 +248,7 @@ exports.relationPost = function(req, res, next, tableName, tableId, relationName
 
     async.series([
         function (callback) {
-            userAuth(req, tableName, tableId, callback);
+            userAuth(req, false, tableName, tableId, callback);
         },
         function (callback) {
             query('INSERT INTO ' + tableName + '_has_' + relationName + ' (' + tableName + '_id,' + relationName + '_id) VALUES (?,?)', [parseInt(tableId), parseInt(relationId)], callback);
@@ -265,7 +269,7 @@ exports.relationPostWithValue = function(req, res, next, tableName, tableId, rel
 
     async.series([
         function (callback) {
-            userAuth(req, tableName, tableId, callback);
+            userAuth(req, false, tableName, tableId, callback);
         },
         function (callback) {
             query('INSERT INTO ' + tableName + '_has_' + relationName + ' (' + tableName + '_id,' + relationName + '_id,value) VALUES (?,?,?)', [parseInt(tableId), parseInt(relationId), parseInt(relationValue)], callback);
@@ -286,7 +290,7 @@ exports.relationPutValue = function(req, res, next, tableName, tableId, relation
 
     async.series([
         function(callback) {
-            userAuth(req, tableName, tableId, callback);
+            userAuth(req, false, tableName, tableId, callback);
         },
         function(callback) {
             query('UPDATE ' + tableName + '_has_' + relationName + ' SET value = ? WHERE ' + tableName + '_id = ? AND ' + relationName + '_id = ?', [parseInt(relationValue), parseInt(tableId), parseInt(relationId)], callback);
@@ -305,7 +309,7 @@ exports.relationDelete = function(req, res, next, tableName, tableId, relationNa
 
     async.series([
         function(callback) {
-            userAuth(req, tableName, tableId, callback);
+            userAuth(req, false, tableName, tableId, callback);
         },
         function(callback) {
             query('DELETE FROM ' + tableName + '_has_' + relationName + ' WHERE ' + tableName + '_id = ? AND ' + relationName + '_id = ?', [parseInt(tableId), parseInt(relationId)], callback);
@@ -408,7 +412,7 @@ exports.personCustomDescription = function(req, res, next, personId, tableName, 
 
     async.series([
         function(callback) {
-            userAuth(req, 'person', personId, callback);
+            userAuth(req, false, 'person', personId, callback);
         },
         function(callback) {
             query('UPDATE person_has_' + tableName + ' SET custom = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [tableCustom, personId, tableId], callback);
@@ -429,29 +433,10 @@ exports.personEquip = function(req, res, next, personId, tableName, tableId, tab
 
     async.series([
         function(callback) {
-            userAuth(req, 'person', personId, callback);
+            userAuth(req, false, 'person', personId, callback);
         },
         function(callback) {
             query('UPDATE person_has_' + tableName + ' SET equipped = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [tableEquip, personId, tableId], callback);
-        }
-    ],function(err) {
-        if(err) return next(err);
-
-        res.status(200).send();
-    });
-};
-
-exports.personDeleteRelation = function(req, res, next, personId, tableName, tableId) {
-    if(!parseInt(personId)) return next('Parsing Error.');
-
-    if(!parseInt(tableId)) return next('Parsing Error.');
-
-    async.series([
-        function(callback) {
-            userAuth(req, 'person', personId, callback);
-        },
-        function(callback) {
-            query('DELETE FROM person_has_' + tableName + ' WHERE person_id = ? AND ' + tableName + '_id = ?', [personId, tableId], callback);
         }
     ],function(err) {
         if(err) return next(err);

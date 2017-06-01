@@ -101,10 +101,8 @@ module.exports = function(router, tableName, path) {
             insert = {};
 
         insert.email = req.body.email;
-        insert.password = req.body.password;
-        insert.displayname = req.body.displayname;
-        insert.firstname = req.body.firstname;
-        insert.surname = req.body.surname;
+        insert.password = hasher(128);
+        insert.displayname = req.body.email;
 
         insert.hashed = onion.hash(insert.password);
 
@@ -123,7 +121,7 @@ module.exports = function(router, tableName, path) {
                 insert.verify.secret = hasher(128);
                 insert.verify.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
 
-                rest.query('INSERT INTO user (email,password,displayname,firstname,surname,verify_secret,verify_timeout) VALUES (?,?,?,?,?,?,?)', [insert.email, insert.encrypted, insert.displayname, insert.firstname, insert.surname, insert.verify.secret, insert.verify.timeout], function(err, result) {
+                rest.query('INSERT INTO user (email,password,displayname,verify_secret,verify_timeout) VALUES (?,?,?,?,?)', [insert.email, insert.encrypted, insert.displayname, insert.verify.secret, insert.verify.timeout], function(err, result) {
                     user.id = result.insertId;
 
                     callback(err);
@@ -243,6 +241,11 @@ module.exports = function(router, tableName, path) {
         user.now = Math.floor(Date.now() / 1000);
 
         insert.secret = req.body.secret;
+        insert.displayname = req.body.displayname;
+        insert.firstname = req.body.firstname;
+        insert.surname = req.body.surname;
+
+        insert.hashed = onion.hash(req.body.password);
 
         async.series([
             function(callback) {
@@ -263,7 +266,16 @@ module.exports = function(router, tableName, path) {
                 callback();
             },
             function(callback) {
-                rest.query('UPDATE user SET verify = 1, verify_secret = NULL, verify_timeout = NULL WHERE id = ?', [user.id], callback);
+                bcrypt.hash(insert.hashed, config.salt, function(err, result) {
+                    if(err) return callback(err);
+
+                    insert.encrypted = onion.encrypt(result);
+
+                    callback();
+                });
+            },
+            function(callback) {
+                rest.query('UPDATE user SET password = ?, displayname = ?, firstname = ?, surname = ?, verify = 1, verify_secret = NULL, verify_timeout = NULL WHERE id = ?', [insert.encrypted, insert.displayname, insert.firstname, insert.surname, user.id], callback);
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {

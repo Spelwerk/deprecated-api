@@ -41,12 +41,11 @@ module.exports = function(router, path) {
 
         table.id = req.params.id;
         table.name = 'world';
-
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.userAuth(req, 'NAME', ID, callback);
+                rest.userAuth(req, false, 'world', ID, callback);
             },
             function(callback) {
                 rest.query('SELECT id FROM skill WHERE canon = 1 AND species_id = ?', [insert.id], function(err, result) {

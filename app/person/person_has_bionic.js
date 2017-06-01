@@ -49,18 +49,16 @@ module.exports = function(router, path) {
     router.post(path + '/id/:id/bionic', function(req, res, next) {
         var person = {},
             energy = {},
+            current = {},
             insert = {};
 
         person.id = req.params.id;
-        person.secret = req.body.secret;
-
         energy.id = energyId;
-
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, false, 'person', req.params.id, callback);
             },
             function(callback) {
                 rest.query('SELECT attribute_id, value FROM bionic_has_attribute WHERE bionic_id = ?', [insert.id], function(err, result) {
@@ -102,8 +100,6 @@ module.exports = function(router, path) {
     });
 
     router.put(path + '/id/:id/bionic/:id2', function(req, res, next) {
-        req.table.name = 'bionic';
-
-        rest.personCustomDescription(req, res, next);
+        rest.personCustomDescription(req, res, next, req.params.id, 'bionic', req.params.id2, req.body.custom);
     });
 };

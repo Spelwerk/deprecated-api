@@ -5,7 +5,7 @@ module.exports = function(router, tableName, path) {
 
     var query = 'SELECT * FROM weapongroup';
 
-    require('./../default')(router, tableName, query, {admin: false, user: true});
+    require('./../default')(router, tableName, query, {admin: true, user: false});
 
     router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +

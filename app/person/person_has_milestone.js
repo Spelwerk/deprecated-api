@@ -29,13 +29,11 @@ module.exports = function(router, path) {
             current = {};
 
         person.id = req.params.id;
-        person.secret = req.body.secret;
-
         insert.id = parseInt(req.body.insert_id);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, false, 'person', req.params.id, callback);
             },
             function(callback) {
                 rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
@@ -65,18 +63,10 @@ module.exports = function(router, path) {
     });
 
     router.put(path + '/id/:id/milestone/:id2', function(req, res, next) {
-        req.table.name = 'milestone';
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.personCustomDescription(req, res, next);
+        rest.personCustomDescription(req, res, next, req.params.id, 'milestone', req.params.id2, req.body.custom);
     });
 
     router.delete(path + '/id/:id/milestone/:id2', function(req, res, next) {
-        req.table.name = 'milestone';
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.personDeleteRelation(req, res, next);
+        rest.relationDelete(req, res, next, 'person', req.params.id, 'milestone', req.params.id2);
     });
 };

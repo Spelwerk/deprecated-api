@@ -43,12 +43,6 @@ module.exports = function(router, path) {
     });
 
     router.delete(path + '/id/:id/attribute/:id2', function(req, res, next) {
-        req.table.name = 'world';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'attribute';
-
         rest.relationDelete(req, res, next, 'world', req.params.id, 'attribute', req.params.id2);
     });
 };

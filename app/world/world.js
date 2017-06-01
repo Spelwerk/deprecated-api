@@ -36,10 +36,10 @@ module.exports = function(router, tableName, path) {
     // WORLD
 
     router.post(path, function(req, res, next) {
+        if(!req.user.id) return next('Forbidden.');
+
         var world = {},
             insert = {};
-
-        if(!req.user.id) return next('Forbidden.');
 
         insert.name = req.body.name;
         insert.description = req.body.description;
@@ -156,7 +156,7 @@ module.exports = function(router, tableName, path) {
 
         async.series([
             function(callback) {
-                rest.userAuth(req, 'NAME', ID, callback);
+                rest.userAuth(req, false, 'world', ID, callback);
             },
             function(callback) {
                 var call = 'UPDATE world SET ',
@@ -192,7 +192,7 @@ module.exports = function(router, tableName, path) {
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        rest.DELETE(req, res, next, tableName, req.params.id);
+        rest.DELETE(req, res, next, adminRequired, tableName, req.params.id);
     });
 
     // RELATIONSHIPS

@@ -83,7 +83,7 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id', function(req, res, next) {
-        rest.PUT(req, res, next, tableName, req.params.id);
+        rest.PUT(req, res, next, false, tableName, req.params.id);
     });
 
     router.put(path + '/id/:id/canon', function(req, res, next) {
@@ -95,6 +95,6 @@ module.exports = function(router, tableName, path) {
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        rest.DELETE(req, res, next, tableName, req.params.id);
+        rest.DELETE(req, res, next, false, tableName, req.params.id);
     });
 };

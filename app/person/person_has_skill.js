@@ -21,27 +21,7 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/skill', function(req, res, next) {
-        var person = {},
-            insert = {};
-
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
-        insert.id = parseInt(req.body.insert_id);
-        insert.value = parseInt(req.body.value);
-
-        async.series([
-            function(callback) {
-                rest.personAuth(person, callback);
-            },
-            function(callback) {
-                rest.query('INSERT INTO person_has_skill (person_id,skill_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
-            }
-        ],function(err) {
-            if(err) return next(err);
-
-            res.status(200).send();
-        });
+        rest.relationPostWithValue(req, res, next, 'person', req.params.id, 'skill', req.body.insert_id, req.body.value);
     });
 
     router.put(path + '/id/:id/skill', function(req, res, next) {
@@ -50,14 +30,12 @@ module.exports = function(router, path) {
             current = {};
 
         person.id = req.params.id;
-        person.secret = req.body.secret;
-
         insert.id = parseInt(req.body.insert_id);
         insert.value = parseInt(req.body.value);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, false, 'skill', req.params.id, callback);
             },
             function(callback) {
                 rest.query('SELECT value FROM person_has_skill WHERE person_id = ? AND skill_id = ?', [person.id, insert.id], function(err, result) {

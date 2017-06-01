@@ -41,16 +41,13 @@ module.exports = function(router, path) {
             insert = {};
 
         person.id = req.params.id;
-        person.secret = req.body.secret;
-
         energy.id = energyId;
-
         insert.id = parseInt(req.body.insert_id);
         insert.bionic = parseInt(req.body.bionic_id);
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, false, 'person', req.params.id, callback);
             },
             function(callback) {
                 rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {

@@ -30,12 +30,8 @@ app.use(function(req, res, next) {
 
 app.use(function(req, res, next) {
     req.table = {};
-    req.relation = {};
 
-    req.table.name = null;
-    req.table.admin = true;
-
-    req.relation.name = null;
+    req.table.admin = false;
 
     next();
 });

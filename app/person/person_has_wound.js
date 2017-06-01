@@ -23,14 +23,12 @@ module.exports = function(router, path) {
             insert = {};
 
         person.id = req.params.id;
-        person.secret = req.body.secret;
-
         insert.name = req.body.name;
         insert.timestwo = req.body.timestwo;
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, false, 'wound', req.params.id, callback);
             },
             function(callback) {
                 rest.query('INSERT INTO wound (name) VALUES (?)', [insert.name], function(err, result) {
@@ -54,14 +52,12 @@ module.exports = function(router, path) {
             insert = {};
 
         person.id = req.params.id;
-        person.secret = req.body.secret;
-
         insert.id = req.params.id2;
         insert.heal = req.params.heal;
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, false, 'wound', req.params.id, callback);
             },
             function(callback) {
                 rest.query('UPDATE person_has_wound SET heal = ? WHERE person_id = ? AND wound_id = ?', [insert.heal, person.id, insert.id], callback);

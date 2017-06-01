@@ -8,7 +8,7 @@ module.exports = function(router, tableName, path) {
 
     var query = 'SELECT * FROM skill';
 
-    require('./../default')(router, tableName, query);
+    require('./../default')(router, tableName, query, {admin: false, user: true});
 
     router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +

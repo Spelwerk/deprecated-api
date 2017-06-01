@@ -13,34 +13,11 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/species', function(req, res, next) {
-        var person = {},
-            insert = {};
-
-        person.id = req.params.id;
-        person.secret = req.body.secret;
-
-        insert.id = parseInt(req.body.insert_id);
-
-        async.series([
-            function(callback) {
-                rest.personAuth(person, callback);
-            },
-            function(callback) {
-                rest.query('INSERT INTO person_has_species (person_id,species_id) VALUES (?,?)', [person.id, insert.id], callback);
-            }
-        ],function(err) {
-            if(err) return next(err);
-
-            res.status(200).send();
-        });
+        rest.relationPost(req, res, next, 'person', req.params.id, 'species', req.body.insert_id);
     });
 
     router.put(path + '/id/:id/species/:id2', function(req, res, next) {
-        req.table.name = 'species';
-        req.table.admin = false;
-        req.table.user = true;
-
-        rest.personCustomDescription(req, res, next);
+        rest.personCustomDescription(req, res, next, req.params.id, 'species', req.params.id2, req.body.custom);
     });
 
     router.delete(path + '/id/:id/species/:id2', function(req, res, next) {
@@ -54,7 +31,7 @@ module.exports = function(router, path) {
 
         async.series([
             function(callback) {
-                rest.personAuth(person, callback);
+                rest.userAuth(req, false, 'person', req.params.id, callback);
             },
             function(callback) {
                 rest.query('SELECT first FROM person_has_species WHERE person_id = ? AND species_id = ? AND first = 1',[person.id, species.id], function(err, result) {
