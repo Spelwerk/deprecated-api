@@ -1,5 +1,5 @@
 var jwt = require('jsonwebtoken'),
-    secret = require('./config').secrets.jwt,
+    secret = require('./config').secret.jwt,
     base = require('./config').base;
 
 function generate(req, email) {

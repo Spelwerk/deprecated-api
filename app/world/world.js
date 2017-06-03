@@ -49,7 +49,7 @@ module.exports = function(router, tableName, path) {
         insert.software = parseInt(req.body.software);
         insert.supernatural = parseInt(req.body.supernatural);
 
-        insert.split_supernatural = parseInt(req.body.split_supernatural);
+        insert.split_doctrine = parseInt(req.body.split_doctrine);
         insert.split_skill = parseInt(req.body.split_skill);
         insert.split_expertise = parseInt(req.body.split_expertise);
         insert.split_milestone = parseInt(req.body.split_milestone);
@@ -57,20 +57,20 @@ module.exports = function(router, tableName, path) {
 
         insert.max_gift = parseInt(req.body.max_gift);
         insert.max_imperfection = parseInt(req.body.max_imperfection);
-        insert.max_supernatural = parseInt(req.body.max_supernatural);
+        insert.max_doctrine = parseInt(req.body.max_doctrine);
         insert.max_skill = parseInt(req.body.max_skill);
         insert.max_expertise = parseInt(req.body.max_expertise);
         insert.max_milestone = parseInt(req.body.max_milestone);
         insert.max_relationship = parseInt(req.body.max_relationship);
 
         var call = 'INSERT INTO world (name,bionic,augmentation,software,supernatural,' +
-            'split_supernatural,split_skill,split_expertise,split_milestone,split_relationship,' +
-            'max_gift,max_imperfection,max_supernatural,max_skill,max_expertise,max_milestone,max_relationship) VALUES ' +
+            'split_doctrine,split_skill,split_expertise,split_milestone,split_relationship,' +
+            'max_gift,max_imperfection,max_doctrine,max_skill,max_expertise,max_milestone,max_relationship) VALUES ' +
             '(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
 
         var values = [insert.name, insert.bionic, insert.augmentation, insert.software, insert.supernatural,
-            insert.split_supernatural, insert.split_skill, insert.split_expertise, insert.split_milestone,
-            insert.split_relationship, insert.max_gift, insert.max_imperfection, insert.max_supernatural,
+            insert.split_doctrine, insert.split_skill, insert.split_expertise, insert.split_milestone,
+            insert.split_relationship, insert.max_gift, insert.max_imperfection, insert.max_doctrine,
             insert.max_skill, insert.max_expertise, insert.max_milestone, insert.max_relationship];
 
         async.series([
@@ -140,7 +140,7 @@ module.exports = function(router, tableName, path) {
         insert.supernatural = parseInt(req.body.supernatural) || null;
         insert.calculated = parseInt(req.body.calculated) || null;
 
-        insert.split_supernatural = parseInt(req.body.split_supernatural) || null;
+        insert.split_doctrine = parseInt(req.body.split_doctrine) || null;
         insert.split_skill = parseInt(req.body.split_skill) || null;
         insert.split_expertise = parseInt(req.body.split_expertise) || null;
         insert.split_milestone = parseInt(req.body.split_milestone) || null;
@@ -148,7 +148,7 @@ module.exports = function(router, tableName, path) {
 
         insert.max_gift = parseInt(req.body.max_gift) || null;
         insert.max_imperfection = parseInt(req.body.max_imperfection) || null;
-        insert.max_supernatural = parseInt(req.body.max_supernatural) || null;
+        insert.max_doctrine = parseInt(req.body.max_doctrine) || null;
         insert.max_skill = parseInt(req.body.max_skill) || null;
         insert.max_expertise = parseInt(req.body.max_expertise) || null;
         insert.max_milestone = parseInt(req.body.max_milestone) || null;

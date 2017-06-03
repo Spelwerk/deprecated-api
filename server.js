@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
 app.use(function(req, res, next) {
-    if(req.headers.apikey !== config.secrets.api) return next('Faulty API Key');
+    if(req.headers.apikey !== config.secret.api) return next('Faulty API Key');
 
     next();
 });
@@ -58,12 +58,11 @@ app.use(function(req, res, next) {
             });
         },
         function(callback) {
-            rest.query('SELECT id,email,displayname,firstname,surname,admin,verify FROM user WHERE id = ? AND email = ?',[req.user.id, req.user.email], function(err, result) {
+            rest.query('SELECT id,admin,verify FROM user WHERE id = ?',[req.user.id], function(err, result) {
                 if(!result[0]) return callback({status: 400, code: 0, message: 'User missing from database.'});
 
                 req.user.select = result[0];
 
-                req.user.email = req.user.select.email;
                 req.user.admin = req.user.select.admin;
                 req.user.verify = req.user.select.verify;
 

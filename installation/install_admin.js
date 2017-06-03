@@ -1,33 +1,36 @@
 var mysql = require('mysql'),
+    async = require('async'),
     pool = mysql.createPool(require('./../app/config').pool),
-    bcrypt = require('bcrypt'),
     superuser = require('./../app/config').superuser,
     onion = require('./../app/onion');
 
 var email = superuser.email,
-    password = superuser.password;
+    password = superuser.password,
+    encrypted = null;
 
-bcrypt.hash(onion.hash(password), require('./../app/config').salt, function(error, hash) {
-    if(error) {
-        console.log(error);
-        process.exit(1);
-    } else {
-        password = onion.encrypt(hash);
+async.series([
+    function(callback) {
+        onion.encrypt(password, function(err, result) {
+            encrypted = result;
 
-        var query = 'INSERT INTO user (id,email,password,displayname,admin,verify) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id = ?, email = ?, password = ?, displayname = ?, admin = ?, verify = ?';
-        var array = [1, email, password, 'administrator', 1, 1];
+            callback(err);
+        });
+    },
+    function(callback) {
+        var query = 'INSERT INTO user (id,email,password,displayname,admin,verify) VALUES (1,?,?,?,1,1) ON DUPLICATE KEY UPDATE id = 1, email = ?, password = ?, displayname = ?, admin = 1, verify = 1';
+        var array = [email, encrypted, 'administrator'];
 
-        query = mysql.format(query,array);
-        query = mysql.format(query,array);
+        query = mysql.format(query, array);
+        query = mysql.format(query, array);
 
         pool.query(query, function(err) {
-            if(err) {
-                console.log(err);
-                process.exit(1);
-            } else {
-                console.log("Created Super User account with...\nemail: " + superuser.email + "\npassword: " + superuser.password);
-                process.exit(0);
-            }
+            callback(err, "Created Super User account with...\nemail: " + superuser.email + "\npassword: " + superuser.password);
         });
     }
+],function(err, result) {
+    if(err) console.log(err);
+
+    console.log(result[1]);
+
+    process.exit(1);
 });

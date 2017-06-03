@@ -1,7 +1,6 @@
 var rest = require('./../rest'),
-    mysql = require('mysql'),
     async = require('async'),
-    bcrypt = require('bcrypt'),
+    moment = require('moment'),
     logger = require('./../logger'),
     config = require('./../config'),
     mailgun = require('mailgun-js')({apiKey: config.mailgun.apikey, domain: config.mailgun.domain}),
@@ -11,7 +10,7 @@ var rest = require('./../rest'),
     hasher = require('./../hasher');
 
 module.exports = function(router, tableName, path) {
-    path = path || '/' + tableName;
+    path = '/user';
 
     var query = 'SELECT ' +
         'id, ' +
@@ -62,12 +61,12 @@ module.exports = function(router, tableName, path) {
     // GET
 
     router.get(path, function(req, res, next) {
-        var call = query + ' WHERE ' + table + '.deleted is NULL';
+        var call = query + ' WHERE deleted is NULL';
         rest.QUERY(req, res, next, call);
     });
 
     router.get(path + '/deleted', function(req, res, next) {
-        var call = query + ' WHERE ' + table + '.deleted is NOT NULL';
+        var call = query + ' WHERE deleted is NOT NULL';
         rest.QUERY(req, res, next, call);
     });
 
@@ -81,7 +80,7 @@ module.exports = function(router, tableName, path) {
     });
 
     router.get(path + '/validate', function(req, res, next) {
-        if(!req.user) return next({status: 403, message: 'Forbidden'});
+        if(!req.user) return next('Forbidden');
 
         res.status(200).send({user: req.user.select});
     });
@@ -101,25 +100,21 @@ module.exports = function(router, tableName, path) {
             insert = {};
 
         insert.email = req.body.email;
-        insert.password = hasher(128);
-        insert.displayname = req.body.email;
-
-        insert.hashed = onion.hash(insert.password);
+        insert.password = req.body.password || hasher(128);
+        insert.displayname = req.body.displayname || req.body.email;
 
         async.series([
             function(callback) {
-                bcrypt.hash(insert.hashed, config.salt, function(err, result) {
-                    if(err) return callback(err);
+                onion.encrypt(insert.password, function(err, result) {
+                    insert.encrypted = result;
 
-                    insert.encrypted = onion.encrypt(result);
-
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
                 insert.verify = {};
                 insert.verify.secret = hasher(128);
-                insert.verify.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+                insert.verify.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
 
                 rest.query('INSERT INTO user (email,password,displayname,verify_secret,verify_timeout) VALUES (?,?,?,?,?)', [insert.email, insert.encrypted, insert.displayname, insert.verify.secret, insert.verify.timeout], function(err, result) {
                     user.id = result.insertId;
@@ -148,9 +143,9 @@ module.exports = function(router, tableName, path) {
                 });
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
-            res.status(200).send({token: user.token});
+            res.status(200).send({id: user.id, token: user.token});
         });
     });
 
@@ -165,7 +160,7 @@ module.exports = function(router, tableName, path) {
         if(!req.user.token || (!req.user.admin && req.user.id !== insert.id)) return next({status: 403, message: 'Forbidden.'});
 
         rest.query('INSERT INTO user (displayname,firstname,surname) VALUES (?,?,?) WHERE id = ?', [insert.displayname, insert.firstname, insert.surname, insert.id], function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
             res.status(200).send();
         });
@@ -180,7 +175,7 @@ module.exports = function(router, tableName, path) {
         if(!req.user.admin) return next({status: 403, message: 'Forbidden.'});
 
         rest.query('UPDATE user SET admin = ? WHERE id = ?', [insert.admin, insert.id], function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
             res.status(200).send();
         });
@@ -194,7 +189,7 @@ module.exports = function(router, tableName, path) {
         if(!req.user.admin && req.user.id !== insert.id) return next({status: 403, message: 'Forbidden'});
 
         rest.query('UPDATE user SET deleted = CURRENT_TIMESTAMP WHERE id = ?', [insert.id], function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
             res.status(200).send();
         });
@@ -210,7 +205,8 @@ module.exports = function(router, tableName, path) {
 
         insert.verify = {};
         insert.verify.secret = hasher(128);
-        insert.verify.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+        //insert.verify.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+        insert.verify.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
@@ -238,18 +234,15 @@ module.exports = function(router, tableName, path) {
         var user = {},
             insert = {};
 
-        user.now = Math.floor(Date.now() / 1000);
-
         insert.secret = req.body.secret;
         insert.displayname = req.body.displayname;
         insert.firstname = req.body.firstname;
         insert.surname = req.body.surname;
-
-        insert.hashed = onion.hash(req.body.password);
+        insert.password = req.body.password;
 
         async.series([
             function(callback) {
-                rest.query('SELECT id, verify_timeout AS timeout FROM user WHERE verify_secret = ?', [insert.secret], function(err,result) {
+                rest.query('SELECT id,verify_timeout,created AS timeout FROM user WHERE verify_secret = ?', [insert.secret], function(err,result) {
                     if(err) return callback(err);
 
                     if(!result[0]) return callback('Wrong Secret.');
@@ -261,35 +254,24 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(user.now < user.timeout) return callback('Timeout Expired.');
+                if(moment().isBefore(moment(user.timeout).format("YYYY-MM-DD HH:mm:ss"))) return callback('Timeout Expired.');
 
                 callback();
             },
             function(callback) {
-                bcrypt.hash(insert.hashed, config.salt, function(err, result) {
-                    if(err) return callback(err);
+                onion.encrypt(insert.password, function(err, result) {
+                    insert.encrypted = result;
 
-                    insert.encrypted = onion.encrypt(result);
-
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
                 rest.query('UPDATE user SET password = ?, displayname = ?, firstname = ?, surname = ?, verify = 1, verify_secret = NULL, verify_timeout = NULL WHERE id = ?', [insert.encrypted, insert.displayname, insert.firstname, insert.surname, user.id], callback);
-            },
-            function(callback) {
-                loginToken(req, user.id, function(err, result) {
-                    if(err) return callback(err);
-
-                    user.token = result;
-
-                    callback();
-                });
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
-            res.status(200).send({token: user.token});
+            res.status(200).send();
         });
     });
 
@@ -304,44 +286,33 @@ module.exports = function(router, tableName, path) {
 
         async.series([
             function(callback) {
-                rest.query('SELECT id,password,twofactor FROM user WHERE email = ? AND deleted IS NULL', [insert.email], function(err, result) {
-                    if(err) return callback(err);
-
+                rest.query('SELECT id,password FROM user WHERE email = ? AND deleted IS NULL', [insert.email], function(err, result) {
                     if(!result[0]) return callback('Missing Email.');
 
                     user.id = result[0].id;
                     user.password = result[0].password;
 
-                    insert.encrypted = onion.hash(insert.password);
-                    user.encrypted = onion.decrypt(user.password);
-
                     callback(err);
                 });
             },
             function(callback) {
-                bcrypt.compare(insert.encrypted, user.encrypted, function(err,result) {
-                    if(err) return callback(err);
-
-                    user.accepted = result;
-
-                    if(!user.accepted) return callback('Wrong Password.');
+                onion.verify(insert.password, user.password, function(err, result) {
+                    if(!result) return callback('Wrong Password.');
 
                     callback(err);
                 });
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
-                    if(err) return callback(err);
-
                     user.token = result;
 
                     callback(err);
                 });
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
-            res.status(200).send({token: user.token});
+            res.status(200).send({id: user.id, token: user.token});
         });
     });
 
@@ -353,7 +324,7 @@ module.exports = function(router, tableName, path) {
 
         insert.login = {};
         insert.login.secret = hasher(128);
-        insert.login.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+        insert.login.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
@@ -399,7 +370,7 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(user.now > user.timeout) return callback('Timeout Expired.');
+                if(moment().isBefore(moment(user.timeout).format("YYYY-MM-DD HH:mm:ss"))) return callback('Timeout Expired.');
 
                 callback();
             },
@@ -418,7 +389,78 @@ module.exports = function(router, tableName, path) {
         ],function(err) {
             if(err) return next({status: 500, message: err});
 
-            res.status(200).send({token: user.token});
+            res.status(200).send({id: user.id, token: user.token});
+        });
+    });
+
+    // EMAIL
+
+    router.post(path + '/mail/email', function(req, res, next) {
+        var user = {},
+            insert = {};
+
+        insert.email = req.body.email;
+
+        insert.reset = {};
+        insert.reset.secret = hasher(128);
+        insert.reset.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
+
+        async.series([
+            function(callback) {
+                rest.query('UPDATE user SET reset_secret = ?, reset_timeout = ? WHERE email = ? AND deleted IS NULL', [insert.reset.secret, insert.reset.timeout, insert.email], callback);
+            },
+            function(callback) {
+                var subject = 'Email Change';
+                var text =
+                    '<b>Hello!</b>' +
+                    '<br/>' +
+                    'Use the following verification code to change your email: <a href="' + config.links.user.verify.reset + insert.reset.secret + '">' + insert.reset.secret + '</a>' +
+                    '<br/>'
+                ;
+
+                rest.sendMail(insert.email, subject, text, callback);
+            }
+        ],function(err) {
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send();
+        });
+    });
+
+    router.post(path + '/mail/verify', function(req, res, next) {
+        var user = {},
+            insert = {};
+
+        user.now = Math.floor(Date.now() / 1000);
+
+        insert.secret = req.body.secret;
+        insert.email = req.body.email;
+
+        async.series([
+            function(callback) {
+                rest.query('SELECT id, reset_timeout AS timeout FROM user WHERE reset_secret = ?', [insert.secret], function(err, result) {
+                    if(err) return callback(err);
+
+                    if(!result[0]) return callback('Wrong Secret.');
+
+                    user.id = result[0].id;
+                    user.timeout = result[0].timeout;
+
+                    callback();
+                });
+            },
+            function(callback) {
+                if(moment().isBefore(moment(user.timeout).format("YYYY-MM-DD HH:mm:ss"))) return callback('Timeout Expired.');
+
+                callback();
+            },
+            function(callback) {
+                rest.query('UPDATE user SET email = ?, reset_secret = NULL, reset_timeout = NULL WHERE id = ?', [insert.email, user.id], callback);
+            }
+        ],function(err) {
+            if(err) return next({status: 500, message: err});
+
+            res.status(200).send();
         });
     });
 
@@ -432,7 +474,7 @@ module.exports = function(router, tableName, path) {
 
         insert.reset = {};
         insert.reset.secret = hasher(128);
-        insert.reset.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
+        insert.reset.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
@@ -465,8 +507,6 @@ module.exports = function(router, tableName, path) {
         insert.secret = req.body.secret;
         insert.password = req.body.password;
 
-        insert.hashed = onion.hash(insert.password);
-
         async.series([
             function(callback) {
                 rest.query('SELECT id, reset_timeout AS timeout FROM user WHERE reset_secret = ?', [insert.secret], function(err, result) {
@@ -481,35 +521,24 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(user.now > user.timeout) return callback('Timeout Expired.');
+                if(moment().isBefore(moment(user.timeout).format("YYYY-MM-DD HH:mm:ss"))) return callback('Timeout Expired.');
 
                 callback();
             },
             function(callback) {
-                bcrypt.hash(insert.hashed, config.salt, function(err, result) {
-                    if(err) return callback(err);
+                onion.encrypt(insert.password, function(err, result) {
+                    insert.encrypted = result;
 
-                    insert.encrypted = onion.encrypt(result);
-
-                    callback();
+                    callback(err);
                 });
             },
             function(callback) {
                 rest.query('UPDATE user SET password = ?, reset_secret = NULL, reset_timeout = NULL WHERE id = ?', [insert.encrypted, user.id], callback);
-            },
-            function(callback) {
-                loginToken(req, user.id, function(err, result) {
-                    if(err) return callback(err);
-
-                    user.token = result;
-
-                    callback();
-                });
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
-            res.status(200).send({token: user.token});
+            res.status(200).send();
         });
     });
 

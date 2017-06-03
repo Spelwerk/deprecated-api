@@ -102,7 +102,8 @@ module.exports = function(router, tableName, path) {
                     points.power = 1;
                     points.relationship = 1;
                     points.skill = 1;
-                    points.supernatural = 1;
+                    points.doctrine = 1;
+                    points.doctrine_expertise = 1;
 
                     var split = {},
                         max = {};
@@ -111,13 +112,13 @@ module.exports = function(router, tableName, path) {
                     split.milestone = Math.floor(insert.age / world.select.split_milestone);
                     split.relationship = Math.floor(insert.age / world.select.split_relationship);
                     split.skill = Math.floor(insert.age / (world.select.split_skill * species.select.multiply_skill));
-                    split.supernatural = Math.floor(insert.age / world.select.split_supernatural);
+                    split.doctrine = Math.floor(insert.age / world.select.split_doctrine);
 
                     max.expertise = world.select.max_expertise;
                     max.milestone = world.select.max_milestone;
                     max.relationship = world.select.max_relationship;
                     max.skill = world.select.max_skill;
-                    max.supernatural = world.select.max_supernatural;
+                    max.doctrine = world.select.max_doctrine;
 
                     if (split.expertise < max.expertise && split.expertise > 1) {
                         points.expertise = split.expertise;
@@ -143,10 +144,10 @@ module.exports = function(router, tableName, path) {
                         points.skill = max.skill;
                     }
 
-                    if (split.supernatural < max.supernatural && split.supernatural > 1) {
-                        points.supernatural = split.supernatural;
-                    } else if (split.supernatural > max.supernatural) {
-                        points.supernatural = max.supernatural;
+                    if (split.doctrine < max.doctrine && split.doctrine > 1) {
+                        points.doctrine = split.doctrine;
+                    } else if (split.doctrine > max.doctrine) {
+                        points.doctrine = max.doctrine;
                     }
 
                     callback(err);
@@ -172,9 +173,9 @@ module.exports = function(router, tableName, path) {
                     },
                     function(callback) {
                         rest.query('INSERT INTO person_creation (person_id,point_expertise,point_gift,point_imperfection,' +
-                            'point_milestone,point_money,point_power,point_relationship,point_skill,point_supernatural) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                            'point_milestone,point_money,point_power,point_relationship,point_skill,point_doctrine,point_doctrine_expertise) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                             [person.id, points.expertise, points.gift, points.imperfection, points.milestone, points.money, points.power,
-                                points.relationship, points.skill, points.supernatural], callback);
+                                points.relationship, points.skill, points.doctrine, points.doctrine_expertise], callback);
                     },
                     function(callback) {
                         var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
@@ -283,7 +284,8 @@ module.exports = function(router, tableName, path) {
         creation.point_power = parseInt(req.body.point_power) || null;
         creation.point_relationship = parseInt(req.body.point_relationship) || null;
         creation.point_skill = parseInt(req.body.point_skill) || null;
-        creation.point_supernatural = parseInt(req.body.point_supernatural) || null;
+        creation.point_doctrine = parseInt(req.body.point_doctrine) || null;
+        creation.doctrine_expertise = parseInt(req.body.point_doctrine_expertise) || null;
 
         playable.supernatural = parseInt(req.body.supernatural) || null;
         playable.age = parseInt(req.body.age) || null;
@@ -416,7 +418,6 @@ module.exports = function(router, tableName, path) {
     });
 
     // SPECIAL
-
 
     router.put(path + '/id/:id/cheat', function(req, res, next) {
         var person = {};
