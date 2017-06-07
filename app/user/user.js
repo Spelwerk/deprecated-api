@@ -127,7 +127,7 @@ module.exports = function(router, tableName, path) {
                 var text =
                     '<b>Hello!</b>' +
                     '<br/>' +
-                    'Use the following verification code to verify your account creation: <a href="' + config.links.user.verify.new + insert.verify.secret + '">' + insert.verify.secret + '</a>' +
+                    'Use the following verification code to verify your account creation: <a href="' + config.links.user.create + insert.verify.secret + '">' + insert.verify.secret + '</a>' +
                     '<br/>'
                 ;
 
@@ -217,7 +217,7 @@ module.exports = function(router, tableName, path) {
                 var text =
                     '<b>Hello!</b>' +
                     '<br/>' +
-                    'Use the following verification code to verify your account creation: <a href="' + config.links.user.verify.new + insert.verify.secret + '">' + insert.verify.secret + '</a>' +
+                    'Use the following verification code to verify your account creation: <a href="' + config.links.user.create + insert.verify.secret + '">' + insert.verify.secret + '</a>' +
                     '<br/>'
                 ;
 
@@ -335,7 +335,7 @@ module.exports = function(router, tableName, path) {
                 var text =
                     '<b>Hello!</b>' +
                     '<br/>' +
-                    'Use the following verification code to login to your account: <a href="' + config.links.user.verify.login + insert.login.secret + '">' + insert.login.secret + '</a>' +
+                    'Use the following verification code to login to your account: <a href="' + config.links.user.login + insert.login.secret + '">' + insert.login.secret + '</a>' +
                     '<br/>'
                 ;
 
@@ -414,7 +414,7 @@ module.exports = function(router, tableName, path) {
                 var text =
                     '<b>Hello!</b>' +
                     '<br/>' +
-                    'Use the following verification code to change your email: <a href="' + config.links.user.verify.reset + insert.reset.secret + '">' + insert.reset.secret + '</a>' +
+                    'Use the following verification code to change your email: <a href="' + config.links.user.email + insert.reset.secret + '">' + insert.reset.secret + '</a>' +
                     '<br/>'
                 ;
 
@@ -485,7 +485,7 @@ module.exports = function(router, tableName, path) {
                 var text =
                     '<b>Hello!</b>' +
                     '<br/>' +
-                    'Use the following verification code to reset your password: <a href="' + config.links.user.verify.reset + insert.reset.secret + '">' + insert.reset.secret + '</a>' +
+                    'Use the following verification code to reset your password: <a href="' + config.links.user.password + insert.reset.secret + '">' + insert.reset.secret + '</a>' +
                     '<br/>'
                 ;
 

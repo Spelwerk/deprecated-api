@@ -1,7 +1,8 @@
-var bases = require('bases');
+var bases = require('bases'),
+    config = require('./config');
 
-var brew = 10000,
-    base = 52;
+var brew = config.baseBrew,
+    base = config.baseBase;
 
 function encode(int) {
     return bases.toBase(parseInt(int) + brew, base);
