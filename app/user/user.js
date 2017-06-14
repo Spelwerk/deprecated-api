@@ -221,7 +221,7 @@ module.exports = function(router, tableName, path) {
                 rest.sendMail(insert.email, subject, text, callback);
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
             res.status(200).send();
         });
@@ -339,7 +339,7 @@ module.exports = function(router, tableName, path) {
                 rest.sendMail(insert.email, subject, text, callback);
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
             res.status(200).send();
         });
@@ -416,7 +416,7 @@ module.exports = function(router, tableName, path) {
                 rest.sendMail(insert.email, subject, text, callback);
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
             res.status(200).send();
         });
@@ -458,7 +458,7 @@ module.exports = function(router, tableName, path) {
                 });
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
             res.status(200).send({id: user.id, token: user.token});
         });
@@ -492,7 +492,7 @@ module.exports = function(router, tableName, path) {
                 rest.sendMail(insert.email, subject, text, callback);
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
 
             res.status(200).send();
         });

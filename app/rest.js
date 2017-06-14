@@ -272,7 +272,7 @@ exports.relationPostWithValue = function(req, res, next, tableName, tableId, rel
             userAuth(req, false, tableName, tableId, callback);
         },
         function (callback) {
-            query('INSERT INTO ' + tableName + '_has_' + relationName + ' (' + tableName + '_id,' + relationName + '_id,value) VALUES (?,?,?)', [parseInt(tableId), parseInt(relationId), parseInt(relationValue)], callback);
+            query('INSERT INTO ' + tableName + '_has_' + relationName + ' (' + tableName + '_id,' + relationName + '_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [parseInt(tableId), parseInt(relationId), parseInt(relationValue)], callback);
         }
     ],function(err) {
         if(err) return next(err);
