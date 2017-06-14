@@ -114,7 +114,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 insert.verify = {};
                 insert.verify.secret = hasher(128);
-                insert.verify.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
+                insert.verify.timeout = moment().add(config.timeout.verify, 'minutes').format("YYYY-MM-DD HH:mm:ss");
 
                 rest.query('INSERT INTO user (email,password,displayname,verify_secret,verify_timeout) VALUES (?,?,?,?,?)', [insert.email, insert.encrypted, insert.displayname, insert.verify.secret, insert.verify.timeout], function(err, result) {
                     user.id = result.insertId;
@@ -135,11 +135,9 @@ module.exports = function(router, tableName, path) {
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
-                    if(err) return callback(err);
-
                     user.token = result;
 
-                    callback();
+                    callback(err);
                 });
             }
         ],function(err) {
@@ -205,8 +203,7 @@ module.exports = function(router, tableName, path) {
 
         insert.verify = {};
         insert.verify.secret = hasher(128);
-        //insert.verify.timeout = Math.floor(Date.now() / 1000) + (config.timeoutTTL * 60);
-        insert.verify.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
+        insert.verify.timeout = moment().add(config.timeout.verify, 'minutes').format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
@@ -254,7 +251,7 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(moment().isBefore(moment(user.timeout).format("YYYY-MM-DD HH:mm:ss"))) return callback('Timeout Expired.');
+                if(moment(user.timeout).isBefore(moment())) return callback('Timeout Expired.');
 
                 callback();
             },
@@ -324,7 +321,7 @@ module.exports = function(router, tableName, path) {
 
         insert.login = {};
         insert.login.secret = hasher(128);
-        insert.login.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
+        insert.login.timeout = moment().add(config.timeout.login, 'minutes').format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
@@ -352,8 +349,6 @@ module.exports = function(router, tableName, path) {
         var user = {},
             insert = {};
 
-        user.now = Math.floor(Date.now() / 1000);
-
         insert.secret = req.body.secret;
 
         async.series([
@@ -370,7 +365,7 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(moment().isBefore(moment(user.timeout).format("YYYY-MM-DD HH:mm:ss"))) return callback('Timeout Expired.');
+                if(moment(user.timeout).isBefore(moment())) return callback('Timeout Expired.');
 
                 callback();
             },
@@ -379,15 +374,15 @@ module.exports = function(router, tableName, path) {
             },
             function(callback) {
                 loginToken(req, user.id, function(err, result) {
-                    if(err) return callback(err);
-
                     user.token = result;
 
-                    callback();
+                    callback(err);
                 });
             }
         ],function(err) {
-            if(err) return next({status: 500, message: err});
+            if(err) return next(err);
+
+            console.log(user.token);
 
             res.status(200).send({id: user.id, token: user.token});
         });
@@ -395,7 +390,7 @@ module.exports = function(router, tableName, path) {
 
     // EMAIL
 
-    router.post(path + '/mail/email', function(req, res, next) {
+    router.post(path + '/email/email', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -403,7 +398,7 @@ module.exports = function(router, tableName, path) {
 
         insert.reset = {};
         insert.reset.secret = hasher(128);
-        insert.reset.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
+        insert.reset.timeout = moment().add(config.timeout.email, 'minutes').format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
@@ -427,11 +422,9 @@ module.exports = function(router, tableName, path) {
         });
     });
 
-    router.post(path + '/mail/verify', function(req, res, next) {
+    router.post(path + '/email/verify', function(req, res, next) {
         var user = {},
             insert = {};
-
-        user.now = Math.floor(Date.now() / 1000);
 
         insert.secret = req.body.secret;
         insert.email = req.body.email;
@@ -450,23 +443,30 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(moment().isBefore(moment(user.timeout).format("YYYY-MM-DD HH:mm:ss"))) return callback('Timeout Expired.');
+                if(moment(user.timeout).isBefore(moment())) return callback('Timeout Expired.');
 
                 callback();
             },
             function(callback) {
                 rest.query('UPDATE user SET email = ?, reset_secret = NULL, reset_timeout = NULL WHERE id = ?', [insert.email, user.id], callback);
+            },
+            function(callback) {
+                loginToken(req, user.id, function(err, result) {
+                    user.token = result;
+
+                    callback(err);
+                });
             }
         ],function(err) {
             if(err) return next({status: 500, message: err});
 
-            res.status(200).send();
+            res.status(200).send({id: user.id, token: user.token});
         });
     });
 
     // PASSWORD
 
-    router.post(path + '/reset/email', function(req, res, next) {
+    router.post(path + '/password/email', function(req, res, next) {
         var user = {},
             insert = {};
 
@@ -474,7 +474,7 @@ module.exports = function(router, tableName, path) {
 
         insert.reset = {};
         insert.reset.secret = hasher(128);
-        insert.reset.timeout = moment().add(config.timeoutTTL, 'm').format("YYYY-MM-DD HH:mm:ss");
+        insert.reset.timeout = moment().add(config.timeout.password, 'minutes').format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
@@ -498,11 +498,9 @@ module.exports = function(router, tableName, path) {
         });
     });
 
-    router.post(path + '/reset/verify', function(req, res, next) {
+    router.post(path + '/password/verify', function(req, res, next) {
         var user = {},
             insert = {};
-
-        user.now = Math.floor(Date.now() / 1000);
 
         insert.secret = req.body.secret;
         insert.password = req.body.password;
@@ -521,7 +519,7 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                if(moment().isBefore(moment(user.timeout).format("YYYY-MM-DD HH:mm:ss"))) return callback('Timeout Expired.');
+                if(moment(user.timeout).isBefore(moment())) return callback('Timeout Expired.');
 
                 callback();
             },
@@ -574,11 +572,17 @@ module.exports = function(router, tableName, path) {
 
     require('./user_has_skill')(router, path);
 
+    require('./user_has_software')(router, path);
+
     require('./user_has_species')(router, path);
 
     require('./user_has_story')(router, path);
 
     require('./user_has_weapon')(router, path);
+
+    require('./user_has_weapongroup')(router, path);
+
+    require('./user_has_weapontype')(router, path);
 
     require('./user_has_world')(router, path);
 };

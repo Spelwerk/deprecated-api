@@ -7,7 +7,7 @@ module.exports = function(router, path) {
         'expertise.name, ' +
         'expertise.description, ' +
         'expertise.skill_id, ' +
-        'person_has_expertise.value AS level, ' +
+        'person_has_expertise.value, ' +
         'person_has_skill.value AS bonus, ' +
         'skill.icon ' +
         'FROM person_has_expertise ' +
@@ -25,52 +25,39 @@ module.exports = function(router, path) {
     router.get(path + '/id/:id/expertise/manifestation/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_expertise.person_id = ? AND ' +
-            'expertise.manifestation_id = ? AND ' +
-            'expertise.doctrine_id IS NOT NULL';
+            'expertise.manifestation_id = ?';
 
         rest.QUERY(req, res, next, call, [req.params.id, req.params.id, req.params.id2], {"name": "ASC"}); // Using ? ON person.id IN LEFT JOIN
     });
 
     router.post(path + '/id/:id/expertise', function(req, res, next) {
+        rest.relationPostWithValue(req, res, next, 'person', req.params.id, 'expertise', req.body.insert_id, req.body.value);
+    });
+
+    router.put(path + '/id/:id/expertise', function(req, res, next) {
         var person = {},
             insert = {},
-            doctrine = {};
+            current = {};
 
         person.id = req.params.id;
         insert.id = parseInt(req.body.insert_id);
-        insert.value = 0;
-
-        if(req.body.value > 0 && req.body.value <= 4) {
-            insert.value = req.body.value;
-        }
+        insert.value = parseInt(req.body.value);
 
         async.series([
             function(callback) {
                 rest.userAuth(req, false, 'expertise', req.params.id, callback);
             },
             function(callback) {
-                rest.query('SELECT doctrine_id FROM expertise WHERE id = ?', [insert.id], function(err, result) {
-                    doctrine.id = !!result[0] ? parseInt(result[0].doctrine_id) : null;
+                rest.query('SELECT value FROM person_has_expertise WHERE person_id = ? AND expertise_id = ?', [person.id, insert.id], function(err, result) {
+                    current.value = !!result[0] ? parseInt(result[0].value) : 0;
 
-                    callback(err);
-                });
-            },
-            function(callback) {
-                if(!doctrine.id) return callback();
-
-                rest.query('SELECT value FROM person_has_doctrine WHERE person_id = ? AND doctrine_id = ?', [person.id, doctrine.id], function(err, result) {
-                    doctrine.exists = !!result[0];
+                    insert.value = insert.value + current.value;
 
                     callback(err);
                 });
             },
             function(callback) {
                 rest.query('INSERT INTO person_has_expertise (person_id,expertise_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
-            },
-            function(callback) {
-                if(!doctrine.id || doctrine.exists) return callback();
-
-                rest.query('INSERT INTO person_has_doctrine (person_id,doctrine_id,value) VALUES (?,?,0) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, doctrine.id], callback);
             }
         ],function(err) {
             if(err) return next(err);

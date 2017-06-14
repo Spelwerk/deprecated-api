@@ -5,31 +5,29 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'weapon.id, ' +
         'weapon.canon, ' +
-        'weapon.species, ' +
-        'weapon.augmentation, ' +
+        'weapon.popularity, ' +
         'weapon.name, ' +
         'weapon.description, ' +
-        'person_has_weapon.custom, ' +
+        'weapon.species, ' +
+        'weapon.augmentation, ' +
+        'weapon.damage_bonus, ' +
         'weapon.price, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
-        'weapontype.name AS weapontype_name, ' +
         'weapontype.damage_d12, ' +
-        'weapontype.damage_bonus, ' +
         'weapontype.critical_d12, ' +
         'weapontype.hand, ' +
         'weapontype.initiative, ' +
         'weapontype.hit, ' +
         'weapontype.distance, ' +
         'weapontype.weapongroup_id, ' +
-        'weapongroup.name AS weapongroup_name, ' +
         'weapongroup.special, ' +
         'weapongroup.skill_id, ' +
-        'person_has_skill.value AS skill_value, ' +
         'weapongroup.expertise_id, ' +
-        'person_has_expertise.value AS expertise_level, ' +
         'weapongroup.damage_id, ' +
         'weapongroup.icon, ' +
+        'person_has_weapon.custom, ' +
+        'person_has_weapon.equipped, ' +
         'person_has_weapon.weaponquality_id AS quality_id, ' +
         'weaponquality.name AS quality_name, ' +
         'weaponquality.price AS quality_price, ' +
@@ -39,16 +37,14 @@ module.exports = function(router, path) {
         'weaponquality.initiative AS quality_initiative, ' +
         'weaponquality.hit AS quality_hit, ' +
         'weaponquality.distance AS quality_distance, ' +
-        'person_has_weapon.equipped ' +
-        'icon.path AS icon_path ' +
+        'person_has_skill.value AS skill_value, ' +
+        'person_has_expertise.value AS expertise_value ' +
         'FROM person_has_weapon ' +
         'LEFT JOIN weapon ON weapon.id = person_has_weapon.weapon_id ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
         'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +
         'LEFT JOIN weaponquality ON weaponquality.id = person_has_weapon.weaponquality_id AND person_has_weapon.weapon_id = weapon.id ' +
-        'LEFT JOIN skill ON skill.id = weapongroup.skill_id ' +
-        'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id ' +
-        'LEFT JOIN person_has_skill ON person_has_skill.person_id = ? AND person_has_skill.skill_id = expertise.skill_id ' +
+        'LEFT JOIN person_has_skill ON person_has_skill.person_id = ? AND person_has_skill.skill_id = weapongroup.skill_id ' +
         'LEFT JOIN person_has_expertise ON person_has_expertise.person_id = ? AND person_has_expertise.expertise_id = weapongroup.expertise_id';
 
     router.get(path + '/id/:id/weapon', function(req, res, next) {

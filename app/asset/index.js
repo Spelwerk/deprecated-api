@@ -9,6 +9,7 @@ module.exports = function(router) {
     require('./bionicquality')(router, 'bionicquality');
     require('./protection')(router, 'protection');
     require('./protectionquality')(router, 'protectionquality');
+    require('./software')(router, 'software');
     require('./weapon')(router, 'weapon');
     require('./weapontype')(router, 'weapontype');
     require('./weapongroup')(router, 'weapongroup');

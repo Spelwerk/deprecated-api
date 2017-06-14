@@ -2,13 +2,7 @@ var async = require('async'),
     rest = require('./../rest');
 
 module.exports = function(router, path) {
-    var query = 'SELECT ' +
-        'imperfection.id, ' +
-        'imperfection.canon, ' +
-        'imperfection.name, ' +
-        'imperfection.description, ' +
-        'person_has_imperfection.custom ' +
-        'FROM person_has_imperfection ' +
+    var query = 'SELECT * FROM person_has_imperfection ' +
         'LEFT JOIN imperfection ON imperfection.id = person_has_imperfection.imperfection_id';
 
     router.get(path + '/id/:id/imperfection', function(req, res, next) {

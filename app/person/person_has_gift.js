@@ -2,15 +2,7 @@ var async = require('async'),
     rest = require('./../rest');
 
 module.exports = function(router, path) {
-    var query = 'SELECT ' +
-        'gift.id, ' +
-        'gift.canon, ' +
-        'gift.name, ' +
-        'gift.description, ' +
-        'gift.attribute_id, ' +
-        'gift.attribute_value, ' +
-        'person_has_gift.custom ' +
-        'FROM person_has_gift ' +
+    var query = 'SELECT * FROM person_has_gift ' +
         'LEFT JOIN gift ON gift.id = person_has_gift.gift_id';
 
     router.get(path + '/id/:id/gift', function(req, res, next) {

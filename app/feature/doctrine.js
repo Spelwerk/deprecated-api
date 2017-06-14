@@ -37,15 +37,16 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call);
     });
 
-    router.post(path, function(req, res, next){
+    router.post(path, function(req, res, next) {
         if(!req.user.id) return next('Forbidden.');
 
         var manifestation = {},
-            doctrine = {},
             expertise = {},
             insert = {};
 
         manifestation.id = req.body.manifestation_id;
+
+        expertise.name = req.body.name + ' Mastery';
 
         insert.name = req.body.name;
         insert.description = req.body.description;
@@ -72,17 +73,7 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                rest.query('INSERT INTO doctrine (name,description,icon,manifestation_id) VALUES (?,?,?,?)', [insert.name, insert.description, insert.icon, manifestation.id], function(err, result) {
-                    doctrine.id = result.insertId;
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                rest.query('INSERT INTO user_has_doctrine (user_id,doctrine_id,owner) VALUES (?,?,1)', [req.user.id, doctrine.id], callback);
-            },
-            function(callback) {
-                rest.query('INSERT INTO expertise (name,description,skill_id,manifestation_id,doctrine_id) VALUES (?,?,?,?,?)', [insert.name, insert.description, manifestation.skill, manifestation.id, insert.id], function(err, result) {
+                rest.query('INSERT INTO expertise (name,description,skill_id,manifestation_id) VALUES (?,?,?,?)', [expertise.name, insert.description, manifestation.skill, manifestation.id], function(err, result) {
                     expertise.id = result.insertId;
 
                     callback(err);
@@ -90,6 +81,16 @@ module.exports = function(router, tableName, path) {
             },
             function(callback) {
                 rest.query('INSERT INTO user_has_expertise (user_id,expertise_id,owner) VALUES (?,?,1)', [req.user.id, expertise.id], callback);
+            },
+            function(callback) {
+                rest.query('INSERT INTO doctrine (name,description,icon,manifestation_id,expertise_id) VALUES (?,?,?,?,?)', [insert.name, insert.description, insert.icon, manifestation.id, expertise.id], function(err, result) {
+                    insert.id = result.insertId;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query('INSERT INTO user_has_doctrine (user_id,doctrine_id,owner) VALUES (?,?,1)', [req.user.id, insert.id], callback);
             }
         ],function(err) {
             if(err) return next(err);

@@ -4,23 +4,22 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'weapon.id, ' +
         'weapon.canon, ' +
-        'weapon.species, ' +
-        'weapon.augmentation, ' +
+        'weapon.popularity, ' +
         'weapon.name, ' +
         'weapon.description, ' +
+        'weapon.species, ' +
+        'weapon.augmentation, ' +
+        'weapon.damage_bonus, ' +
         'weapon.price, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
-        'weapontype.name AS weapontype_name, ' +
         'weapontype.damage_d12, ' +
-        'weapontype.damage_bonus, ' +
         'weapontype.critical_d12, ' +
         'weapontype.hand, ' +
         'weapontype.initiative, ' +
         'weapontype.hit, ' +
         'weapontype.distance, ' +
         'weapontype.weapongroup_id, ' +
-        'weapongroup.name AS weapongroup_name, ' +
         'weapongroup.special, ' +
         'weapongroup.skill_id, ' +
         'weapongroup.expertise_id, ' +
@@ -29,10 +28,7 @@ module.exports = function(router, path) {
         'FROM world_has_weapon ' +
         'LEFT JOIN weapon ON weapon.id = world_has_weapon.weapon_id ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
-        'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +
-        'LEFT JOIN skill ON skill.id = weapongroup.skill_id ' +
-        'LEFT JOIN expertise ON expertise.id = weapongroup.expertise_id ' +
-        'LEFT JOIN attribute ON attribute.id = weapongroup.damage_id';
+        'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id';
 
     router.get(path + '/id/:id/weapon', function(req, res, next) {
         var call = query + ' WHERE ' +

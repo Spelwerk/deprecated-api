@@ -766,6 +766,8 @@ module.exports = function(router, tableName, path) {
 
     require('./person_has_skill')(router, path);
 
+    require('./person_has_software')(router, path);
+
     require('./person_has_species')(router, path);
 
     require('./person_has_weapon')(router, path);

@@ -6,15 +6,16 @@ module.exports = function(router, tableName, path) {
     var query = 'SELECT ' +
         'weapon.id, ' +
         'weapon.canon, ' +
-        'weapon.species, ' +
-        'weapon.augmentation, ' +
+        'weapon.popularity, ' +
         'weapon.name, ' +
         'weapon.description, ' +
+        'weapon.species, ' +
+        'weapon.augmentation, ' +
+        'weapon.damage_bonus, ' +
         'weapon.price, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
         'weapontype.damage_d12, ' +
-        'weapontype.damage_bonus, ' +
         'weapontype.critical_d12, ' +
         'weapontype.hand, ' +
         'weapontype.initiative, ' +

@@ -219,6 +219,8 @@ module.exports = function(router, tableName, path) {
 
     require('./world_has_skill')(router, path);
 
+    require('./world_has_software')(router, path);
+
     require('./world_has_species')(router, path);
 
     require('./world_has_weapon')(router, path);
