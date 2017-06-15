@@ -8,13 +8,15 @@ var async = require('async'),
     tokens = require('./tokens'),
     base = require('./base');
 
-function query(call, params, callback) {
+function query(call, params, callback, logCall) {
+    logCall = logCall || true;
+
     if(params) {
         call = mysql.format(call, params);
     }
 
     pool.query(call, function(err, result) {
-        logger.logCall('rest.js', call, err);
+        if(logCall) logger.logCall('rest.js', call, err);
 
         callback(err, result);
     });
@@ -242,9 +244,9 @@ exports.REVIVE = function(req, res, next, tableName, tableId) {
 // RELATIONS
 
 exports.relationPost = function(req, res, next, tableName, tableId, relationName, relationId) {
-    if(!parseInt(tableId)) return next('Parsing Error.');
+    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
 
-    if(!parseInt(relationId)) return next('Parsing Error.');
+    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
 
     async.series([
         function (callback) {
@@ -261,11 +263,11 @@ exports.relationPost = function(req, res, next, tableName, tableId, relationName
 };
 
 exports.relationPostWithValue = function(req, res, next, tableName, tableId, relationName, relationId, relationValue) {
-    if(!parseInt(tableId)) return next('Parsing Error.');
+    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
 
-    if(!parseInt(relationId)) return next('Parsing Error.');
+    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
 
-    if(!parseInt(relationValue)) return next('Parsing Error.');
+    if(!parseInt(relationValue)) return next('Parsing Error. Expected relationValue. Actual: ' + relationValue);
 
     async.series([
         function (callback) {
@@ -282,11 +284,11 @@ exports.relationPostWithValue = function(req, res, next, tableName, tableId, rel
 };
 
 exports.relationPutValue = function(req, res, next, tableName, tableId, relationName, relationId, relationValue) {
-    if(!parseInt(tableId)) return next('Parsing Error.');
+    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
 
-    if(!parseInt(relationId)) return next('Parsing Error.');
+    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
 
-    if(!parseInt(relationValue)) return next('Parsing Error.');
+    if(!parseInt(relationValue)) return next('Parsing Error. Expected relationValue. Actual: ' + relationValue);
 
     async.series([
         function(callback) {
@@ -303,9 +305,9 @@ exports.relationPutValue = function(req, res, next, tableName, tableId, relation
 };
 
 exports.relationDelete = function(req, res, next, tableName, tableId, relationName, relationId) {
-    if(!parseInt(tableId)) return next('Parsing Error.');
+    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
 
-    if(!parseInt(relationId)) return next('Parsing Error.');
+    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
 
     async.series([
         function(callback) {
@@ -328,8 +330,13 @@ exports.personInsertAttribute = function(person, insert, current, callback) {
 
     var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
+    // Loop through attribute list from person
     for(var i in person.attribute) {
+
+        // Loop through attribute list from relation
         for(var j in insert.attribute) {
+
+            // If person has attribute in list = update values positively
             if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
                 person.attribute[i].value += insert.attribute[j].value;
                 person.attribute[i].changed = true;
@@ -337,8 +344,13 @@ exports.personInsertAttribute = function(person, insert, current, callback) {
             }
         }
 
+        // If there is a previous (single) relation that has an attribute
         if(current.attribute !== undefined && current.attribute[0] !== undefined) {
+
+            // Loop through the attribute list from previous relation
             for(var k in current.attribute) {
+
+                // If person has attribute in the list = update values negatively
                 if(person.attribute[i].attribute_id === current.attribute[k].attribute_id) {
                     person.attribute[i].value -= current.attribute[k].value;
                     person.attribute[i].changed = true;
@@ -346,16 +358,24 @@ exports.personInsertAttribute = function(person, insert, current, callback) {
             }
         }
 
+        // If the attribute has changed = add it to the call
         if(person.attribute[i].changed === true) {
             call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
         }
     }
 
-    for(var m in insert.attribute) {
+    // If the value in the relation attribute has not been updated (ie: person does not have it) = add it to the call
+    /*
+
+     This is currently hidden because I am not sure we want to add attributes to players if they are missing them.
+     The world sets a list of attributes, and then manifestation. That should be it.
+
+     for(var m in insert.attribute) {
         if(insert.attribute[m].updated !== true) {
             call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
         }
     }
+     */
 
     call = call.slice(0, -1);
 
@@ -369,8 +389,13 @@ exports.personInsertSkill = function(person, insert, current, callback) {
 
     var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
 
+    // Loop through skill list from person
     for(var i in person.skill) {
+
+        // Loop through skill list from relation
         for(var j in insert.skill) {
+
+            // If person has the skill in list = update values positively
             if(person.skill[i].skill_id === insert.skill[j].skill_id) {
                 person.skill[i].value += insert.skill[j].value;
                 person.skill[i].changed = true;
@@ -378,8 +403,13 @@ exports.personInsertSkill = function(person, insert, current, callback) {
             }
         }
 
+        // If there is a previous (single) relation that has a skill
         if(current.skill !== undefined && current.skill[0] !== undefined) {
+
+            // Loop through the skill list from previous relation
             for(var k in current.skill) {
+
+                // If person has skill in list = update values negatively
                 if(person.skill[i].skill_id === current.skill[k].skill_id) {
                     person.skill[i].value -= current.skill[k].value;
                     person.skill[i].changed = true;
@@ -387,16 +417,24 @@ exports.personInsertSkill = function(person, insert, current, callback) {
             }
         }
 
+        // If the skill has changed = add it to the call
         if(person.skill[i].changed === true) {
             call += '(' + person.id + ',' + person.skill[i].skill_id + ',' + person.skill[i].value + '),';
         }
     }
+
+    // If the value in the relation skill has not been updated (ie: person does not have it) = add it to the call
+    /*
+
+    This is currently hidden because I am not sure we want to add skills to players if they are missing them.
+    The world sets a list of skills, and then species. That should be it.
 
     for(var m in insert.skill) {
         if(insert.skill[m].updated !== true) {
             call += '(' + person.id + ',' + insert.skill[m].skill_id + ',' + insert.skill[m].value + '),';
         }
     }
+    */
 
     call = call.slice(0, -1);
 
@@ -406,9 +444,9 @@ exports.personInsertSkill = function(person, insert, current, callback) {
 };
 
 exports.personCustomDescription = function(req, res, next, personId, tableName, tableId, tableCustom) {
-    if(!parseInt(personId)) return next('Parsing Error.');
+    if(!parseInt(personId)) return next('Parsing Error. Expected personId. Actual: ' + personId);
 
-    if(!parseInt(tableId)) return next('Parsing Error.');
+    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
 
     async.series([
         function(callback) {
@@ -425,11 +463,9 @@ exports.personCustomDescription = function(req, res, next, personId, tableName, 
 };
 
 exports.personEquip = function(req, res, next, personId, tableName, tableId, tableEquip) {
-    if(!parseInt(personId)) return next('Parsing Error.');
+    if(!parseInt(personId)) return next('Parsing Error. Expected personId. Actual: ' + personId);
 
-    if(!parseInt(tableId)) return next('Parsing Error.');
-
-    if(!parseInt(tableEquip)) return next('Parsing Error.');
+    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
 
     async.series([
         function(callback) {
@@ -452,9 +488,9 @@ exports.userRelationPost = function(req, res, next, userId, relationName, relati
 
     if(req.user.id !== userId && !req.user.admin) return next('Forbidden.');
 
-    if(!parseInt(userId)) return next('Parsing Error.');
+    if(!parseInt(userId)) return next('Parsing Error. Expected userId. Actual: ' + userId);
 
-    if(!parseInt(relationId)) return next('Parsing Error.');
+    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
 
     query('INSERT INTO user_has_' + relationName + ' (user_id,' + relationName + '_id) VALUES (?,?)', [parseInt(userId), parseInt(relationId)], function(err) {
         if(err) return next(err);
@@ -468,9 +504,9 @@ exports.userRelationDelete = function(req, res, next, userId, relationName, rela
 
     if(req.user.id !== userId && !req.user.admin) return next('Forbidden.');
 
-    if(!parseInt(userId)) return next('Parsing Error.');
+    if(!parseInt(userId)) return next('Parsing Error. Expected userId. Actual: ' + userId);
 
-    if(!parseInt(relationId)) return next('Parsing Error.');
+    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
 
     query('DELETE FROM user_has_' + relationName + ' WHERE user_id = ? AND ' + relationName + '_id = ?', [parseInt(userId), parseInt(relationId)], function(err) {
         if(err) return next(err);

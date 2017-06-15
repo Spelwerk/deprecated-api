@@ -50,7 +50,7 @@ module.exports = function(router, path) {
     router.get(path + '/id/:id/weapon', function(req, res, next) {
         var call = query + ' WHERE ' +
             'person_has_weapon.person_id = ? AND ' +
-            'weapon.special = ?';
+            'weapongroup.special = ?';
 
         rest.QUERY(req, res, next, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
     });

@@ -5,11 +5,12 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'skill.id, ' +
         'skill.canon, ' +
-        'skill.special, ' +
+        'skill.popularity, ' +
         'skill.name, ' +
         'skill.description, ' +
-        'skill.icon' +
-        'person_has_skill.value, ' +
+        'skill.species_id, ' +
+        'skill.icon, ' +
+        'person_has_skill.value ' +
         'FROM person_has_skill ' +
         'LEFT JOIN skill ON skill.id = person_has_skill.skill_id';
 

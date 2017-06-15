@@ -1,7 +1,7 @@
 var rest = require('./../rest');
 
 module.exports = function(router, path) {
-    var query = 'SELECT doctrine.id FROM user_has_doctrine ' +
+    var query = 'SELECT * FROM user_has_doctrine ' +
         'LEFT JOIN doctrine ON doctrine.id = user_has_doctrine.doctrine_id';
 
     router.get(path + '/id/:id/doctrine', function(req, res, next) {

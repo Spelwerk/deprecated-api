@@ -68,16 +68,6 @@ app.use(function(req, res, next) {
 
                 callback(err);
             });
-        },
-        function(callback) {
-            callback();
-            /*
-            rest.query('SELECT permission.name FROM user_has_permission LEFT JOIN permission ON permission.id = user_has_permission.permission_id WHERE user_id = ?', [req.user.id], function(err, result) {
-                req.user.permissions = result;
-
-                callback(err);
-            });
-            */
         }
     ],function(err) {
         next(err);
@@ -89,7 +79,11 @@ require('./app/index')(router);
 app.use('/', router);
 
 app.use(function(err, req, res) {
-    console.log(err);
+    if(err.originalUrl) {
+        console.log('ERROR WHEN TRYING TO PARSE >> ' + err.originalUrl);
+    } else {
+        console.log(err);
+    }
 
     res.status(500).send(err);
 });

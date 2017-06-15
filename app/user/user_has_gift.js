@@ -1,7 +1,7 @@
 var rest = require('./../rest');
 
 module.exports = function(router, path) {
-    var query = 'SELECT gift.id FROM user_has_gift ' +
+    var query = 'SELECT * FROM user_has_gift ' +
         'LEFT JOIN gift ON gift.id = user_has_gift.gift_id';
 
     router.get(path + '/id/:id/gift', function(req, res, next) {

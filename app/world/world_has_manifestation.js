@@ -15,46 +15,7 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/manifestation', function(req, res, next) {
-        var table = {},
-            insert = {},
-            manifestation = {};
-
-        table.id = parseInt(req.params.id);
-        table.name = 'world';
-        insert.id = parseInt(req.body.insert_id);
-
-        async.series([
-            function(callback) {
-                rest.userAuth(req, false, 'world', ID, callback);
-            },
-            function(callback) {
-                rest.query( 'SELECT id FROM expertise WHERE canon = 1 AND manifestation_id = ? AND doctrine_id IS NOT NULL', [insert.id], function(err, result) {
-                    manifestation.expertise = result;
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                rest.query( 'INSERT INTO world_has_manifestation (world_id,manifestation_id) VALUES (?,?)', [table.id, insert.id], callback);
-            },
-            function(callback) {
-                if(!manifestation.expertise[0]) return callback();
-
-                var call = 'INSERT INTO world_has_expertise (world_id,expertise_id) VALUES ';
-
-                for(var i in manifestation.expertise) {
-                    call += '(' + table.id + ',' + manifestation.expertise[i].id + '),';
-                }
-
-                call = call.slice(0, -1) + ' ON DUPLICATE KEY UPDATE expertise_id = VALUES(expertise_id)';
-
-                rest.query( call, null, callback);
-            }
-        ],function(err) {
-            if(err) return next(err);
-
-            res.status(200).send();
-        });
+        rest.relationPost(req, res, next, 'world', req.params.id, 'manifestation', req.body.insert_id);
     });
 
     router.delete(path + '/id/:id/manifestation/:id2', function(req, res, next) {

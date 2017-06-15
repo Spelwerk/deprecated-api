@@ -70,7 +70,7 @@ module.exports = function(router, tableName, path) {
                         rest.query('SELECT attribute_id, value FROM world_has_attribute WHERE world_id = ?', [world.id], callback);
                     },
                     function(callback) {
-                        rest.query('SELECT skill_id FROM world_has_skill WHERE world_id = ?', [world.id], callback);
+                        rest.query('SELECT skill_id AS id FROM world_has_skill WHERE world_id = ?', [world.id], callback);
                     },
                     function (callback) {
                         rest.query('SELECT * FROM species WHERE id = ?', [species.id], callback);
@@ -82,7 +82,7 @@ module.exports = function(router, tableName, path) {
                         rest.query('SELECT id FROM skill WHERE species_id = ?', [species.id], callback);
                     },
                     function (callback) {
-                        rest.query('SELECT weapon_id FROM species_has_weapon WHERE species_id = ?', [species.id], callback);
+                        rest.query('SELECT weapon_id AS id FROM species_has_weapon WHERE species_id = ?', [species.id], callback);
                     }
                 ], function (err, results) {
                     world.select = results[0][0];
@@ -108,6 +108,7 @@ module.exports = function(router, tableName, path) {
                     var split = {},
                         max = {};
 
+                    // Calculate split value based on person age and world settings
                     split.expertise = Math.floor(insert.age / (world.select.split_expertise * species.select.multiply_expertise));
                     split.milestone = Math.floor(insert.age / world.select.split_milestone);
                     split.relationship = Math.floor(insert.age / world.select.split_relationship);
@@ -120,6 +121,8 @@ module.exports = function(router, tableName, path) {
                     max.skill = world.select.max_skill;
                     max.doctrine = world.select.max_doctrine;
 
+                    // If the split value is lower than maximum, and higher than 1
+                    // If the split value is higher than maximum
                     if (split.expertise < max.expertise && split.expertise > 1) {
                         points.expertise = split.expertise;
                     } else if (split.expertise > max.expertise) {
@@ -180,9 +183,16 @@ module.exports = function(router, tableName, path) {
                     function(callback) {
                         var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
+                        // Loop through attribute list from world
                         for(var i in world.attribute) {
-                            if(species.attribute[0]) {
+
+                            // If species has a list of attributes
+                            if(species.attribute !== undefined && species.attribute[0] !== undefined) {
+
+                                // Loop through species list of attributes
                                 for(var j in species.attribute) {
+
+                                    // If species has attribute in world list = update values and save updated status in species attribute
                                     if(world.attribute[i].attribute_id === species.attribute[j].attribute_id) {
                                         world.attribute[i].value += species.attribute[j].value;
                                         species.attribute[j].updated = true;
@@ -190,11 +200,17 @@ module.exports = function(router, tableName, path) {
                                 }
                             }
 
+                            // Add the attribute and (perhaps updated) value to the call
                             call += '(' + person.id + ',' + world.attribute[i].attribute_id + ',' + world.attribute[i].value + '),';
                         }
 
-                        if(species.attribute[0]) {
+                        // If species has a list of attributes
+                        if(species.attribute !== undefined && species.attribute[0] !== undefined) {
+
+                            // Loop through species list of attributes
                             for (var m in species.attribute) {
+
+                                // If species attribute was not added to world call = it is species specific attribute
                                 if (species.attribute[m].updated !== true) {
                                     call += '(' + person.id + ',' + species.attribute[m].attribute_id + ',' + species.attribute[m].value + '),';
                                 }
@@ -208,24 +224,21 @@ module.exports = function(router, tableName, path) {
                     function(callback) {
                         var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
 
+                        // Loop through skill list from world
                         for(var i in world.skill) {
-                            if(species.skill[0]) {
-                                for(var j in species.skill) {
-                                    if(world.skill[i].skill_id === species.skill[j].skill_id) {
-                                        world.skill[i].value += species.skill[j].value;
-                                        species.skill[j].updated = true;
-                                    }
-                                }
-                            }
 
-                            call += '(' + person.id + ',' + world.skill[i].skill_id + ',' + world.skill[i].value + '),';
+                            // Add skill to call
+                            call += '(' + person.id + ',' + world.skill[i].id + ',0),';
                         }
 
-                        if(species.skill[0]) {
+                        // If species has a list of skills
+                        if(species.skill !== undefined && species.skill[0] !== undefined) {
+
+                            // Loop through species list of skills
                             for (var m in species.skill) {
-                                if (species.skill[m].updated !== true) {
-                                    call += '(' + person.id + ',' + species.skill[m].skill_id + ',' + species.skill[m].value + '),';
-                                }
+
+                                // Add skill to call
+                                call += '(' + person.id + ',' + species.skill[m].id + ',0),';
                             }
                         }
 
@@ -234,12 +247,16 @@ module.exports = function(router, tableName, path) {
                         rest.query(call, null, callback);
                     },
                     function(callback) {
-                        if(species.weapon[0] !== undefined) return callback();
+                        if(species.weapon[0] === undefined) return callback();
 
                         var call = 'INSERT INTO person_has_weapon (person_id,weapon_id,species) VALUES ';
 
+                        // Loop through species list of weapons
                         for(var i in species.weapon) {
-                            call += '(' + person.id + ',' + species.weapon[i].weapon_id + ',1),';
+
+                            console.log(species.weapon[i]);
+                            // Add weapon to call
+                            call += '(' + person.id + ',' + species.weapon[i].id + ',1),';
                         }
 
                         call = call.slice(0, -1);
@@ -271,24 +288,23 @@ module.exports = function(router, tableName, path) {
 
         person.id = parseInt(req.params.id);
 
-        insert.playable = parseInt(req.body.playable) || null;
-        insert.calculated = parseInt(req.body.calculated) || null;
+        insert.playable = req.body.playable || null;
+        insert.calculated = req.body.calculated || null;
         insert.nickname = req.body.nickname || null;
         insert.occupation = req.body.occupation || null;
 
-        creation.point_expertise = parseInt(req.body.point_expertise) || null;
-        creation.point_gift = parseInt(req.body.point_gift) || null;
-        creation.point_imperfection = parseInt(req.body.point_imperfection) || null;
-        creation.point_milestone = parseInt(req.body.point_milestone) || null;
-        creation.point_money = parseInt(req.body.point_money) || null;
-        creation.point_power = parseInt(req.body.point_power) || null;
-        creation.point_relationship = parseInt(req.body.point_relationship) || null;
-        creation.point_skill = parseInt(req.body.point_skill) || null;
-        creation.point_doctrine = parseInt(req.body.point_doctrine) || null;
-        creation.doctrine_expertise = parseInt(req.body.point_doctrine_expertise) || null;
+        creation.point_expertise = req.body.point_expertise;
+        creation.point_gift = req.body.point_gift;
+        creation.point_imperfection = req.body.point_imperfection;
+        creation.point_milestone = req.body.point_milestone;
+        creation.point_money = req.body.point_money;
+        creation.point_power = req.body.point_power;
+        creation.point_relationship = req.body.point_relationship;
+        creation.point_skill = req.body.point_skill;
+        creation.point_doctrine = req.body.point_doctrine;
 
-        playable.supernatural = parseInt(req.body.supernatural) || null;
-        playable.age = parseInt(req.body.age) || null;
+        playable.supernatural = req.body.supernatural || null;
+        playable.age = req.body.age || null;
 
         description.firstname = req.body.firstname || null;
         description.surname = req.body.surname || null;
@@ -310,8 +326,8 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 rest.query('SELECT playable,calculated FROM person WHERE id = ?', [person.id], function(err, result) {
                     person.auth = !!result[0];
-                    person.playable = !!result[0];
-                    person.calculated = !!result[0];
+                    person.playable = !!result[0].playable;
+                    person.calculated = !!result[0].calculated;
 
                     if(!person.auth) return callback('Forbidden');
 
@@ -345,8 +361,8 @@ module.exports = function(router, tableName, path) {
                     values_array = [],
                     query_amount = 0;
 
-                for (var i in creation) {
-                    if(creation[i] !== null) {
+                for(var i in creation) {
+                    if(creation[i] !== undefined) {
                         call += i + ' = ?, ';
                         values_array.push(creation[i]);
                         query_amount++;
@@ -387,7 +403,7 @@ module.exports = function(router, tableName, path) {
                     values_array = [],
                     query_amount = 0;
 
-                for (var i in playable) {
+                for (var i in description) {
                     if(description[i] !== null) {
                         call += i + ' = ?, ';
                         values_array.push(description[i]);
@@ -556,10 +572,10 @@ module.exports = function(router, tableName, path) {
                     function(callback) {
                         rest.query('SELECT focus_id FROM person_playable WHERE person_id = ?', [person.id], callback);
                     }
-                ],function(err,results) {
-                    person.attribute = results[1];
-                    insert.attribute = results[2];
-                    current.id = results[3][0].focus_id;
+                ],function(err, results) {
+                    person.attribute = results[0];
+                    insert.attribute = results[1];
+                    current.id = results[2][0].focus_id;
 
                     callback(err);
                 });
@@ -647,7 +663,7 @@ module.exports = function(router, tableName, path) {
         });
     });
 
-    router.post(path + '/id/:id/manifestation', function(req, res, next) {
+    router.put(path + '/id/:id/manifestation', function(req, res, next) {
         var person = {},
             manifestation = {},
             insert = {};
@@ -671,7 +687,7 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                rest.query('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.power], callback)
+                rest.query('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES (?,?,0) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.power], callback)
             },
             function(callback) {
                 rest.query('INSERT INTO person_has_skill (person_id,skill_id,value) VALUES (?,?,0) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, manifestation.skill], callback)

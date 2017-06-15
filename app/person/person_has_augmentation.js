@@ -57,15 +57,15 @@ module.exports = function(router, path) {
                 });
             },
             function(callback) {
-                rest.query('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
-                    person.skill = result;
+                rest.query('SELECT attribute_id, value FROM augmentation_has_attribute WHERE augmentation_id = ?', [insert.id], function(err, result) {
+                    insert.attribute = !!result[0] ? result : null;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query('SELECT attribute_id, value FROM augmentation_has_attribute WHERE augmentation_id = ?', [insert.id], function(err, result) {
-                    insert.attribute = !!result[0] ? result : null;
+                rest.query('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
+                    person.skill = result;
 
                     callback(err);
                 });

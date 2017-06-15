@@ -29,6 +29,9 @@ module.exports = function(router, tableName, path) {
         var user = {};
 
         user.id = userId;
+        user.os = req.body.os || '';
+        user.browser = req.body.browser || '';
+        user.ip = req.body.ip || '';
 
         async.series([
             function(callback) {
@@ -48,7 +51,7 @@ module.exports = function(router, tableName, path) {
                 callback();
             },
             function(callback) {
-                rest.query('INSERT INTO usertoken (user_id,token) VALUES (?,?) ON DUPLICATE KEY UPDATE token = VALUES (token)', [user.id, user.token], callback);
+                rest.query('INSERT INTO usertoken (user_id,token,os,browser,ip) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE token = VALUES (token)', [user.id, user.token, user.os, user.browser, user.ip], callback);
             },
             function(callback) {
                 rest.query('UPDATE user SET login_secret = NULL, login_timeout = NULL WHERE id = ?', [user.id], callback);

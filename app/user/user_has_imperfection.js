@@ -1,7 +1,7 @@
 var rest = require('./../rest');
 
 module.exports = function(router, path) {
-    var query = 'SELECT imperfection.id FROM user_has_imperfection ' +
+    var query = 'SELECT * FROM user_has_imperfection ' +
         'LEFT JOIN imperfection ON imperfection.id = user_has_imperfection.imperfection_id';
 
     router.get(path + '/id/:id/imperfection', function(req, res, next) {

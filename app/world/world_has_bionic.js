@@ -4,6 +4,7 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'bionic.id, ' +
         'bionic.canon, ' +
+        'bionic.popularity, ' +
         'bionic.name, ' +
         'bionic.description, ' +
         'bionic.price, ' +
@@ -11,14 +12,10 @@ module.exports = function(router, path) {
         'bionic.legal, ' +
         'bionic.bodypart_id, ' +
         'bodypart.name AS bodypart_name, ' +
-        'bionic.attribute_id, ' +
-        'attribute.name AS attribute_name, ' +
-        'bionic.attribute_value, ' +
         'bionic.icon ' +
         'FROM world_has_bionic ' +
         'LEFT JOIN bionic ON bionic.id = world_has_bionic.bionic_id ' +
-        'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id ' +
-        'LEFT JOIN attribute ON attribute.id = bionic.attribute_id';
+        'LEFT JOIN bodypart ON bodypart.id = bionic.bodypart_id';
 
     router.get(path + '/id/:id/bionic', function(req, res, next) {
         var call = query + ' WHERE ' +

@@ -4,12 +4,12 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'expertise.id, ' +
         'expertise.canon, ' +
+        'expertise.popularity, ' +
         'expertise.name, ' +
         'expertise.description, ' +
         'expertise.skill_id, ' +
         'expertise.species_id, ' +
         'expertise.manifestation_id, ' +
-        'expertise.doctrine_id, ' +
         'skill.icon ' +
         'FROM world_has_expertise ' +
         'LEFT JOIN expertise ON expertise.id = world_has_expertise.expertise_id ' +
@@ -21,7 +21,6 @@ module.exports = function(router, path) {
             'world_has_expertise.world_id = ? AND ' +
             'expertise.species_id IS NULL AND ' +
             'expertise.manifestation_id IS NULL AND ' +
-            'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
         rest.QUERY(req, res, next, call, [req.params.id]);
@@ -35,7 +34,6 @@ module.exports = function(router, path) {
             'expertise.skill_id = ? AND ' +
             'expertise.species_id IS NULL AND ' +
             'expertise.manifestation_id IS NULL AND ' +
-            'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
         rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
@@ -48,7 +46,6 @@ module.exports = function(router, path) {
             'world_has_expertise.world_id = ? AND ' +
             'expertise.species_id IS NULL AND ' +
             'expertise.manifestation_id = ? AND ' +
-            'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
         rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
@@ -62,7 +59,6 @@ module.exports = function(router, path) {
             'expertise.skill_id = ? AND ' +
             '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +
             'expertise.manifestation_id IS NULL AND ' +
-            'expertise.doctrine_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
         rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
@@ -79,18 +75,6 @@ module.exports = function(router, path) {
             'expertise.deleted IS NULL';
 
         rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
-    });
-
-    // person creation (manifestation expertise select)
-    router.get(path + '/id/:id/expertise/manifestation/:id2/doctrine', function(req, res, next) {
-        var call = query + ' WHERE ' +
-            'expertise.canon = 1 AND ' +
-            'world_has_expertise.world_id = ? AND ' +
-            'expertise.manifestation_id = ? AND ' +
-            'expertise.doctrine_id IS NOT NULL AND ' +
-            'expertise.deleted IS NULL';
-
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
     router.post(path + '/id/:id/expertise', function(req, res, next) {

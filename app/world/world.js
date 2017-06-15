@@ -126,11 +126,11 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id', function(req, res, next) {
-        var table = {},
+        var world = {},
             insert = {};
 
-        table.id = req.params.id;
-        table.name = 'world';
+        world.id = req.params.id;
+        world.name = 'world';
 
         insert.name = req.body.name || null;
 
@@ -156,7 +156,7 @@ module.exports = function(router, tableName, path) {
 
         async.series([
             function(callback) {
-                rest.userAuth(req, false, 'world', ID, callback);
+                rest.userAuth(req, false, 'world', world.id, callback);
             },
             function(callback) {
                 var call = 'UPDATE world SET ',
@@ -175,7 +175,7 @@ module.exports = function(router, tableName, path) {
                     callback();
                 } else {
                     call = call.slice(0, -2) + ', updated = CURRENT_TIMESTAMP WHERE id = ?';
-                    values_array.push(table.id);
+                    values_array.push(world.id);
 
                     rest.query(call, values_array, callback);
                 }

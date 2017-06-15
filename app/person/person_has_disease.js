@@ -5,6 +5,7 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'disease.id, ' +
         'disease.canon, ' +
+        'disease.popularity, ' +
         'disease.name, ' +
         'person_has_disease.heal, ' +
         'person_has_disease.timestwo ' +

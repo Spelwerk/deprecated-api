@@ -12,8 +12,6 @@ module.exports = function(router, path) {
         'bionic.energy, ' +
         'bionic.legal, ' +
         'bionic.bodypart_id, ' +
-        'bionic.attribute_id, ' +
-        'bionic.attribute_value, ' +
         'bionic.icon, ' +
         'person_has_bionic.custom, ' +
         'person_has_bionic.bionicquality_id AS quality_id, ' +
@@ -59,6 +57,13 @@ module.exports = function(router, path) {
         async.series([
             function(callback) {
                 rest.userAuth(req, false, 'person', req.params.id, callback);
+            },
+            function(callback) {
+                rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
+                    person.attribute = result;
+
+                    callback(err);
+                });
             },
             function(callback) {
                 rest.query('SELECT attribute_id, value FROM bionic_has_attribute WHERE bionic_id = ?', [insert.id], function(err, result) {

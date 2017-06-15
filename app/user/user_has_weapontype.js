@@ -1,7 +1,7 @@
 var rest = require('./../rest');
 
 module.exports = function(router, path) {
-    var query = 'SELECT weapontype.id FROM user_has_weapontype ' +
+    var query = 'SELECT * FROM user_has_weapontype ' +
         'LEFT JOIN weapontype ON weapontype.id = user_has_weapontype.weapontype_id';
 
     router.get(path + '/id/:id/weapontype', function(req, res, next) {

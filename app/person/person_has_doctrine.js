@@ -5,10 +5,13 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'doctrine.id, ' +
         'doctrine.canon, ' +
+        'doctrine.popularity, ' +
         'doctrine.name, ' +
         'doctrine.description, ' +
-        'doctrine.icon' +
-        'person_has_doctrine.value, ' +
+        'doctrine.manifestation_id, ' +
+        'doctrine.expertise_id, ' +
+        'doctrine.icon,  ' +
+        'person_has_doctrine.value ' +
         'FROM person_has_doctrine ' +
         'LEFT JOIN doctrine ON doctrine.id = person_has_doctrine.doctrine_id';
 

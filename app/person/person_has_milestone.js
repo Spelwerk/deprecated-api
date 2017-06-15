@@ -5,13 +5,12 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'milestone.id, ' +
         'milestone.canon, ' +
+        'milestone.popularity, ' +
         'milestone.name, ' +
         'milestone.description, ' +
         'milestone.background_id, ' +
-        'milestone.attribute_id, ' +
-        'milestone.attribute_value, ' +
-        'milestone.loyalty_id, ' +
-        'milestone.loyalty_occupation, ' +
+        'milestone.species_id, ' +
+        'milestone.manifestation_id, ' +
         'person_has_milestone.custom ' +
         'FROM person_has_milestone ' +
         'LEFT JOIN milestone ON milestone.id = person_has_milestone.milestone_id';
@@ -43,8 +42,22 @@ module.exports = function(router, path) {
                 });
             },
             function(callback) {
-                rest.query('SELECT attribute_id, attribute_value AS value FROM milestone WHERE id = ?', [insert.id], function(err, result) {
-                    insert.attribute = result;
+                rest.query('SELECT attribute_id, value FROM milestone_has_attribute WHERE milestone_id = ?', [insert.id], function(err, result) {
+                    insert.attribute = !!result[0] ? result : null;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
+                    person.skill = result;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query('SELECT skill_id, value FROM milestone_has_skill WHERE milestone_id = ?', [insert.id], function(err, result) {
+                    insert.skill = !!result[0] ? result : null;
 
                     callback(err);
                 });
@@ -54,6 +67,9 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.personInsertAttribute(person, insert, current, callback);
+            },
+            function(callback) {
+                rest.personInsertSkill(person, insert, current, callback);
             }
         ],function(err) {
             if(err) return next(err);

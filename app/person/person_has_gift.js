@@ -32,8 +32,22 @@ module.exports = function(router, path) {
                 });
             },
             function(callback) {
-                rest.query('SELECT attribute_id, attribute_value AS value FROM gift WHERE id = ?', [insert.id], function(err, result) {
-                    insert.attribute = result;
+                rest.query('SELECT attribute_id, value FROM gift_has_attribute WHERE gift_id = ?', [insert.id], function(err, result) {
+                    insert.attribute = !!result[0] ? result : null;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
+                    person.skill = result;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                rest.query('SELECT skill_id, value FROM gift_has_skill WHERE gift_id = ?', [insert.id], function(err, result) {
+                    insert.skill = !!result[0] ? result : null;
 
                     callback(err);
                 });
@@ -43,6 +57,9 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.personInsertAttribute(person, insert, current, callback);
+            },
+            function(callback) {
+                rest.personInsertSkill(person, insert, current, callback);
             }
         ],function(err) {
             if(err) return next(err);

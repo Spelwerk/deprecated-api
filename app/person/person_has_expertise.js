@@ -4,12 +4,16 @@ var async = require('async'),
 module.exports = function(router, path) {
     var query = 'SELECT ' +
         'expertise.id, ' +
+        'expertise.canon, ' +
+        'expertise.popularity, ' +
         'expertise.name, ' +
         'expertise.description, ' +
         'expertise.skill_id, ' +
+        'expertise.species_id, ' +
+        'expertise.manifestation_id, ' +
+        'skill.icon, ' +
         'person_has_expertise.value, ' +
-        'person_has_skill.value AS bonus, ' +
-        'skill.icon ' +
+        'person_has_skill.value AS bonus ' +
         'FROM person_has_expertise ' +
         'LEFT JOIN expertise ON expertise.id = person_has_expertise.expertise_id ' +
         'LEFT JOIN skill ON skill.id = expertise.skill_id ' +
