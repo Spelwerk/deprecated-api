@@ -14,7 +14,6 @@ module.exports = function(router, path) {
 
     router.post(path + '/id/:id/gift', function(req, res, next) {
         var person = {},
-            current = {},
             insert = {};
 
         person.id = req.params.id;
@@ -56,10 +55,10 @@ module.exports = function(router, path) {
                 rest.query('INSERT INTO person_has_gift (person_id,gift_id) VALUES (?,?)', [person.id, insert.id], callback);
             },
             function(callback) {
-                rest.personInsertAttribute(person, insert, current, callback);
+                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, null, callback);
             },
             function(callback) {
-                rest.personInsertSkill(person, insert, current, callback);
+                rest.personInsert('INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ', person.id, person.skill, insert.skill, null, callback);
             }
         ],function(err) {
             if(err) return next(err);

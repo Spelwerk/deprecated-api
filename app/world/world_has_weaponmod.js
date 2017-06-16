@@ -6,7 +6,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/weaponmod', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'weaponmod.canon = 1 AND ' +
             'world_has_weaponmod.world_id = ? AND ' +
             'weaponmod.deleted IS NULL';
 
@@ -15,7 +14,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/weaponmod/type/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'weaponmod.canon = 1 AND ' +
             'world_has_weaponmod.world_id = ? AND ' +
             'weaponmod.weapontype_id = ? AND ' +
             'weaponmod.deleted IS NULL';

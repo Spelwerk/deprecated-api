@@ -3,9 +3,7 @@ var rest = require('./../rest');
 module.exports = function(router, tableName, path) {
     path = path || '/' + tableName;
 
-    var query = 'SELECT * FROM asset ' +
-        'LEFT JOIN assettype ON assettype.id = asset.assettype_id ' +
-        'LEFT JOIN assetgroup ON assetgroup.id = assettype.assetgroup_id';
+    var query = 'SELECT * FROM asset';
 
     require('./../default')(router, tableName, query, {admin: false, user: true});
 

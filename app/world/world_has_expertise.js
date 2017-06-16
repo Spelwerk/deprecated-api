@@ -17,7 +17,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/expertise', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.species_id IS NULL AND ' +
             'expertise.manifestation_id IS NULL AND ' +
@@ -29,7 +28,6 @@ module.exports = function(router, path) {
     // world creation
     router.get(path + '/id/:id/expertise/skill/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.skill_id = ? AND ' +
             'expertise.species_id IS NULL AND ' +
@@ -42,7 +40,6 @@ module.exports = function(router, path) {
     // world creation
     router.get(path + '/id/:id/expertise/manifestation/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.species_id IS NULL AND ' +
             'expertise.manifestation_id = ? AND ' +
@@ -54,7 +51,6 @@ module.exports = function(router, path) {
     // person creation
     router.get(path + '/id/:id/expertise/skill/:id2/species/:id3', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.skill_id = ? AND ' +
             '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +
@@ -67,7 +63,6 @@ module.exports = function(router, path) {
     // person creation
     router.get(path + '/id/:id/expertise/skill/:id2/species/:id3/manifestation/:id4', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'expertise.canon = 1 AND ' +
             'world_has_expertise.world_id = ? AND ' +
             'expertise.skill_id = ? AND ' +
             '(expertise.species_id = ? OR expertise.species_id IS NULL) AND ' +

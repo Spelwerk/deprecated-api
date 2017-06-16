@@ -6,7 +6,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/milestone', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'milestone.canon = 1 AND ' +
             'world_has_milestone.world_id = ? AND ' +
             'milestone.species_id IS NULL AND ' +
             'milestone.manifestation_id IS NULL AND ' +
@@ -17,7 +16,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/milestone/background/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'milestone.canon = 1 AND ' +
             'world_has_milestone.world_id = ? AND ' +
             '(milestone.background_id = ? OR milestone.background_id IS NULL) AND ' +
             'milestone.species_id IS NULL AND ' +
@@ -29,7 +27,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/milestone/background/:id2/species/:id3', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'milestone.canon = 1 AND ' +
             'world_has_milestone.world_id = ? AND ' +
             '(milestone.background_id = ? OR milestone.background_id IS NULL) AND ' +
             '(milestone.species_id = ? OR milestone.species_id IS NULL) AND ' +
@@ -41,7 +38,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/milestone/background/:id2/species/:id3/manifestation/:id4', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'milestone.canon = 1 AND ' +
             'world_has_milestone.world_id = ? AND ' +
             '(milestone.background_id = ? OR milestone.background_id IS NULL) AND ' +
             '(milestone.species_id = ? OR milestone.species_id IS NULL) AND ' +

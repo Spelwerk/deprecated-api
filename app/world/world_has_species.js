@@ -7,7 +7,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/species', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'species.canon = 1 AND ' +
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';
 
@@ -16,7 +15,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/species/playable', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'species.canon = 1 AND ' +
             'species.playable = 1 AND ' +
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';
@@ -26,7 +24,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/species/creature', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'species.canon = 1 AND ' +
             'species.playable = 0 AND ' +
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';

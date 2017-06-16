@@ -19,7 +19,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/bionic', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'bionic.canon = 1 AND ' +
             'world_has_bionic.world_id = ? AND ' +
             'bionic.deleted IS NULL';
 

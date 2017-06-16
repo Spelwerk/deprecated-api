@@ -6,7 +6,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/imperfection', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'imperfection.canon = 1 AND ' +
             'world_has_imperfection.world_id = ? AND ' +
             'imperfection.species_id IS NULL AND ' +
             'imperfection.manifestation_id IS NULL AND ' +
@@ -17,7 +16,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/imperfection/species/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'imperfection.canon = 1 AND ' +
             'world_has_imperfection.world_id = ? AND ' +
             '(imperfection.species_id = ? OR imperfection.species_id IS NULL) AND ' +
             'imperfection.manifestation_id IS NULL AND ' +
@@ -28,7 +26,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/imperfection/species/:id2/manifestation/:id3', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'imperfection.canon = 1 AND ' +
             'world_has_imperfection.world_id = ? AND ' +
             '(imperfection.species_id = ? OR imperfection.species_id IS NULL) AND ' +
             '(imperfection.manifestation_id = ? OR imperfection.manifestation_id IS NULL) AND ' +

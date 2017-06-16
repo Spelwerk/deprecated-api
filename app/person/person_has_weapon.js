@@ -71,8 +71,50 @@ module.exports = function(router, path) {
         rest.personCustomDescription(req, res, next, req.params.id, 'weapon', req.params.id2, req.body.custom);
     });
 
-    router.put(path + '/id/:id/weapon/:id2/equip/:equip', function(req, res, next) {
-        rest.personEquip(req, res, next, req.params.id, 'weapon', req.params.id2, req.params.equip);
+    router.put(path + '/id/:id/weapon/:weapon/equip', function(req, res, next) {
+        var person = {},
+            weapon = {};
+
+        weapon.equip = 1;
+
+        person.id = req.params.id;
+        weapon.id = req.params.weapon;
+
+        async.series([
+            function(callback) {
+                rest.userAuth(req, false, 'person', person.id, callback);
+            },
+            function(callback) {
+                rest.query('UPDATE person_has_weapon SET equipped = ? WHERE person_id = ? AND weapon_id = ?', [weapon.equip, person.id, weapon.id], callback);
+            }
+        ],function(err) {
+            if(err) return next(err);
+
+            res.status(200).send();
+        });
+    });
+
+    router.put(path + '/id/:id/weapon/:weapon/unequip', function(req, res, next) {
+        var person = {},
+            weapon = {};
+
+        weapon.equip = 0;
+
+        person.id = req.params.id;
+        weapon.id = req.params.weapon;
+
+        async.series([
+            function(callback) {
+                rest.userAuth(req, false, 'person', person.id, callback);
+            },
+            function(callback) {
+                rest.query('UPDATE person_has_weapon SET equipped = ? WHERE person_id = ? AND weapon_id = ?', [weapon.equip, person.id, weapon.id], callback);
+            }
+        ],function(err) {
+            if(err) return next(err);
+
+            res.status(200).send();
+        });
     });
 
     router.delete(path + '/id/:id/weapon/:id2', function(req, res, next) {

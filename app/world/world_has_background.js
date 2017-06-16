@@ -6,7 +6,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/background', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'background.canon = 1 AND ' +
             'world_has_background.world_id = ? AND ' +
             'background.species_id IS NULL AND ' +
             'background.manifestation_id IS NULL AND ' +
@@ -17,7 +16,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/background/species/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'background.canon = 1 AND ' +
             'world_has_background.world_id = ? AND ' +
             '(background.species_id = ? OR background.species_id IS NULL) AND ' +
             'background.manifestation_id IS NULL AND ' +
@@ -28,7 +26,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/background/species/:id2/manifestation/:id3', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'background.canon = 1 AND ' +
             'world_has_background.world_id = ? AND ' +
             '(background.species_id = ? OR background.species_id IS NULL) AND ' +
             '(background.manifestation_id = ? OR background.manifestation_id IS NULL) AND ' +

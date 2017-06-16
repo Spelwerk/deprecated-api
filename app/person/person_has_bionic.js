@@ -48,7 +48,6 @@ module.exports = function(router, path) {
     router.post(path + '/id/:id/bionic', function(req, res, next) {
         var person = {},
             energy = {},
-            current = {},
             insert = {};
 
         person.id = req.params.id;
@@ -60,25 +59,31 @@ module.exports = function(router, path) {
                 rest.userAuth(req, false, 'person', req.params.id, callback);
             },
             function(callback) {
-                rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
+                rest.query('INSERT INTO person_has_bionic (person_id,bionic_id) VALUES (?,?)', [person.id, insert.id], callback);
+            },
+
+            // ATTRIBUTE
+
+            function(callback) {
+                rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
                     person.attribute = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query('SELECT attribute_id, value FROM bionic_has_attribute WHERE bionic_id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT attribute_id AS id, value FROM bionic_has_attribute WHERE bionic_id = ?', [insert.id], function(err, result) {
                     insert.attribute = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query('INSERT INTO person_has_bionic (person_id,bionic_id) VALUES (?,?)', [person.id, insert.id], callback);
+                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, null, callback);
             },
-            function(callback) {
-                rest.personInsertAttribute(person, insert, current, callback);
-            },
+
+            // ENERGY
+
             function(callback) {
                 rest.query('SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, energy.id], function(err, result) {
                     person.energy = parseInt(result[0].value);
@@ -94,7 +99,7 @@ module.exports = function(router, path) {
                 });
             },
             function(callback) {
-                insert.value = insert.energy + person.energy;
+                insert.value = person.energy + insert.energy;
 
                 rest.query('UPDATE person_has_attribute SET value = ? WHERE person_id = ? AND attribute_id = ?', [insert.value, person.id, energy.id], callback);
             }

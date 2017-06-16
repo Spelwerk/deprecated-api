@@ -8,15 +8,13 @@ var async = require('async'),
     tokens = require('./tokens'),
     base = require('./base');
 
-function query(call, params, callback, logCall) {
-    logCall = logCall || true;
-
+function query(call, params, callback) {
     if(params) {
         call = mysql.format(call, params);
     }
 
     pool.query(call, function(err, result) {
-        if(logCall) logger.logCall('rest.js', call, err);
+        logger.logCall('rest.js', call, err);
 
         callback(err, result);
     });
@@ -61,9 +59,59 @@ function sendMail(email, subject, text, callback) {
     });
 }
 
+function personInsert(call, personId, personList, relationList, currentList, callback) {
+    if(!personList[0]) return callback();
+
+    if(!relationList[0] && currentList[0]) return callback();
+
+    // Begin by looping through personList, as we want to change existing relations, not add new
+    for(var p in personList) {
+
+        // If the Relation List exists and has at least one value
+        if(relationList && relationList[0]) {
+
+            // Loop through relationList
+            for(var r in relationList) {
+
+                // If person has the relation-col we wish to update = add the value
+                if(personList[p].id === relationList[r].id) {
+                    personList[p].value += relationList[r].value;
+                    personList[p].changed = true;
+                }
+            }
+        }
+
+        // If the Current List exists and has at least one value
+        if(currentList && currentList[0]) {
+
+            // Loop through currentList
+            for(var c in currentList) {
+
+                // If person has the relation-col we wish to update = remove the value
+                if(personList[p].id === currentList[c].id) {
+                    personList[p].value -= currentList[c].value;
+                    personList[p].changed = true;
+                }
+            }
+        }
+
+        // If the attribute has changed = add it to the call
+        if(personList[p].changed === true) {
+            call += '(' + personId + ',' + personList[p].id + ',' + personList[p].value + '),';
+        }
+    }
+
+    call = call.slice(0, -1);
+
+    call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
+
+    query(call, null, callback);
+}
+
 module.exports.query = query;
 module.exports.userAuth = userAuth;
 module.exports.sendMail = sendMail;
+module.exports.personInsert = personInsert;
 
 // GET
 
@@ -305,124 +353,6 @@ exports.relationDelete = function(req, res, next, tableName, tableId, relationNa
 
 // PERSON
 
-exports.personInsertAttribute = function(person, insert, current, callback) {
-    if(!person.attribute || !person.attribute[0] || !insert.attribute || !insert.attribute[0]) return callback();
-
-    var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
-
-    // Loop through attribute list from person
-    for(var i in person.attribute) {
-
-        // Loop through attribute list from relation
-        for(var j in insert.attribute) {
-
-            // If person has attribute in list = update values positively
-            if(person.attribute[i].attribute_id === insert.attribute[j].attribute_id) {
-                person.attribute[i].value += insert.attribute[j].value;
-                person.attribute[i].changed = true;
-                insert.attribute[j].updated = true;
-            }
-        }
-
-        // If there is a previous (single) relation that has an attribute
-        if(current.attribute !== undefined && current.attribute[0] !== undefined) {
-
-            // Loop through the attribute list from previous relation
-            for(var k in current.attribute) {
-
-                // If person has attribute in the list = update values negatively
-                if(person.attribute[i].attribute_id === current.attribute[k].attribute_id) {
-                    person.attribute[i].value -= current.attribute[k].value;
-                    person.attribute[i].changed = true;
-                }
-            }
-        }
-
-        // If the attribute has changed = add it to the call
-        if(person.attribute[i].changed === true) {
-            call += '(' + person.id + ',' + person.attribute[i].attribute_id + ',' + person.attribute[i].value + '),';
-        }
-    }
-
-    // If the value in the relation attribute has not been updated (ie: person does not have it) = add it to the call
-    /*
-
-     This is currently hidden because I am not sure we want to add attributes to players if they are missing them.
-     The world sets a list of attributes, and then manifestation. That should be it.
-
-     for(var m in insert.attribute) {
-        if(insert.attribute[m].updated !== true) {
-            call += '(' + person.id + ',' + insert.attribute[m].attribute_id + ',' + insert.attribute[m].value + '),';
-        }
-    }
-     */
-
-    call = call.slice(0, -1);
-
-    call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
-
-    query(call, null, callback);
-};
-
-exports.personInsertSkill = function(person, insert, current, callback) {
-    if(!person.skill || !person.skill[0] || !insert.skill || !insert.skill[0]) return callback();
-
-    var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
-
-    // Loop through skill list from person
-    for(var i in person.skill) {
-
-        // Loop through skill list from relation
-        for(var j in insert.skill) {
-
-            // If person has the skill in list = update values positively
-            if(person.skill[i].skill_id === insert.skill[j].skill_id) {
-                person.skill[i].value += insert.skill[j].value;
-                person.skill[i].changed = true;
-                insert.skill[j].updated = true;
-            }
-        }
-
-        // If there is a previous (single) relation that has a skill
-        if(current.skill !== undefined && current.skill[0] !== undefined) {
-
-            // Loop through the skill list from previous relation
-            for(var k in current.skill) {
-
-                // If person has skill in list = update values negatively
-                if(person.skill[i].skill_id === current.skill[k].skill_id) {
-                    person.skill[i].value -= current.skill[k].value;
-                    person.skill[i].changed = true;
-                }
-            }
-        }
-
-        // If the skill has changed = add it to the call
-        if(person.skill[i].changed === true) {
-            call += '(' + person.id + ',' + person.skill[i].skill_id + ',' + person.skill[i].value + '),';
-        }
-    }
-
-    // If the value in the relation skill has not been updated (ie: person does not have it) = add it to the call
-    /*
-
-    This is currently hidden because I am not sure we want to add skills to players if they are missing them.
-    The world sets a list of skills, and then species. That should be it.
-
-    for(var m in insert.skill) {
-        if(insert.skill[m].updated !== true) {
-            call += '(' + person.id + ',' + insert.skill[m].skill_id + ',' + insert.skill[m].value + '),';
-        }
-    }
-    */
-
-    call = call.slice(0, -1);
-
-    call += ' ON DUPLICATE KEY UPDATE value = VALUES(value)';
-
-    query(call, null, callback);
-};
-
 exports.personCustomDescription = function(req, res, next, personId, tableName, tableId, tableCustom) {
     if(!parseInt(personId)) return next('Parsing Error. Expected personId. Actual: ' + personId);
 
@@ -434,25 +364,6 @@ exports.personCustomDescription = function(req, res, next, personId, tableName, 
         },
         function(callback) {
             query('UPDATE person_has_' + tableName + ' SET custom = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [tableCustom, personId, tableId], callback);
-        }
-    ],function(err) {
-        if(err) return next(err);
-
-        res.status(200).send();
-    });
-};
-
-exports.personEquip = function(req, res, next, personId, tableName, tableId, tableEquip) {
-    if(!parseInt(personId)) return next('Parsing Error. Expected personId. Actual: ' + personId);
-
-    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
-
-    async.series([
-        function(callback) {
-            userAuth(req, false, 'person', personId, callback);
-        },
-        function(callback) {
-            query('UPDATE person_has_' + tableName + ' SET equipped = ? WHERE person_id = ? AND ' + tableName + '_id = ?', [tableEquip, personId, tableId], callback);
         }
     ],function(err) {
         if(err) return next(err);

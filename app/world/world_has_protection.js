@@ -6,7 +6,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/protection', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'protection.canon = 1 AND ' +
             'world_has_protection.world_id = ? AND ' +
             'protection.deleted IS NULL';
 

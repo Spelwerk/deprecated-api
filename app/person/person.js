@@ -456,7 +456,7 @@ module.exports = function(router, tableName, path) {
                 });
             },
             function(callback) {
-                rest.query('UPDATE person SET popularity = 0, thumbsup = 0, thumbsdown = 0 WHERE id = ?', [person.id], callback);
+                rest.query('UPDATE person SET popularity = 0 WHERE id = ?', [person.id], callback);
             },
             function(callback) {
                 rest.query('UPDATE person_playable SET cheated = 1 WHERE person_id = ?', [person.id], callback);
@@ -483,16 +483,16 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id AS id, value FROM background_has_attribute WHERE background_id = ?', [insert.id], callback);
                     },
                     function(callback) {
-                        rest.query('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?', [insert.id], callback);
+                        rest.query('SELECT skill_id AS id, value FROM person_has_skill WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query('SELECT skill_id, value FROM background_has_skill WHERE background_id = ?', [insert.id], callback);
+                        rest.query('SELECT skill_id AS id, value FROM background_has_skill WHERE background_id = ?', [insert.id], callback);
                     },
                     function(callback) {
                         rest.query('SELECT background_id FROM person_playable WHERE person_id = ?', [person.id], callback);
@@ -512,7 +512,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(!current.id) return callback();
 
-                rest.query('SELECT attribute_id, value FROM background_has_attribute WHERE background_id = ?', [current.id], function(err, result) {
+                rest.query('SELECT attribute_id AS id, value FROM background_has_attribute WHERE background_id = ?', [current.id], function(err, result) {
                     current.attribute = result;
 
                     callback(err);
@@ -521,7 +521,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(!current.id) return callback();
 
-                rest.query('SELECT skill_id, value FROM background_has_skill WHERE background_id = ?', [current.id], function(err, result) {
+                rest.query('SELECT skill_id AS id, value FROM background_has_skill WHERE background_id = ?', [current.id], function(err, result) {
                     current.skill = result;
 
                     callback(err);
@@ -535,12 +535,12 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(insert.id === current.id) return callback();
 
-                rest.personInsertAttribute(person, insert, current, callback);
+                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
             },
             function(callback) {
                 if(insert.id === current.id) return callback();
 
-                rest.personInsertSkill(person, insert, current, callback);
+                rest.personInsert('INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ', person.id, person.skill, insert.skill, current.skill, callback);
             }
         ],function(err) {
             if(err) return next(err);
@@ -564,10 +564,10 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?', [insert.id], callback);
+                        rest.query('SELECT attribute_id AS id, attribute_value AS value FROM focus WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
                         rest.query('SELECT focus_id FROM person_playable WHERE person_id = ?', [person.id], callback);
@@ -583,7 +583,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(!current.id) return callback();
 
-                rest.query('SELECT attribute_id, attribute_value AS value FROM focus WHERE id = ?', [current.id], function(err, result) {
+                rest.query('SELECT attribute_id AS id, attribute_value AS value FROM focus WHERE id = ?', [current.id], function(err, result) {
                     current.attribute = result;
 
                     callback(err);
@@ -597,7 +597,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(insert.id === current.id) return callback();
 
-                rest.personInsertAttribute(person, insert, current, callback);
+                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
             }
         ],function(err) {
             if(err) return next(err);
@@ -621,10 +621,10 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?', [insert.id], callback);
+                        rest.query('SELECT attribute_id AS id, attribute_value AS value FROM identity WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
                         rest.query('SELECT identity_id FROM person_playable WHERE person_id = ?', [person.id], callback);
@@ -640,7 +640,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(!current.id) return callback();
 
-                rest.query('SELECT attribute_id, attribute_value AS value FROM identity WHERE id = ?', [current.id], function(err, result) {
+                rest.query('SELECT attribute_id AS id, attribute_value AS value FROM identity WHERE id = ?', [current.id], function(err, result) {
                     current.attribute = result;
 
                     callback(err);
@@ -654,7 +654,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(insert.id === current.id) return callback();
 
-                rest.personInsertAttribute(person, insert, current, callback);
+                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
             }
         ],function(err) {
             if(err) return next(err);
@@ -714,10 +714,10 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 async.parallel([
                     function(callback) {
-                        rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
+                        rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
                     },
                     function(callback) {
-                        rest.query('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?', [insert.id], callback);
+                        rest.query('SELECT attribute_id AS id, attribute_value AS value FROM nature WHERE id = ?', [insert.id], callback);
                     },
                     function(callback) {
                         rest.query('SELECT nature_id FROM person_playable WHERE person_id = ?', [person.id], callback);
@@ -733,7 +733,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(!current.id) return callback();
 
-                rest.query('SELECT attribute_id, attribute_value AS value FROM nature WHERE id = ?', [current.id], function(err, result) {
+                rest.query('SELECT attribute_id AS id, attribute_value AS value FROM nature WHERE id = ?', [current.id], function(err, result) {
                     current.attribute = result;
 
                     callback(err);
@@ -747,7 +747,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(insert.id === current.id) return callback();
 
-                rest.personInsertAttribute(person, insert, current, callback);
+                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
             }
         ],function(err) {
             if(err) return next(err);

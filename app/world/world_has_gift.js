@@ -6,7 +6,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/gift', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'gift.canon = 1 AND ' +
             'world_has_gift.world_id = ? AND ' +
             'gift.species_id IS NULL AND ' +
             'gift.manifestation_id IS NULL AND ' +
@@ -17,7 +16,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/gift/species/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'gift.canon = 1 AND ' +
             'world_has_gift.world_id = ? AND ' +
             '(gift.species_id = ? OR gift.species_id IS NULL) AND ' +
             'gift.manifestation_id IS NULL AND ' +
@@ -28,7 +26,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/gift/species/:id2/manifestation/:id3', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'gift.canon = 1 AND ' +
             'world_has_gift.world_id = ? AND ' +
             '(gift.species_id = ? OR gift.species_id IS NULL) AND ' +
             '(gift.manifestation_id = ? OR gift.manifestation_id IS NULL) AND ' +

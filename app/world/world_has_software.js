@@ -6,7 +6,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/software', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'software.canon = 1 AND ' +
             'world_has_software.world_id = ? AND ' +
             'software.deleted IS NULL';
 

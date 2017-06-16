@@ -32,7 +32,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/weapon', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'weapon.canon = 1 AND ' +
             'weapon.species = 0 AND ' +
             'weapon.augmentation = 0 AND ' +
             'world_has_weapon.world_id = ? AND ' +
@@ -43,7 +42,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/weapon/type/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'weapon.canon = 1 AND ' +
             'weapon.species = 0 AND ' +
             'weapon.augmentation = 0 AND ' +
             'world_has_weapon.world_id = ? AND ' +
@@ -55,7 +53,6 @@ module.exports = function(router, path) {
 
     router.get(path + '/id/:id/weapon/group/:id2', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'weapon.canon = 1 AND ' +
             'weapon.species = 0 AND ' +
             'weapon.augmentation = 0 AND ' +
             'world_has_weapon.world_id = ? AND ' +
