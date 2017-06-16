@@ -6,6 +6,7 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'bionic.id, ' +
         'bionic.canon, ' +
+        'bionic.popularity, ' +
         'bionic.name, ' +
         'bionic.description, ' +
         'bionic.price, ' +
@@ -67,7 +68,7 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.query('SELECT attribute_id, value FROM bionic_has_attribute WHERE bionic_id = ?', [insert.id], function(err, result) {
-                    insert.attribute = !!result[0] ? result : null;
+                    insert.attribute = result;
 
                     callback(err);
                 });

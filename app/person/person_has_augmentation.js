@@ -6,6 +6,7 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'augmentation.id, ' +
         'augmentation.canon, ' +
+        'augmentation.popularity, ' +
         'augmentation.name, ' +
         'augmentation.description, ' +
         'augmentation.price, ' +
@@ -42,8 +43,8 @@ module.exports = function(router, path) {
 
         person.id = req.params.id;
         energy.id = energyId;
-        insert.id = parseInt(req.body.insert_id);
-        insert.bionic = parseInt(req.body.bionic_id);
+        insert.id = req.body.insert_id;
+        insert.bionic = req.body.bionic_id;
 
         async.series([
             function(callback) {
@@ -58,7 +59,7 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.query('SELECT attribute_id, value FROM augmentation_has_attribute WHERE augmentation_id = ?', [insert.id], function(err, result) {
-                    insert.attribute = !!result[0] ? result : null;
+                    insert.attribute = result;
 
                     callback(err);
                 });
@@ -72,14 +73,14 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.query('SELECT skill_id, value FROM augmentation_has_skill WHERE augmentation_id = ?', [insert.id], function(err, result) {
-                    insert.skill = !!result[0] ? result : null;
+                    insert.skill = result;
 
                     callback(err);
                 });
             },
             function(callback) {
                 rest.query('SELECT weapon_id FROM augmentation WHERE id = ?', [insert.id], function(err, result) {
-                    insert.weapon = !!result[0] ? result[0].weapon_id : null;
+                    insert.weapon = result[0].weapon_id;
 
                     callback(err);
                 });
@@ -94,7 +95,7 @@ module.exports = function(router, path) {
                 rest.personInsertSkill(person, insert, current, callback);
             },
             function(callback) {
-                if(!insert.weapon) return callback();
+                if(!insert.weapon || !insert.weapon[0]) return callback();
 
                 rest.query('INSERT INTO person_has_weapon (person_id,weapon_id) VALUES (?,?)', [person.id, insert.weapon], callback);
             },

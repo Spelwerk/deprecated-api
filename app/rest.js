@@ -244,10 +244,6 @@ exports.REVIVE = function(req, res, next, tableName, tableId) {
 // RELATIONS
 
 exports.relationPost = function(req, res, next, tableName, tableId, relationName, relationId) {
-    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
-
-    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
-
     async.series([
         function (callback) {
             userAuth(req, false, tableName, tableId, callback);
@@ -263,12 +259,6 @@ exports.relationPost = function(req, res, next, tableName, tableId, relationName
 };
 
 exports.relationPostWithValue = function(req, res, next, tableName, tableId, relationName, relationId, relationValue) {
-    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
-
-    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
-
-    if(!parseInt(relationValue)) return next('Parsing Error. Expected relationValue. Actual: ' + relationValue);
-
     async.series([
         function (callback) {
             userAuth(req, false, tableName, tableId, callback);
@@ -284,12 +274,6 @@ exports.relationPostWithValue = function(req, res, next, tableName, tableId, rel
 };
 
 exports.relationPutValue = function(req, res, next, tableName, tableId, relationName, relationId, relationValue) {
-    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
-
-    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
-
-    if(!parseInt(relationValue)) return next('Parsing Error. Expected relationValue. Actual: ' + relationValue);
-
     async.series([
         function(callback) {
             userAuth(req, false, tableName, tableId, callback);
@@ -305,10 +289,6 @@ exports.relationPutValue = function(req, res, next, tableName, tableId, relation
 };
 
 exports.relationDelete = function(req, res, next, tableName, tableId, relationName, relationId) {
-    if(!parseInt(tableId)) return next('Parsing Error. Expected tableId. Actual: ' + tableId);
-
-    if(!parseInt(relationId)) return next('Parsing Error. Expected relationId. Actual: ' + relationId);
-
     async.series([
         function(callback) {
             userAuth(req, false, tableName, tableId, callback);
@@ -326,7 +306,7 @@ exports.relationDelete = function(req, res, next, tableName, tableId, relationNa
 // PERSON
 
 exports.personInsertAttribute = function(person, insert, current, callback) {
-    if(!person.attribute || !insert.attribute) return callback();
+    if(!person.attribute || !person.attribute[0] || !insert.attribute || !insert.attribute[0]) return callback();
 
     var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
 
@@ -385,7 +365,7 @@ exports.personInsertAttribute = function(person, insert, current, callback) {
 };
 
 exports.personInsertSkill = function(person, insert, current, callback) {
-    if(!person.skill || !insert.skill) return callback();
+    if(!person.skill || !person.skill[0] || !insert.skill || !insert.skill[0]) return callback();
 
     var call = 'INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ';
 

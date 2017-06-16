@@ -33,7 +33,7 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.query('SELECT attribute_id, value FROM gift_has_attribute WHERE gift_id = ?', [insert.id], function(err, result) {
-                    insert.attribute = !!result[0] ? result : null;
+                    insert.attribute = result;
 
                     callback(err);
                 });
@@ -47,7 +47,7 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.query('SELECT skill_id, value FROM gift_has_skill WHERE gift_id = ?', [insert.id], function(err, result) {
-                    insert.skill = !!result[0] ? result : null;
+                    insert.skill = result;
 
                     callback(err);
                 });

@@ -4,6 +4,7 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'augmentation.id, ' +
         'augmentation.canon, ' +
+        'augmentation.popularity, ' +
         'augmentation.name, ' +
         'augmentation.description, ' +
         'augmentation.price, ' +
