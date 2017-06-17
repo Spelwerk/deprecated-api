@@ -545,6 +545,12 @@ module.exports = function(router, tableName, path) {
 
     // RELATIONSHIPS
 
+    require('./user_has_asset')(router, path);
+
+    require('./user_has_assetgroup')(router, path);
+
+    require('./user_has_assettype')(router, path);
+
     require('./user_has_augmentation')(router, path);
 
     require('./user_has_background')(router, path);

@@ -15,6 +15,7 @@ module.exports = function(router, tableName, path) {
         'weapontype.initiative, ' +
         'weapontype.hit, ' +
         'weapontype.distance, ' +
+        'weapontype.weapongroup_id, ' +
         'weapongroup.special, ' +
         'weapongroup.skill_id, ' +
         'weapongroup.expertise_id, ' +
