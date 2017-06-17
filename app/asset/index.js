@@ -7,6 +7,7 @@ module.exports = function(router) {
     require('./augmentationquality')(router, 'augmentationquality');
     require('./bionic')(router, 'bionic');
     require('./bionicquality')(router, 'bionicquality');
+    require('./bodypart')(router, 'bodypart');
     require('./protection')(router, 'protection');
     require('./protectionquality')(router, 'protectionquality');
     require('./software')(router, 'software');
