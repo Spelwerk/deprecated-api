@@ -42,6 +42,7 @@ module.exports = function(router, path) {
     var query = 'SELECT ' +
         'protection.id, ' +
         'protection.canon, ' +
+        'protection.popularity, ' +
         'protection.name, ' +
         'protection.description, ' +
         'protection.price, ' +
@@ -72,7 +73,7 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/protection', function(req, res, next) {
-        rest.relationPost(req, res, next, req.params.id, 'protection', req.body.insert_id);
+        rest.relationPost(req, res, next, 'person', req.params.id, 'protection', req.body.insert_id);
     });
 
     router.put(path + '/id/:id/protection/:id2', function(req, res, next) {
@@ -106,7 +107,7 @@ module.exports = function(router, path) {
                 });
             },
             function(callback) {
-                rest.query('SELECT attribute_id AS id, value FROM protection_has_attribute WHERE protection_id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT attribute_id AS id, value FROM protection_has_attribute WHERE protection_id = ?', [protection.id], function(err, result) {
                     protection.attribute = result;
 
                     callback(err);

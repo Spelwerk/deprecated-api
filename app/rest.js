@@ -381,6 +381,25 @@ exports.personCustomDescription = function(req, res, next, personId, tableName, 
 
 // USER
 
+exports.owner = function(req, res, next, tableName, tableId) {
+    var owner = 0;
+
+    async.series([
+        function(callback) {
+            if(!req.user.id) return callback();
+
+            query('SELECT owner FROM user_has_' + tableName + ' WHERE user_id = ? AND ' + tableName + '_id = ?', [req.user.id, tableId], callback);
+        }
+    ],function(err, result) {
+        if(err) return next(err);
+
+        owner = parseInt(result[0][0].owner);
+
+        res.status(200).send({owner: owner});
+    });
+
+};
+
 exports.userRelationPost = function(req, res, next, userId, relationName, relationId) {
     if(!req.user.id) return next('Forbidden.');
 

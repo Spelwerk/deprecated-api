@@ -11,11 +11,13 @@ module.exports = function(router, tableName, path) {
     });
 
     router.get(path + '/id/:id', function(req, res, next) {
-        var call = query + ' ' +
-            'LEFT JOIN user_has_story ON (user_has_story.story_id = story.id AND user_has_story.owner = 1 AND user_has_story.user_id = ?) ' +
-            'WHERE id = ?';
+        var call = query + ' WHERE id = ?';
 
         rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
+    });
+
+    router.get(path + '/id/:id/owner', function(req, res, next) {
+        rest.owner(req, res, next, 'story', req.params.id);
     });
 
     router.get(path + '/deleted', function(req, res, next) {

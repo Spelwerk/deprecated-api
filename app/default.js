@@ -28,18 +28,13 @@ module.exports = function(router, tableName, query, options) {
     // ID
 
     router.get(path + '/id/:id', function(req, res, next) {
-        var call = query + ' WHERE ' + tableName + '.id = ?',
-            array = [req.params.id];
+        var call = query + ' WHERE ' + tableName + '.id = ?';
 
-        if(options.user) {
-            call = query + ' ' +
-                'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
-                'WHERE ' + tableName + '.id = ?';
+        rest.QUERY(req, res, next, call, [req.params.id]);
+    });
 
-            array = [req.user.id, req.params.id];
-        }
-
-        rest.QUERY(req, res, next, call, array);
+    router.get(path + '/id/:id/owner', function(req, res, next) {
+        rest.owner(req, res, next, tableName, req.params.id);
     });
 
     router.put(path + '/id/:id', function(req, res, next) {

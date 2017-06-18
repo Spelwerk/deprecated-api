@@ -30,6 +30,10 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
     });
 
+    router.get(path + '/id/:id/owner', function(req, res, next) {
+        rest.owner(req, res, next, 'manifestation', req.params.id);
+    });
+
     router.post(path, function(req, res, next) {
         if(!req.user.id) return next('Forbidden.');
 

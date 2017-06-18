@@ -32,6 +32,10 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
     });
 
+    router.get(path + '/id/:id/owner', function(req, res, next) {
+        rest.owner(req, res, next, 'species', req.params.id);
+    });
+
     router.get(path + '/playable', function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +

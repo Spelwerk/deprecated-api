@@ -26,11 +26,13 @@ module.exports = function(router, tableName, path) {
     });
 
     router.get(path + '/id/:id', function(req, res, next) {
-        var call = query + ' ' +
-            'LEFT JOIN user_has_world ON (user_has_world.world_id = world.id AND user_has_world.owner = 1 AND user_has_world.user_id = ?) ' +
-            'WHERE id = ?';
+        var call = query + ' WHERE id = ?';
 
-        rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
+        rest.QUERY(req, res, next, call, [req.params.id]);
+    });
+
+    router.get(path + '/id/:id/owner', function(req, res, next) {
+        rest.owner(req, res, next, 'world', req.params.id);
     });
 
     // WORLD
