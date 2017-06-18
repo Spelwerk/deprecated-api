@@ -9,7 +9,6 @@ module.exports = function(router, tableName, path) {
 
     router.get(path + '/manifestation/:id', function(req, res, next) {
         var call = query + ' WHERE ' +
-            'canon = 1 AND ' +
             'manifestation_id = ? AND ' +
             'deleted IS NULL';
 

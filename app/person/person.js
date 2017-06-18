@@ -550,56 +550,7 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id/focus', function(req, res, next) {
-        var person = {},
-            insert = {},
-            current = {};
-
-        person.id = parseInt(req.params.id);
-        insert.id = parseInt(req.body.insert_id);
-
-        async.series([
-            function(callback) {
-                rest.userAuth(req, false, 'person', req.params.id, callback);
-            },
-            function(callback) {
-                async.parallel([
-                    function(callback) {
-                        rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT attribute_id AS id, attribute_value AS value FROM focus WHERE id = ?', [insert.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT focus_id FROM person_playable WHERE person_id = ?', [person.id], callback);
-                    }
-                ],function(err, results) {
-                    person.attribute = results[0];
-                    insert.attribute = results[1];
-                    current.id = results[2][0].focus_id;
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                if(!current.id) return callback();
-
-                rest.query('SELECT attribute_id AS id, attribute_value AS value FROM focus WHERE id = ?', [current.id], function(err, result) {
-                    current.attribute = result;
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                if(insert.id === current.id) return callback();
-
-                rest.query('UPDATE person_playable SET focus_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
-            },
-            function(callback) {
-                if(insert.id === current.id) return callback();
-
-                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
-            }
-        ],function(err) {
+        rest.query('UPDATE person_playable SET focus_id = ? WHERE person_id = ?', [req.body.insert_id, req.params.id], function(err) {
             if(err) return next(err);
 
             res.status(200).send();
@@ -607,56 +558,7 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id/identity', function(req, res, next) {
-        var person = {},
-            insert = {},
-            current = {};
-
-        person.id = parseInt(req.params.id);
-        insert.id = parseInt(req.body.insert_id);
-
-        async.series([
-            function(callback) {
-                rest.userAuth(req, false, 'person', req.params.id, callback);
-            },
-            function(callback) {
-                async.parallel([
-                    function(callback) {
-                        rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT attribute_id AS id, attribute_value AS value FROM identity WHERE id = ?', [insert.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT identity_id FROM person_playable WHERE person_id = ?', [person.id], callback);
-                    }
-                ],function(err,results) {
-                    person.attribute = results[0];
-                    insert.attribute = results[1];
-                    current.id = results[2][0].identity_id;
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                if(!current.id) return callback();
-
-                rest.query('SELECT attribute_id AS id, attribute_value AS value FROM identity WHERE id = ?', [current.id], function(err, result) {
-                    current.attribute = result;
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                if(insert.id === current.id) return callback();
-
-                rest.query('UPDATE person_playable SET identity_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
-            },
-            function(callback) {
-                if(insert.id === current.id) return callback();
-
-                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
-            }
-        ],function(err) {
+        rest.query('UPDATE person_playable SET identity_id = ? WHERE person_id = ?', [req.body.insert_id, req.params.id], function(err) {
             if(err) return next(err);
 
             res.status(200).send();
@@ -700,58 +602,9 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id/nature', function(req, res, next) {
-        var person = {},
-            insert = {},
-            current = {};
-
-        person.id = parseInt(req.params.id);
-        insert.id = parseInt(req.body.insert_id);
-
-        async.series([
-            function(callback) {
-                rest.userAuth(req, false, 'person', req.params.id, callback);
-            },
-            function(callback) {
-                async.parallel([
-                    function(callback) {
-                        rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT attribute_id AS id, attribute_value AS value FROM nature WHERE id = ?', [insert.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT nature_id FROM person_playable WHERE person_id = ?', [person.id], callback);
-                    }
-                ],function(err, results) {
-                    person.attribute = results[0];
-                    insert.attribute = results[1];
-                    current.id = results[2][0].nature_id;
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                if(!current.id) return callback();
-
-                rest.query('SELECT attribute_id AS id, attribute_value AS value FROM nature WHERE id = ?', [current.id], function(err, result) {
-                    current.attribute = result;
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                if(insert.id === current.id) return callback();
-
-                rest.query('UPDATE person_playable SET nature_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
-            },
-            function(callback) {
-                if(insert.id === current.id) return callback();
-
-                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
-            }
-        ],function(err) {
+        rest.query('UPDATE person_playable SET nature_id = ? WHERE person_id = ?', [req.body.insert_id, req.params.id], function(err) {
             if(err) return next(err);
-            
+
             res.status(200).send();
         });
     });
