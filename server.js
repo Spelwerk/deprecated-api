@@ -29,14 +29,6 @@ app.use(function(req, res, next) {
 });
 
 app.use(function(req, res, next) {
-    req.table = {};
-
-    req.table.admin = false;
-
-    next();
-});
-
-app.use(function(req, res, next) {
     if(!req.headers.token) return next();
 
     req.user = {};
@@ -47,29 +39,23 @@ app.use(function(req, res, next) {
 
     if(!req.user.decoded) return next('Invalid token.');
 
-    async.series([
-        function(callback) {
-            rest.query('SELECT user_id FROM usertoken WHERE token = ?', [req.user.token], function(err, result) {
-                if(!result[0]) return callback('Token missing from database.');
+    var query = 'SELECT ' +
+        'usertoken.user_id AS id, ' +
+        'user.admin, ' +
+        'user.verify ' +
+        'FROM usertoken ' +
+        'LEFT JOIN user ON user.id = usertoken.user_id ' +
+        'WHERE usertoken.token = ?';
 
-                req.user.id = result[0].user_id;
+    rest.query(query, [req.user.token], function(err, result) {
+        if(!result) return next('Token or user missing from database.');
 
-                callback(err);
-            });
-        },
-        function(callback) {
-            rest.query('SELECT id,admin,verify FROM user WHERE id = ?',[req.user.id], function(err, result) {
-                if(!result[0]) return callback({status: 400, code: 0, message: 'User missing from database.'});
+        req.user.select = result[0];
 
-                req.user.select = result[0];
+        req.user.id = req.user.select.id;
+        req.user.admin = req.user.select.admin;
+        req.user.verify = req.user.select.verify;
 
-                req.user.admin = req.user.select.admin;
-                req.user.verify = req.user.select.verify;
-
-                callback(err);
-            });
-        }
-    ],function(err) {
         next(err);
     });
 });

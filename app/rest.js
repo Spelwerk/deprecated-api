@@ -60,9 +60,16 @@ function sendMail(email, subject, text, callback) {
 }
 
 function personInsert(call, personId, personList, relationList, currentList, callback) {
+    console.log('person');
+    console.log(personList);
+    console.log('relation');
+    console.log(relationList);
+    console.log('current');
+    console.log(currentList);
+
     if(!personList[0]) return callback();
 
-    if(!relationList[0] && currentList[0]) return callback();
+    if((relationList === undefined || relationList === null || !relationList[0]) && (currentList === undefined || currentList === null || !currentList[0])) return callback();
 
     // Begin by looping through personList, as we want to change existing relations, not add new
     for(var p in personList) {

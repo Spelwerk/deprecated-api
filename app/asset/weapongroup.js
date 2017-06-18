@@ -110,7 +110,7 @@ module.exports = function(router, tableName, path) {
         var call = query + ' WHERE ' + tableName + '.id = ?',
             array = [req.params.id];
 
-        if(options.user) {
+        if(req.user) {
             call = query + ' ' +
                 'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
                 'WHERE ' + tableName + '.id = ?';
@@ -122,9 +122,7 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id', function(req, res, next) {
-        var adminRequired = options.admin || true;
-
-        rest.PUT(req, res, next, adminRequired, tableName, req.params.id);
+        rest.PUT(req, res, next, false, tableName, req.params.id);
     });
 
     router.put(path + '/id/:id/canon', function(req, res, next) {
@@ -136,45 +134,6 @@ module.exports = function(router, tableName, path) {
     });
 
     router.delete(path + '/id/:id', function(req, res, next) {
-        var adminRequired = options.admin || true;
-
-        rest.DELETE(req, res, next, adminRequired, tableName, req.params.id);
-    });
-
-    // BASE
-
-    router.get(path + '/base/:base', function(req, res, next) {
-        var call = query + ' WHERE ' + tableName + '.id = ?',
-            array = [base.unique(req.params.base)];
-
-        if(options.user) {
-            call = query + ' ' +
-                'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
-                'WHERE ' + tableName + '.id = ?';
-
-            array = [req.user.id, base.unique(req.params.base)];
-        }
-
-        rest.QUERY(req, res, next, call, array);
-    });
-
-    router.put(path + '/base/:base', function(req, res, next) {
-        var adminRequired = options.admin || true;
-
-        rest.PUT(req, res, next, adminRequired, tableName, req.params.base);
-    });
-
-    router.put(path + '/base/:base/canon', function(req, res, next) {
-        rest.CANON(req, res, next, tableName, req.params.base);
-    });
-
-    router.put(path + '/base/:base/revive', function(req, res, next) {
-        rest.REVIVE(req, res, next, tableName, req.params.base);
-    });
-
-    router.delete(path + '/base/:base', function(req, res, next) {
-        var adminRequired = options.admin || true;
-
-        rest.DELETE(req, res, next, adminRequired, tableName, req.params.base);
+        rest.DELETE(req, res, next, false, tableName, req.params.id);
     });
 };

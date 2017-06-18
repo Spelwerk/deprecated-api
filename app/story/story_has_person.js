@@ -16,12 +16,6 @@ module.exports = function(router, path) {
     });
 
     router.delete(path + '/id/:id/person/:id2', function(req, res, next) {
-        req.table.name = 'story';
-        req.table.admin = false;
-        req.table.user = true;
-
-        req.relation.name = 'person';
-
-        rest.relationDelete(req, res, next, 'story', req.params.id, 'person', req.params.id2);
+        //todo
     });
 };

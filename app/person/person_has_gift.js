@@ -24,38 +24,44 @@ module.exports = function(router, path) {
                 rest.userAuth(req, false, 'person', req.params.id, callback);
             },
             function(callback) {
-                rest.query('SELECT attribute_id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
+                rest.query('INSERT INTO person_has_gift (person_id,gift_id) VALUES (?,?)', [person.id, insert.id], callback);
+            },
+
+            // ATTRIBUTE
+
+            function(callback) {
+                rest.query('SELECT attribute_id as id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
                     person.attribute = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query('SELECT attribute_id, value FROM gift_has_attribute WHERE gift_id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT attribute_id as id, value FROM gift_has_attribute WHERE gift_id = ?', [insert.id], function(err, result) {
                     insert.attribute = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query('SELECT skill_id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
+                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, null, callback);
+            },
+
+            // SKILL
+
+            function(callback) {
+                rest.query('SELECT skill_id as id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
                     person.skill = result;
 
                     callback(err);
                 });
             },
             function(callback) {
-                rest.query('SELECT skill_id, value FROM gift_has_skill WHERE gift_id = ?', [insert.id], function(err, result) {
+                rest.query('SELECT skill_id as id, value FROM gift_has_skill WHERE gift_id = ?', [insert.id], function(err, result) {
                     insert.skill = result;
 
                     callback(err);
                 });
-            },
-            function(callback) {
-                rest.query('INSERT INTO person_has_gift (person_id,gift_id) VALUES (?,?)', [person.id, insert.id], callback);
-            },
-            function(callback) {
-                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, null, callback);
             },
             function(callback) {
                 rest.personInsert('INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ', person.id, person.skill, insert.skill, null, callback);

@@ -23,7 +23,29 @@ module.exports = function(router, path) {
     });
 
     router.post(path + '/id/:id/doctrine', function(req, res, next) {
-        rest.relationPostWithValue(req, res, next, 'person', req.params.id, 'doctrine', req.body.insert_id, req.body.value);
+        var person = {},
+            insert = {};
+
+        person.id = req.params.id;
+        insert.id = req.body.insert_id;
+        insert.value = parseInt(req.body.value);
+
+        async.series([
+            function (callback) {
+                if(insert.value < 1) return callback();
+
+                rest.userAuth(req, false, 'person', person.id, callback);
+            },
+            function (callback) {
+                if(insert.value < 1) return callback();
+
+                rest.query('INSERT INTO person_has_doctrine (person_id,doctrine_id,value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)', [person.id, insert.id, insert.value], callback);
+            }
+        ],function(err) {
+            if(err) return next(err);
+
+            res.status(200).send();
+        });
     });
 
     router.put(path + '/id/:id/doctrine', function(req, res, next) {

@@ -63,7 +63,7 @@ module.exports = function(router, tableName, path) {
         async.series([
             function(callback) {
                 async.parallel([
-                    function (callback) {
+                    function(callback) {
                         rest.query('SELECT * FROM world WHERE id = ?', [world.id], callback);
                     },
                     function(callback) {
@@ -72,19 +72,19 @@ module.exports = function(router, tableName, path) {
                     function(callback) {
                         rest.query('SELECT skill_id AS id FROM world_has_skill WHERE world_id = ?', [world.id], callback);
                     },
-                    function (callback) {
+                    function(callback) {
                         rest.query('SELECT * FROM species WHERE id = ?', [species.id], callback);
                     },
-                    function (callback) {
+                    function(callback) {
                         rest.query('SELECT attribute_id, value FROM species_has_attribute WHERE species_id = ?', [species.id], callback);
                     },
-                    function (callback) {
+                    function(callback) {
                         rest.query('SELECT id FROM skill WHERE species_id = ?', [species.id], callback);
                     },
-                    function (callback) {
+                    function(callback) {
                         rest.query('SELECT weapon_id AS id FROM species_has_weapon WHERE species_id = ?', [species.id], callback);
                     }
-                ], function (err, results) {
+                ], function(err, results) {
                     world.select = results[0][0];
                     world.attribute = results[1];
                     world.skill = results[2];
@@ -176,9 +176,9 @@ module.exports = function(router, tableName, path) {
                     },
                     function(callback) {
                         rest.query('INSERT INTO person_creation (person_id,point_expertise,point_gift,point_imperfection,' +
-                            'point_milestone,point_money,point_power,point_relationship,point_skill,point_doctrine,point_doctrine_expertise) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                            'point_milestone,point_money,point_power,point_relationship,point_skill,point_doctrine) VALUES (?,?,?,?,?,?,?,?,?,?)',
                             [person.id, points.expertise, points.gift, points.imperfection, points.milestone, points.money, points.power,
-                                points.relationship, points.skill, points.doctrine, points.doctrine_expertise], callback);
+                                points.relationship, points.skill, points.doctrine], callback);
                     },
                     function(callback) {
                         var call = 'INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ';
@@ -275,7 +275,7 @@ module.exports = function(router, tableName, path) {
         ],function(err) {
             if(err) return next(err);
 
-            res.status(200).send({id: person.id, secret: person.secret});
+            res.status(200).send({id: person.id});
         });
     });
 
@@ -481,32 +481,32 @@ module.exports = function(router, tableName, path) {
                 rest.userAuth(req, false, 'person', req.params.id, callback);
             },
             function(callback) {
-                async.parallel([
-                    function(callback) {
-                        rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT attribute_id AS id, value FROM background_has_attribute WHERE background_id = ?', [insert.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT skill_id AS id, value FROM person_has_skill WHERE person_id = ?', [person.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT skill_id AS id, value FROM background_has_skill WHERE background_id = ?', [insert.id], callback);
-                    },
-                    function(callback) {
-                        rest.query('SELECT background_id FROM person_playable WHERE person_id = ?', [person.id], callback);
-                    }
-                ],function(err, results) {
-                    person.attribute = results[0];
-                    person.skill = results[1];
-
-                    insert.attribute = results[2];
-                    insert.skill = results[3];
-
-                    current.id = results[4][0].background_id;
+                rest.query('SELECT background_id FROM person_playable WHERE person_id = ?', [person.id], function(err, result) {
+                    current.id = result[0].background_id;
 
                     callback(err);
+                });
+            },
+            function(callback) {
+                if(insert.id === current.id) return callback();
+
+                rest.query('UPDATE person_playable SET background_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
+            },
+
+            // ATTRIBUTE
+
+            function(callback) {
+                rest.query('SELECT attribute_id AS id, value FROM person_has_attribute WHERE person_id = ?', [person.id], function(err, result) {
+                    person.attribute = result;
+
+                    callback(err)
+                });
+            },
+            function(callback) {
+                rest.query('SELECT attribute_id AS id, value FROM background_has_attribute WHERE background_id = ?', [insert.id], function(err, result) {
+                    insert.attribute = result;
+
+                    callback(err)
                 });
             },
             function(callback) {
@@ -516,6 +516,28 @@ module.exports = function(router, tableName, path) {
                     current.attribute = result;
 
                     callback(err);
+                });
+            },
+            function(callback) {
+                if(insert.id === current.id) return callback();
+
+                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
+            },
+
+            // SKILL
+
+            function(callback) {
+                rest.query('SELECT skill_id AS id, value FROM person_has_skill WHERE person_id = ?', [person.id], function(err, result) {
+                    person.skill = result;
+
+                    callback(err)
+                });
+            },
+            function(callback) {
+                rest.query('SELECT skill_id AS id, value FROM background_has_skill WHERE background_id = ?', [insert.id], function(err, result) {
+                    insert.skill = result;
+
+                    callback(err)
                 });
             },
             function(callback) {
@@ -530,16 +552,6 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 if(insert.id === current.id) return callback();
 
-                rest.query('UPDATE person_playable SET background_id = ? WHERE person_id = ?', [insert.id, person.id], callback);
-            },
-            function(callback) {
-                if(insert.id === current.id) return callback();
-
-                rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, current.attribute, callback);
-            },
-            function(callback) {
-                if(insert.id === current.id) return callback();
-
                 rest.personInsert('INSERT INTO person_has_skill (person_id,skill_id,value) VALUES ', person.id, person.skill, insert.skill, current.skill, callback);
             }
         ],function(err) {
@@ -550,11 +562,20 @@ module.exports = function(router, tableName, path) {
     });
 
     router.put(path + '/id/:id/focus', function(req, res, next) {
-        rest.query('UPDATE person_playable SET focus_id = ? WHERE person_id = ?', [req.body.insert_id, req.params.id], function(err) {
+        async.series([
+            function(callback) {
+                rest.userAuth(req, false, 'person', req.params.id, callback);
+            },
+            function(callback) {
+                rest.query('UPDATE person_playable SET focus_id = ? WHERE person_id = ?', [req.body.insert_id, req.params.id], callback);
+            }
+        ],function(err) {
             if(err) return next(err);
 
             res.status(200).send();
         });
+
+
     });
 
     router.put(path + '/id/:id/identity', function(req, res, next) {
