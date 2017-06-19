@@ -7,6 +7,8 @@ module.exports = function(router, tableName, path) {
 
     var query = 'SELECT * FROM weapongroup';
 
+    // GET
+
     router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
@@ -45,6 +47,20 @@ module.exports = function(router, tableName, path) {
 
     // DEFAULT
 
+    router.get(path + '/id/:id', function(req, res, next) {
+        var call = query + ' WHERE weapongroup.id = ?';
+
+        rest.QUERY(req, res, next, call, [req.params.id]);
+    });
+
+    router.get(path + '/id/:id/isOwner', function(req, res, next) {
+        rest.userVerifyOwner(req, res, next, 'weapongroup', req.params.id);
+    });
+
+    router.get(path + '/id/:id/comment', function(req, res, next) {
+        rest.getComments(req, res, next, 'weapongroup', req.params.id);
+    });
+
     router.get(path + '/all', function(req, res, next) {
         rest.QUERY(req, res, next, query);
     });
@@ -55,7 +71,13 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call);
     });
 
-    // POST
+    // COMMENTS
+
+    router.post(path + '/id/:id/comment', function(req, res, next) {
+        rest.postComment(req, res, next, 'weapongroup', req.params.id);
+    });
+
+    // WEAPON GROUP
 
     router.post(path, function(req, res, next) {
         if(!req.user.id) return next('Forbidden.');
@@ -102,27 +124,6 @@ module.exports = function(router, tableName, path) {
 
             res.status(200).send({id: insert.id});
         });
-    });
-
-    // ID
-
-    router.get(path + '/id/:id', function(req, res, next) {
-        var call = query + ' WHERE ' + tableName + '.id = ?',
-            array = [req.params.id];
-
-        if(req.user) {
-            call = query + ' ' +
-                'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
-                'WHERE ' + tableName + '.id = ?';
-
-            array = [req.user.id, req.params.id];
-        }
-
-        rest.QUERY(req, res, next, call, array);
-    });
-
-    router.get(path + '/id/:id/owner', function(req, res, next) {
-        rest.owner(req, res, next, 'weapongroup', req.params.id);
     });
 
     router.put(path + '/id/:id', function(req, res, next) {

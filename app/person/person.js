@@ -16,14 +16,12 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, query);
     });
 
-    router.get(path + '/id/:id', function(req, res, next) {
-        var call = query + ' WHERE id = ?';
-
-        rest.QUERY(req, res, next, call, [req.params.id]);
+    router.get(path + '/id/:id/isOwner', function(req, res, next) {
+        rest.userVerifyOwner(req, res, next, 'person', req.params.id);
     });
 
-    router.get(path + '/id/:id/owner', function(req, res, next) {
-        rest.owner(req, res, next, 'person', req.params.id);
+    router.get(path + '/id/:id/comment', function(req, res, next) {
+        rest.getComments(req, res, next, 'person', req.params.id);
     });
 
     router.get(path + '/popular', function(req, res, next) {
@@ -33,6 +31,14 @@ module.exports = function(router, tableName, path) {
             'deleted IS NULL';
 
         rest.QUERY(req, res, next, call);
+    });
+
+    // DEFAULT
+
+    router.get(path + '/id/:id', function(req, res, next) {
+        var call = query + ' WHERE person.id = ?';
+
+        rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/deleted', function(req, res, next) {
@@ -632,7 +638,13 @@ module.exports = function(router, tableName, path) {
         });
     });
 
-    // RELATIONSHIPS
+    // COMMENTS
+
+    router.post(path + '/id/:id/comment', function(req, res, next) {
+        rest.postComment(req, res, next, 'person', req.params.id);
+    });
+
+    // RELATIONS
 
     require('./person_has_attribute')(router, path);
 

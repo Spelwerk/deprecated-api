@@ -6,6 +6,8 @@ module.exports = function(router, tableName, path) {
 
     var query = 'SELECT * FROM doctrine';
 
+    // GET
+
     router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'deleted IS NULL';
@@ -21,9 +23,7 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/all', function(req, res, next) {
-        rest.QUERY(req, res, next, query);
-    });
+    // DEFAULT
 
     router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' WHERE doctrine.id = ?';
@@ -31,8 +31,16 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id/owner', function(req, res, next) {
-        rest.owner(req, res, next, 'doctrine', req.params.id);
+    router.get(path + '/id/:id/isOwner', function(req, res, next) {
+        rest.userVerifyOwner(req, res, next, 'doctrine', req.params.id);
+    });
+
+    router.get(path + '/id/:id/comment', function(req, res, next) {
+        rest.getComments(req, res, next, 'doctrine', req.params.id);
+    });
+
+    router.get(path + '/all', function(req, res, next) {
+        rest.QUERY(req, res, next, query);
     });
 
     router.get(path + '/deleted', function(req, res, next) {
@@ -40,6 +48,8 @@ module.exports = function(router, tableName, path) {
 
         rest.QUERY(req, res, next, call);
     });
+
+    // DOCTRINE
 
     router.post(path, function(req, res, next) {
         if(!req.user.id) return next('Forbidden.');
@@ -117,5 +127,11 @@ module.exports = function(router, tableName, path) {
 
     router.delete(path + '/id/:id', function(req, res, next) {
         rest.DELETE(req, res, next, false, tableName, req.params.id);
+    });
+
+    // COMMENTS
+
+    router.post(path + '/id/:id/comment', function(req, res, next) {
+        rest.postComment(req, res, next, 'doctrine', req.params.id);
     });
 };

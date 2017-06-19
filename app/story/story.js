@@ -6,9 +6,13 @@ module.exports = function(router, tableName, path) {
 
     var query = 'SELECT * FROM story';
 
+    // GET
+
     router.get(path, function(req, res, next) {
         rest.QUERY(req, res, next, query);
     });
+
+    // DEFAULT
 
     router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' WHERE id = ?';
@@ -16,8 +20,12 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
     });
 
-    router.get(path + '/id/:id/owner', function(req, res, next) {
-        rest.owner(req, res, next, 'story', req.params.id);
+    router.get(path + '/id/:id/isOwner', function(req, res, next) {
+        rest.userVerifyOwner(req, res, next, 'story', req.params.id);
+    });
+
+    router.get(path + '/id/:id/comment', function(req, res, next) {
+        rest.getComments(req, res, next, 'story', req.params.id);
     });
 
     router.get(path + '/deleted', function(req, res, next) {
@@ -26,7 +34,7 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call);
     });
 
-    // Story
+    // STORY
 
     router.post(path, function(req, res, next) {
         if(!req.user.id) return next('Forbidden.');
@@ -91,7 +99,13 @@ module.exports = function(router, tableName, path) {
         rest.DELETE(req, res, next, false, tableName, req.params.id);
     });
 
-    // RELATIONSHIPS
+    // COMMENTS
+
+    router.post(path + '/id/:id/comment', function(req, res, next) {
+        rest.postComment(req, res, next, 'story', req.params.id);
+    });
+
+    // RELATIONS
 
     require('./story_has_location')(router, path);
 

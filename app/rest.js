@@ -264,6 +264,57 @@ exports.CANON = function(req, res, next, tableName, tableId) {
     });
 };
 
+exports.CLONE = function(req, res, next, adminRequired, tableName, tableId) {
+    var call = 'INSERT INTO ' + tableName + ' (',
+        valsArray = [],
+        copy = {};
+
+    async.series([
+        function(callback) {
+            query('SELECT * FROM ' + tableName + ' WHERE id = ?', [tableId], function(err, result) {
+                var select = result[0],
+                    vals = ' VALUES (';
+
+                for(var key in select) {
+                    if(select.hasOwnProperty(key)) {
+                        if(key === 'id') continue;
+                        if(key === 'canon') continue;
+                        if(key === 'popularity') continue;
+                        if(key === 'created') continue;
+                        if(key === 'deleted') continue;
+                        if(key === 'updated') continue;
+
+                        call += key + ',';
+                        vals += '?,';
+                        valsArray.push(select[key]);
+                    }
+                }
+
+                call = call.slice(0, -1) + ')';
+                vals = vals.slice(0, -1) + ')';
+
+                call += vals;
+
+                console.log(call);
+                console.log(valsArray);
+
+                callback();
+            });
+        },
+        function(callback) {
+            query(call, valsArray, function(err, result) {
+                copy.id = result.insertId;
+
+                callback(err);
+            });
+        }
+    ],function(err) {
+        if(err) return next(err);
+
+        res.status(200).send({id: copy.id});
+    })
+};
+
 // DELETE / REVIVE
 
 exports.DELETE = function(req, res, next, adminRequired, tableName, tableId) {
@@ -381,19 +432,23 @@ exports.personCustomDescription = function(req, res, next, personId, tableName, 
 
 // USER
 
-exports.owner = function(req, res, next, tableName, tableId) {
-    var owner = 0;
+exports.userVerifyOwner = function(req, res, next, tableName, tableId) {
+    var owner = false;
 
     async.series([
         function(callback) {
-            if(!req.user.id) return callback();
+            if(!req.user) return callback();
+
+            if(req.user.admin) return callback();
 
             query('SELECT owner FROM user_has_' + tableName + ' WHERE user_id = ? AND ' + tableName + '_id = ?', [req.user.id, tableId], callback);
         }
     ],function(err, result) {
         if(err) return next(err);
 
-        owner = parseInt(result[0][0].owner);
+        if(req.user.admin) owner = true;
+
+        if(result[0]) owner = !!result[0][0].owner;
 
         res.status(200).send({owner: owner});
     });
@@ -430,4 +485,63 @@ exports.userRelationDelete = function(req, res, next, userId, relationName, rela
 
         res.status(202).send();
     });
+};
+
+// COMMENT
+
+exports.getComments = function(req, res, next, tableName, tableId) {
+    var tName = tableName + '_has_comment',
+        tId = tableName + '_id';
+
+    var call = 'SELECT ' +
+        'comment.id, ' +
+        'comment.content, ' +
+        'comment.user_id, ' +
+        'user.displayname, ' +
+        'comment.created, ' +
+        'comment.updated ' +
+        'FROM ' + tName + ' ' +
+        'LEFT JOIN comment ON comment.id = ' + tName + '.comment_id ' +
+        'LEFT JOIN user ON user.id = comment.user_id ' +
+        'WHERE ' + tableName + '.' + tId + ' = ?';
+
+    query(call, [tableId], function(err, result) {
+        if(err) return next(err);
+
+        if(!result[0]) {
+            res.status(204).send();
+        } else {
+            res.status(200).send({data: result});
+        }
+    });
+};
+
+exports.postComment = function(req, res, next, tableName, tableId) {
+    var tName = tableName + '_has_comment',
+        tId = tableName + '_id';
+
+    var insert = {};
+
+    insert.content = req.body.content;
+
+    async.series([
+        function(callback) {
+            query('INSERT INTO comment (content,user_id) VALUES (?,?)',[insert.content, req.user.id], function(err, result) {
+                insert.id = result.insertId;
+
+                callback(err);
+            });
+        },
+        function(callback) {
+            query('INSERT INTO ' + tName + ' (' + tId + ',comment_id) VALUES (?,?)', [tableId, insert.id], callback);
+        }
+    ],function(err) {
+        if(err) return next(err);
+
+        if(!result[0]) {
+            res.status(204).send();
+        } else {
+            res.status(200).send();
+        }
+    })
 };

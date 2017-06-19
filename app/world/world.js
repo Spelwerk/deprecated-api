@@ -8,19 +8,12 @@ module.exports = function(router, tableName, path) {
 
     var query = 'SELECT * FROM world';
 
-    // Get
+    // GET
 
     router.get(path, function(req, res, next) {
         var call = query + ' WHERE ' +
             'canon = 1 AND ' +
             'deleted is NULL';
-
-        rest.QUERY(req, res, next, call);
-    });
-
-    router.get(path + '/deleted', function(req, res, next) {
-        var call = query + ' WHERE ' +
-            'deleted is NOT NULL';
 
         rest.QUERY(req, res, next, call);
     });
@@ -31,8 +24,19 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.params.id]);
     });
 
-    router.get(path + '/id/:id/owner', function(req, res, next) {
-        rest.owner(req, res, next, 'world', req.params.id);
+    router.get(path + '/id/:id/isOwner', function(req, res, next) {
+        rest.userVerifyOwner(req, res, next, 'world', req.params.id);
+    });
+
+    router.get(path + '/id/:id/comment', function(req, res, next) {
+        rest.getComments(req, res, next, 'world', req.params.id);
+    });
+
+    router.get(path + '/deleted', function(req, res, next) {
+        var call = query + ' WHERE ' +
+            'deleted is NOT NULL';
+
+        rest.QUERY(req, res, next, call);
     });
 
     // WORLD
@@ -197,7 +201,13 @@ module.exports = function(router, tableName, path) {
         rest.DELETE(req, res, next, adminRequired, tableName, req.params.id);
     });
 
-    // RELATIONSHIPS
+    // COMMENTS
+
+    router.post(path + '/id/:id/comment', function(req, res, next) {
+        rest.postComment(req, res, next, 'world', req.params.id);
+    });
+
+    // RELATIONS
 
     require('./world_has_attribute')(router, path);
 

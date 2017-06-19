@@ -6,21 +6,15 @@ module.exports = function(router, tableName, path) {
 
     var query = 'SELECT * FROM manifestation';
 
+    // GET
+
     router.get(path, function(req, res, next) {
         var call = query + ' WHERE canon = 1 AND deleted is NULL';
 
         rest.QUERY(req, res, next, call);
     });
 
-    router.get(path + '/deleted', function(req, res, next) {
-        var call = query + ' WHERE deleted is NOT NULL';
-
-        rest.QUERY(req, res, next, call);
-    });
-
-    router.get(path + '/all', function(req, res, next) {
-        rest.QUERY(req, res, next, query);
-    });
+    // DEFAULT
 
     router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' ' +
@@ -30,9 +24,25 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, call, [req.user.id, req.params.id]);
     });
 
-    router.get(path + '/id/:id/owner', function(req, res, next) {
-        rest.owner(req, res, next, 'manifestation', req.params.id);
+    router.get(path + '/id/:id/isOwner', function(req, res, next) {
+        rest.userVerifyOwner(req, res, next, 'manifestation', req.params.id);
     });
+
+    router.get(path + '/id/:id/comment', function(req, res, next) {
+        rest.getComments(req, res, next, 'manifestation', req.params.id);
+    });
+
+    router.get(path + '/all', function(req, res, next) {
+        rest.QUERY(req, res, next, query);
+    });
+
+    router.get(path + '/deleted', function(req, res, next) {
+        var call = query + ' WHERE deleted is NOT NULL';
+
+        rest.QUERY(req, res, next, call);
+    });
+
+    // MANIFESTATION
 
     router.post(path, function(req, res, next) {
         if(!req.user.id) return next('Forbidden.');
@@ -100,5 +110,11 @@ module.exports = function(router, tableName, path) {
 
     router.delete(path + '/id/:id', function(req, res, next) {
         rest.DELETE(req, res, next, false, tableName, req.params.id);
+    });
+
+    // COMMENTS
+
+    router.post(path + '/id/:id/comment', function(req, res, next) {
+        rest.postComment(req, res, next, 'manifestation', req.params.id);
     });
 };

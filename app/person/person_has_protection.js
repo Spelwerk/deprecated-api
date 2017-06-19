@@ -24,7 +24,7 @@ function unequip(personId, protectionId, callback) {
             });
         },
         function(callback) {
-            rest.query('SELECT attribute_id AS id, value FROM protection_has_attribute WHERE protection_id = ?', [insert.id], function(err, result) {
+            rest.query('SELECT attribute_id AS id, value FROM protection_has_attribute WHERE protection_id = ?', [protection.id], function(err, result) {
                 protection.attribute = result;
 
                 callback(err);

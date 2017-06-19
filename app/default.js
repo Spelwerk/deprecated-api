@@ -6,6 +6,18 @@ module.exports = function(router, tableName, query, options) {
 
     var path = '/' + tableName;
 
+    // GET
+
+    router.get(path + '/id/:id', function(req, res, next) {
+        var call = query + ' WHERE ' + tableName + '.id = ?';
+
+        rest.QUERY(req, res, next, call, [req.params.id]);
+    });
+
+    router.get(path + '/id/:id/isOwner', function(req, res, next) {
+        rest.userVerifyOwner(req, res, next, tableName, req.params.id);
+    });
+
     router.get(path + '/all', function(req, res, next) {
         rest.QUERY(req, res, next, query);
     });
@@ -25,17 +37,11 @@ module.exports = function(router, tableName, query, options) {
         rest.POST(req, res, next, adminRequired, userSave, tableName);
     });
 
-    // ID
-
-    router.get(path + '/id/:id', function(req, res, next) {
-        var call = query + ' WHERE ' + tableName + '.id = ?';
-
-        rest.QUERY(req, res, next, call, [req.params.id]);
+    router.post(path + '/id/:id/clone', function(req, res, next) {
+        rest.CLONE(req, res, next, false, 'person', req.params.id);
     });
 
-    router.get(path + '/id/:id/owner', function(req, res, next) {
-        rest.owner(req, res, next, tableName, req.params.id);
-    });
+    // PUT
 
     router.put(path + '/id/:id', function(req, res, next) {
         var adminRequired = options.admin || true;
@@ -51,46 +57,21 @@ module.exports = function(router, tableName, query, options) {
         rest.REVIVE(req, res, next, tableName, req.params.id);
     });
 
+    // DELETE
+
     router.delete(path + '/id/:id', function(req, res, next) {
         var adminRequired = options.admin || true;
 
         rest.DELETE(req, res, next, adminRequired, tableName, req.params.id);
     });
 
-    // BASE
+    // COMMENTS
 
-    router.get(path + '/base/:base', function(req, res, next) {
-        var call = query + ' WHERE ' + tableName + '.id = ?',
-            array = [base.unique(req.params.base)];
-
-        if(options.user) {
-            call = query + ' ' +
-                'LEFT JOIN user_has_' + tableName + ' ON (user_has_' + tableName + '.' + tableName + '_id = ' + tableName + '.id AND user_has_' + tableName + '.owner = 1 AND user_has_' + tableName + '.user_id = ?) ' +
-                'WHERE ' + tableName + '.id = ?';
-
-            array = [req.user.id, base.unique(req.params.base)];
-        }
-
-        rest.QUERY(req, res, next, call, array);
+    router.get(path + '/id/:id/comment', function(req, res, next) {
+        rest.getComments(req, res, next, tableName, req.params.id);
     });
 
-    router.put(path + '/base/:base', function(req, res, next) {
-        var adminRequired = options.admin || true;
-
-        rest.PUT(req, res, next, adminRequired, tableName, req.params.base);
-    });
-
-    router.put(path + '/base/:base/canon', function(req, res, next) {
-        rest.CANON(req, res, next, tableName, req.params.base);
-    });
-
-    router.put(path + '/base/:base/revive', function(req, res, next) {
-        rest.REVIVE(req, res, next, tableName, req.params.base);
-    });
-
-    router.delete(path + '/base/:base', function(req, res, next) {
-        var adminRequired = options.admin || true;
-
-        rest.DELETE(req, res, next, adminRequired, tableName, req.params.base);
+    router.post(path + '/id/:id/comment', function(req, res, next) {
+        rest.postComment(req, res, next, tableName, req.params.id);
     });
 };
