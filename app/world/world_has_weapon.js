@@ -13,8 +13,8 @@ module.exports = function(router, path) {
         'weapon.price, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
-        'weapontype.damage_d12, ' +
-        'weapontype.critical_d12, ' +
+        'weapontype.damage_dice, ' +
+        'weapontype.critical_dice, ' +
         'weapontype.hand, ' +
         'weapontype.initiative, ' +
         'weapontype.hit, ' +

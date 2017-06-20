@@ -10,17 +10,12 @@ module.exports = function(router, path) {
         'bionic.name, ' +
         'bionic.description, ' +
         'bionic.price, ' +
-        'bionic.energy, ' +
         'bionic.legal, ' +
         'bionic.bodypart_id, ' +
         'bionic.icon, ' +
-        'person_has_bionic.custom, ' +
-        'person_has_bionic.bionicquality_id AS quality_id, ' +
-        'bionicquality.price AS quality_price, ' +
-        'bionicquality.energy AS quality_energy ' +
+        'person_has_bionic.custom ' +
         'FROM person_has_bionic ' +
-        'LEFT JOIN bionic ON bionic.id = person_has_bionic.bionic_id ' +
-        'LEFT JOIN bionicquality ON bionicquality.id = person_has_bionic.bionicquality_id';
+        'LEFT JOIN bionic ON bionic.id = person_has_bionic.bionic_id';
 
     router.get(path + '/id/:id/bionic', function(req, res, next) {
         var call = query + ' WHERE ' +
@@ -80,28 +75,6 @@ module.exports = function(router, path) {
             },
             function(callback) {
                 rest.personInsert('INSERT INTO person_has_attribute (person_id,attribute_id,value) VALUES ', person.id, person.attribute, insert.attribute, null, callback);
-            },
-
-            // ENERGY
-
-            function(callback) {
-                rest.query('SELECT value FROM person_has_attribute WHERE person_id = ? AND attribute_id = ?', [person.id, energy.id], function(err, result) {
-                    person.energy = parseInt(result[0].value);
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                rest.query('SELECT energy FROM bionic WHERE id = ?', [insert.id], function(err, result) {
-                    insert.energy = parseInt(result[0].energy);
-
-                    callback(err);
-                });
-            },
-            function(callback) {
-                insert.value = person.energy + insert.energy;
-
-                rest.query('UPDATE person_has_attribute SET value = ? WHERE person_id = ? AND attribute_id = ?', [insert.value, person.id, energy.id], callback);
             }
         ],function(err) {
             if(err) return next(err);

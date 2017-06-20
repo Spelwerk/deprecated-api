@@ -8,7 +8,6 @@ module.exports = function(router, path) {
         'bionic.name, ' +
         'bionic.description, ' +
         'bionic.price, ' +
-        'bionic.energy, ' +
         'bionic.legal, ' +
         'bionic.bodypart_id, ' +
         'bodypart.name AS bodypart_name, ' +

@@ -4,9 +4,7 @@ module.exports = function(router) {
     require('./assettype')(router, 'assettype');
     require('./assetgroup')(router, 'assetgroup');
     require('./augmentation')(router, 'augmentation');
-    require('./augmentationquality')(router, 'augmentationquality');
     require('./bionic')(router, 'bionic');
-    require('./bionicquality')(router, 'bionicquality');
     require('./bodypart')(router, 'bodypart');
     require('./protection')(router, 'protection');
     require('./protectionquality')(router, 'protectionquality');
@@ -14,7 +12,6 @@ module.exports = function(router) {
     require('./weapon')(router, 'weapon');
     require('./weapontype')(router, 'weapontype');
     require('./weapongroup')(router, 'weapongroup');
-    require('./weaponquality')(router, 'weaponquality');
     require('./weaponmod')(router, 'weaponmod');
 
 };

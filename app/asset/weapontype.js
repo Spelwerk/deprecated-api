@@ -9,8 +9,8 @@ module.exports = function(router, tableName, path) {
         'weapontype.popularity, ' +
         'weapontype.name, ' +
         'weapontype.description, ' +
-        'weapontype.damage_d12, ' +
-        'weapontype.critical_d12, ' +
+        'weapontype.damage_dice, ' +
+        'weapontype.critical_dice, ' +
         'weapontype.hand, ' +
         'weapontype.initiative, ' +
         'weapontype.hit, ' +

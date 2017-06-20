@@ -14,8 +14,8 @@ module.exports = function(router, path) {
         'weapon.price, ' +
         'weapon.legal, ' +
         'weapon.weapontype_id, ' +
-        'weapontype.damage_d12, ' +
-        'weapontype.critical_d12, ' +
+        'weapontype.damage_dice, ' +
+        'weapontype.critical_dice, ' +
         'weapontype.hand, ' +
         'weapontype.initiative, ' +
         'weapontype.hit, ' +
@@ -28,22 +28,12 @@ module.exports = function(router, path) {
         'weapongroup.icon, ' +
         'person_has_weapon.custom, ' +
         'person_has_weapon.equipped, ' +
-        'person_has_weapon.weaponquality_id AS quality_id, ' +
-        'weaponquality.name AS quality_name, ' +
-        'weaponquality.price AS quality_price, ' +
-        'weaponquality.damage_d12 AS quality_damage_d12, ' +
-        'weaponquality.damage_bonus AS quality_damage_bonus, ' +
-        'weaponquality.critical_d12 AS quality_critical_d12, ' +
-        'weaponquality.initiative AS quality_initiative, ' +
-        'weaponquality.hit AS quality_hit, ' +
-        'weaponquality.distance AS quality_distance, ' +
         'person_has_skill.value AS skill_value, ' +
         'person_has_expertise.value AS expertise_value ' +
         'FROM person_has_weapon ' +
         'LEFT JOIN weapon ON weapon.id = person_has_weapon.weapon_id ' +
         'LEFT JOIN weapontype ON weapontype.id = weapon.weapontype_id ' +
         'LEFT JOIN weapongroup ON weapongroup.id = weapontype.weapongroup_id ' +
-        'LEFT JOIN weaponquality ON weaponquality.id = person_has_weapon.weaponquality_id AND person_has_weapon.weapon_id = weapon.id ' +
         'LEFT JOIN person_has_skill ON person_has_skill.person_id = ? AND person_has_skill.skill_id = weapongroup.skill_id ' +
         'LEFT JOIN person_has_expertise ON person_has_expertise.person_id = ? AND person_has_expertise.expertise_id = weapongroup.expertise_id';
 
