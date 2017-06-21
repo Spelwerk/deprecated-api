@@ -89,7 +89,7 @@ module.exports = function(router, tableName, path) {
     });
 
     router.get(path + '/tokens', function(req, res, next) {
-        rest.query('SELECT token FROM usertoken WHERE user_id = ?', [req.user.id], function(err, result) {
+        rest.query('SELECT * FROM usertoken WHERE user_id = ?', [req.user.id], function(err, result) {
             if(err) return next(err);
 
             res.status(200).send({data: result});

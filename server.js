@@ -39,25 +39,29 @@ app.use(function(req, res, next) {
 
     if(!req.user.decoded) return next('Invalid token.');
 
-    var query = 'SELECT ' +
-        'usertoken.user_id AS id, ' +
-        'user.admin, ' +
-        'user.verify ' +
-        'FROM usertoken ' +
-        'LEFT JOIN user ON user.id = usertoken.user_id ' +
-        'WHERE usertoken.token = ?';
+    async.series([
+        function(callback) {
+            rest.query('SELECT user_id AS id FROM usertoken WHERE token = ?', [req.user.token], function(err, result) {
+                if(!result) return callback('Token missing from database.');
 
-    rest.query(query, [req.user.token], function(err, result) {
-        if(!result) return next('Token or user missing from database.');
+                req.user.id = result[0].id;
 
-        req.user.select = result[0];
+                callback(err);
+            });
+        },
+        function(callback) {
+            rest.query('SELECT id,admin,verify FROM user WHERE id = ?', [req.user.id], function(err, result) {
+                if(!result) return callback('User missing from database.');
 
-        req.user.id = req.user.select.id;
-        req.user.admin = req.user.select.admin;
-        req.user.verify = req.user.select.verify;
+                req.user.select = result[0];
+                req.user.admin = result[0].admin;
 
+                callback(err);
+            });
+        }
+    ],function(err) {
         next(err);
-    });
+    })
 });
 
 require('./app/index')(router);
