@@ -441,14 +441,18 @@ exports.userVerifyOwner = function(req, res, next, tableName, tableId) {
 
             if(req.user.admin) return callback();
 
-            query('SELECT owner FROM user_has_' + tableName + ' WHERE user_id = ? AND ' + tableName + '_id = ?', [req.user.id, tableId], callback);
+            query('SELECT owner FROM user_has_' + tableName + ' WHERE user_id = ? AND ' + tableName + '_id = ? AND owner = 1', [req.user.id, tableId], callback);
         }
     ],function(err, result) {
         if(err) return next(err);
 
         if(req.user.admin) owner = true;
 
-        if(result[0]) owner = !!result[0][0].owner;
+        if(result[0][0]) {
+            owner = true;
+        }
+
+        console.log(owner);
 
         res.status(200).send({owner: owner});
     });

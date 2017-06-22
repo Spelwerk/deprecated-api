@@ -117,7 +117,7 @@ module.exports = function(router, tableName, path) {
             function(callback) {
                 insert.verify = {};
                 insert.verify.secret = hasher(128);
-                insert.verify.timeout = moment().add(config.timeout.verify, 'minutes').format("YYYY-MM-DD HH:mm:ss");
+                insert.verify.timeout = moment().add(config.timeout.verify, 'days').format("YYYY-MM-DD HH:mm:ss");
 
                 rest.query('INSERT INTO user (email,password,displayname,verify_secret,verify_timeout) VALUES (?,?,?,?,?)', [insert.email, insert.encrypted, insert.displayname, insert.verify.secret, insert.verify.timeout], function(err, result) {
                     user.id = result.insertId;
@@ -206,7 +206,7 @@ module.exports = function(router, tableName, path) {
 
         insert.verify = {};
         insert.verify.secret = hasher(128);
-        insert.verify.timeout = moment().add(config.timeout.verify, 'minutes').format("YYYY-MM-DD HH:mm:ss");
+        insert.verify.timeout = moment().add(config.timeout.verify, 'days').format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
@@ -239,10 +239,11 @@ module.exports = function(router, tableName, path) {
         insert.firstname = req.body.firstname;
         insert.surname = req.body.surname;
         insert.password = req.body.password;
+        insert.timeout = moment().format("YYYY-MM-DD HH:mm:ss");
 
         async.series([
             function(callback) {
-                rest.query('SELECT id,verify_timeout,created AS timeout FROM user WHERE verify_secret = ?', [insert.secret], function(err,result) {
+                rest.query('SELECT id, verify_timeout AS timeout FROM user WHERE verify_secret = ?', [insert.secret], function(err,result) {
                     if(err) return callback(err);
 
                     if(!result[0]) return callback('Wrong Secret.');
