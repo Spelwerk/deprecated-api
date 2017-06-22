@@ -1,6 +1,5 @@
 var async = require('async'),
-    rest = require('./../rest'),
-    base = require('./../base');
+    rest = require('./../rest');
 
 module.exports = function(router, tableName, path) {
     path = path || '/' + tableName;

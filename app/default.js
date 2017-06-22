@@ -1,5 +1,4 @@
-var rest = require('./rest'),
-    base = require('./base');
+var rest = require('./rest');
 
 module.exports = function(router, tableName, query, options) {
     query = query || 'SELECT * FROM ' + tableName;

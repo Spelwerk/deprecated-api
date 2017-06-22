@@ -5,8 +5,7 @@ var async = require('async'),
     mailgun = require('mailgun-js')({apiKey: config.mailgun.apikey, domain: config.mailgun.domain}),
     mailcomposer = require('mailcomposer'),
     logger = require('./logger'),
-    tokens = require('./tokens'),
-    base = require('./base');
+    tokens = require('./tokens');
 
 function query(call, params, callback) {
     if(params) {
@@ -204,7 +203,6 @@ exports.POST = function(req, res, next, adminRequired, userSave, tableName) {
 
             query(call, varr, function(err, result) {
                 insert.id = parseInt(result.insertId);
-                insert.cs = base.encode(insert.id);
 
                 callback(err);
             });
@@ -217,7 +215,7 @@ exports.POST = function(req, res, next, adminRequired, userSave, tableName) {
     ],function(err) {
         if(err) return next(err);
 
-        res.status(200).send({id: insert.id, cs: insert.cs});
+        res.status(200).send({id: insert.id});
     });
 };
 
