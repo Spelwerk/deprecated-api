@@ -16,14 +16,6 @@ module.exports = function(router, tableName, path) {
         rest.QUERY(req, res, next, query);
     });
 
-    router.get(path + '/id/:id/isOwner', function(req, res, next) {
-        rest.userVerifyOwner(req, res, next, 'person', req.params.id);
-    });
-
-    router.get(path + '/id/:id/comment', function(req, res, next) {
-        rest.getComments(req, res, next, 'person', req.params.id);
-    });
-
     router.get(path + '/popular', function(req, res, next) {
         var call = 'SELECT id,nickname,occupation FROM person WHERE ' +
             'playable = 1 AND ' +
@@ -39,6 +31,14 @@ module.exports = function(router, tableName, path) {
         var call = query + ' WHERE person.id = ?';
 
         rest.QUERY(req, res, next, call, [req.params.id]);
+    });
+
+    router.get(path + '/id/:id/isOwner', function(req, res, next) {
+        rest.userVerifyOwner(req, res, next, 'person', req.params.id);
+    });
+
+    router.get(path + '/id/:id/comment', function(req, res, next) {
+        rest.getComments(req, res, next, 'person', req.params.id);
     });
 
     router.get(path + '/deleted', function(req, res, next) {

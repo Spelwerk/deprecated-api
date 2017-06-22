@@ -3,10 +3,10 @@ var async = require('async'),
 
 module.exports = function(router, path) {
     var query = 'SELECT ' +
-        'sanity.id, ' +
         'sanity.canon, ' +
         'sanity.popularity, ' +
         'sanity.name, ' +
+        'person_has_sanity.id, ' +
         'person_has_sanity.heal, ' +
         'person_has_sanity.timestwo ' +
         'FROM person_has_sanity ' +
@@ -32,6 +32,15 @@ module.exports = function(router, path) {
                 rest.userAuth(req, false, 'sanity', req.params.id, callback);
             },
             function(callback) {
+                rest.query('SELECT id FROM sanity WHERE UPPER(name) = ?', [insert.name.toUpperCase()], function(err, result) {
+                    insert.id = result[0].id;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                if(insert.id) return callback();
+
                 rest.query('INSERT INTO sanity (name) VALUES (?)', [insert.name], function(err, result) {
                     insert.id = result.insertId;
 
@@ -61,7 +70,7 @@ module.exports = function(router, path) {
                 rest.userAuth(req, false, 'sanity', req.params.id, callback);
             },
             function(callback) {
-                rest.query('UPDATE person_has_sanity SET heal = ? WHERE person_id = ? AND sanity_id = ?', [insert.heal, person.id, insert.id], callback);
+                rest.query('UPDATE person_has_sanity SET heal = ? WHERE id = ?', [insert.heal, person.id, insert.id], callback);
             }
         ],function(err) {
             if(err) return next(err);

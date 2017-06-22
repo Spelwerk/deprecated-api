@@ -3,10 +3,10 @@ var async = require('async'),
 
 module.exports = function(router, path) {
     var query = 'SELECT ' +
-        'disease.id, ' +
         'disease.canon, ' +
         'disease.popularity, ' +
         'disease.name, ' +
+        'person_has_disease.id, ' +
         'person_has_disease.heal, ' +
         'person_has_disease.timestwo ' +
         'FROM person_has_disease ' +
@@ -32,6 +32,15 @@ module.exports = function(router, path) {
                 rest.userAuth(req, false, 'disease', req.params.id, callback);
             },
             function(callback) {
+                rest.query('SELECT id FROM disease WHERE UPPER(name) = ?', [insert.name.toUpperCase()], function(err, result) {
+                    insert.id = result[0].id;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                if(insert.id) return callback();
+
                 rest.query('INSERT INTO disease (name) VALUES (?)', [insert.name], function(err, result) {
                     insert.id = result.insertId;
 
@@ -61,7 +70,7 @@ module.exports = function(router, path) {
                 rest.userAuth(req, false, 'disease', req.params.id, callback);
             },
             function(callback) {
-                rest.query('UPDATE person_has_disease SET heal = ? WHERE person_id = ? AND disease_id = ?', [insert.heal, person.id, insert.id], callback);
+                rest.query('UPDATE person_has_disease SET heal = ? WHERE id = ?', [insert.heal, person.id, insert.id], callback);
             }
         ],function(err) {
             if(err) return next(err);

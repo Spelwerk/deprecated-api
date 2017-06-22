@@ -21,16 +21,18 @@ function query(call, params, callback) {
 }
 
 function userAuth(req, adminRequired, tableName, tableId, callback) {
-    if(!req.user.id) return callback('Forbidden.');
+    if(!req.user.token) return callback('User not logged in.');
 
-    if(adminRequired && !req.user.admin) return callback('Forbidden.');
+    if(!req.user.id) return callback('User token invalid.');
+
+    if(adminRequired && !req.user.admin) return callback('User not admin.');
 
     if(req.user.admin) return callback();
 
     query('SELECT owner FROM user_has_' + tableName + ' WHERE user_id = ? AND ' + tableName + '_id = ?', [req.user.id, tableId], function(err, result) {
         req.user.owner = !!result[0];
 
-        if(!req.user.owner) return callback('Forbidden.');
+        if(!req.user.owner) return callback('User forbidden.');
 
         callback(err);
     });

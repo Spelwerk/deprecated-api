@@ -3,12 +3,12 @@ var async = require('async'),
 
 module.exports = function(router, path) {
     var query = 'SELECT ' +
-        'wound.id, ' +
         'wound.canon, ' +
         'wound.popularity, ' +
         'wound.name, ' +
+        'person_has_wound.id, ' +
         'person_has_wound.heal, ' +
-        'person_has_wound.timestwo ' +
+        'person_has_wound.timestwo, ' +
         'FROM person_has_wound ' +
         'LEFT JOIN wound ON wound.id = person_has_wound.wound_id';
 
@@ -32,6 +32,17 @@ module.exports = function(router, path) {
                 rest.userAuth(req, false, 'wound', req.params.id, callback);
             },
             function(callback) {
+                rest.query('SELECT id FROM wound WHERE UPPER(name) = ?', [insert.name.toUpperCase()], function(err, result) {
+                    if(!result[0]) callback(err);
+
+                    insert.id = result[0].id;
+
+                    callback(err);
+                });
+            },
+            function(callback) {
+                if(insert.id) return callback();
+
                 rest.query('INSERT INTO wound (name) VALUES (?)', [insert.name], function(err, result) {
                     insert.id = result.insertId;
 
@@ -61,7 +72,7 @@ module.exports = function(router, path) {
                 rest.userAuth(req, false, 'wound', req.params.id, callback);
             },
             function(callback) {
-                rest.query('UPDATE person_has_wound SET heal = ? WHERE person_id = ? AND wound_id = ?', [insert.heal, person.id, insert.id], callback);
+                rest.query('UPDATE person_has_wound SET heal = ? WHERE id = ?', [insert.heal, person.id, insert.id], callback);
             }
         ],function(err) {
             if(err) return next(err);

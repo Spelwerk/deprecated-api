@@ -29,7 +29,6 @@ module.exports = function(router, path) {
         story.secret = req.body.secret;
 
         insert.name = moment().format('dddd Do MMM YYYY');
-        insert.description = req.body.description;
         insert.notes = req.body.notes;
 
         async.series([
@@ -41,7 +40,7 @@ module.exports = function(router, path) {
                 });
             },
             function(callback) {
-                rest.query('INSERT INTO meeting (name,description,notes,story_id) VALUES (?,?,?,?)', [insert.name, insert.description, insert.notes, story.id], callback);
+                rest.query('INSERT INTO meeting (name,notes,story_id) VALUES (?,?,?,?)', [insert.name, insert.notes, story.id], callback);
             }
         ],function(err) {
             if(err) return next(err);
@@ -73,7 +72,7 @@ module.exports = function(router, path) {
                 });
             },
             function(callback) {
-                rest.query('UPDATE meeting SET name = ?, description = ?, notes = ? WHERE id = ?', [insert.name, insert.description, insert.notes, meeting.id], callback);
+                rest.query('UPDATE meeting SET name = ?, notes = ? WHERE id = ?', [insert.name, insert.notes, meeting.id], callback);
             }
         ],function(err) {
             if(err) return next(err);
