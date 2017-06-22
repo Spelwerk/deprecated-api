@@ -24,7 +24,7 @@ async.series([
     function(callback) {
         console.log('Creating superuser file...');
 
-        fs.writeFile(superuserFile, '{\n  "email": "admin@admin",\n  "password": "' + hasher(32) + '",\n  "noreply": "noreply@spelwerk.se"\n}', callback);
+        fs.writeFile(superuserFile, '{\n  "email": "admin@webpage.com",\n  "password": "' + hasher(32) + '",\n  "noreply": "noreply@webpage.com"\n}', callback);
     },
     function(callback) {
         console.log('Creating mailgun file...');

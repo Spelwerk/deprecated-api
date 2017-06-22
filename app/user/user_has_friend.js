@@ -13,7 +13,7 @@ module.exports = function(router, path) {
             'user_has_friend.user_id = ? AND ' +
             'user.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/friend', function(req, res, next) {

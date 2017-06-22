@@ -13,7 +13,7 @@ module.exports = function(router, tableName, path) {
     // GET
 
     router.get(path, function(req, res, next) {
-        rest.QUERY(req, res, next, query);
+        rest.GET(req, res, next, query);
     });
 
     router.get(path + '/popular', function(req, res, next) {
@@ -22,7 +22,7 @@ module.exports = function(router, tableName, path) {
             'calculated = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call);
+        rest.GET(req, res, next, call);
     });
 
     // DEFAULT
@@ -30,7 +30,7 @@ module.exports = function(router, tableName, path) {
     router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' WHERE person.id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/isOwner', function(req, res, next) {
@@ -44,7 +44,7 @@ module.exports = function(router, tableName, path) {
     router.get(path + '/deleted', function(req, res, next) {
         var call = query + ' WHERE person.deleted is NOT NULL';
 
-        rest.QUERY(req, res, next, call, null, {"id": "ASC"});
+        rest.GET(req, res, next, call, null, {"id": "ASC"});
     });
 
     // PERSON

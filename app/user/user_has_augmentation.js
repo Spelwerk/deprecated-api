@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_augmentation.user_id = ? AND ' +
             'augmentation.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/augmentation', function(req, res, next) {

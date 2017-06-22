@@ -21,7 +21,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'person_has_bionic.person_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id], {"name": "ASC"});
+        rest.GET(req, res, next, call, [req.params.id], {"name": "ASC"});
     });
 
     router.get(path + '/id/:id/bionic/id/:id2', function(req, res, next) {
@@ -29,7 +29,7 @@ module.exports = function(router, path) {
             'person_has_bionic.person_id = ? AND ' +
             'person_has_bionic.bionic_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/bionic/bodypart/:id2', function(req, res, next) {
@@ -37,7 +37,7 @@ module.exports = function(router, path) {
             'person_has_bionic.person_id = ? AND ' +
             'bionic.bodypart_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/bionic', function(req, res, next) {

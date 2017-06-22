@@ -11,7 +11,7 @@ module.exports = function(router, path) {
             'background.manifestation_id IS NULL AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/background/species/:id2', function(req, res, next) {
@@ -21,7 +21,7 @@ module.exports = function(router, path) {
             'background.manifestation_id IS NULL AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/background/species/:id2/manifestation/:id3', function(req, res, next) {
@@ -31,7 +31,7 @@ module.exports = function(router, path) {
             '(background.manifestation_id = ? OR background.manifestation_id IS NULL) AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
     router.post(path + '/id/:id/background', function(req, res, next) {

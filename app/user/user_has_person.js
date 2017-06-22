@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_person.user_id = ? AND ' +
             'person.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/person/favorite', function(req, res, next) {
@@ -18,7 +18,7 @@ module.exports = function(router, path) {
             'user_has_person.favorite = 1 AND ' +
             'person.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/person', function(req, res, next) {

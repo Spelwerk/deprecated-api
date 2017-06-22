@@ -11,7 +11,7 @@ module.exports = function(router, path) {
             'milestone.manifestation_id IS NULL AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/milestone/background/:id2', function(req, res, next) {
@@ -22,7 +22,7 @@ module.exports = function(router, path) {
             'milestone.manifestation_id IS NULL AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/milestone/background/:id2/species/:id3', function(req, res, next) {
@@ -33,7 +33,7 @@ module.exports = function(router, path) {
             'milestone.manifestation_id IS NULL AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
     router.get(path + '/id/:id/milestone/background/:id2/species/:id3/manifestation/:id4', function(req, res, next) {
@@ -44,7 +44,7 @@ module.exports = function(router, path) {
             '(milestone.manifestation_id = ? OR milestone.manifestation_id IS NULL) AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
     });
 
     router.post(path + '/id/:id/milestone', function(req, res, next) {

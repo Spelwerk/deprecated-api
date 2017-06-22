@@ -8,7 +8,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'asset_has_doctrine.asset_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/doctrine', function(req, res, next) {

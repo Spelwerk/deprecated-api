@@ -12,7 +12,7 @@ module.exports = function(router, tableName, path) {
             'canon = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     require('./augmentation_has_attribue')(router, path);

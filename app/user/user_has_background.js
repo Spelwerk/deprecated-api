@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_background.user_id = ? AND ' +
             'background.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/background', function(req, res, next) {

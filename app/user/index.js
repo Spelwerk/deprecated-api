@@ -1,5 +1,5 @@
 module.exports = function(router) {
 
-    require('./user')(router, 'user');
+    require('./user')(router, 'user', '/user');
 
 };

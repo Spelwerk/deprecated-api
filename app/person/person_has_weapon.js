@@ -42,7 +42,7 @@ module.exports = function(router, path) {
             'person_has_weapon.person_id = ? AND ' +
             'weapongroup.special = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
+        rest.GET(req, res, next, call, [req.params.id, req.params.id, req.params.id, 0], {"equipped": "DESC", "name": "ASC"});
     });
 
     router.get(path + '/id/:id/weapon/equipped/:id2', function(req, res, next) {
@@ -50,7 +50,7 @@ module.exports = function(router, path) {
             'person_has_weapon.person_id = ? AND ' +
             'person_has_weapon.equipped = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id, req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id, req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/weapon', function(req, res, next) {

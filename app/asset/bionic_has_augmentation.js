@@ -20,7 +20,7 @@ module.exports = function(router, path) {
             'augmentation.canon = 1 AND ' +
             'augmentation.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/augmentation', function(req, res, next) {

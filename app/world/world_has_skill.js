@@ -10,7 +10,7 @@ module.exports = function(router, path) {
             'skill.species_id IS NULL AND ' +
             'skill.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/skill/species/:id2', function(req, res, next) {
@@ -19,7 +19,7 @@ module.exports = function(router, path) {
             '(skill.species_id = ? OR skill.species_id IS NULL) AND ' +
             'skill.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/skill', function(req, res, next) {

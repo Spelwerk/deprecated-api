@@ -14,7 +14,7 @@ module.exports = function(router, tableName, path) {
             'manifestation_id IS NULL AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call);
+        rest.GET(req, res, next, call);
     });
 
     router.get(path + '/manifestation/:id', function(req, res, next) {
@@ -24,7 +24,7 @@ module.exports = function(router, tableName, path) {
             'manifestation_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/species/:id', function(req, res, next) {
@@ -34,6 +34,6 @@ module.exports = function(router, tableName, path) {
             'manifestation_id IS NULL AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 };

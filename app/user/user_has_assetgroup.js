@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_assetgroup.user_id = ? AND ' +
             'assetgroup.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/assetgroup', function(req, res, next) {

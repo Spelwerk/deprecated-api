@@ -9,7 +9,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'person_has_species.person_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id], {"first": "ASC", "name": "ASC"});
+        rest.GET(req, res, next, call, [req.params.id], {"first": "ASC", "name": "ASC"});
     });
 
     router.post(path + '/id/:id/species', function(req, res, next) {

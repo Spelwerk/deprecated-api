@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_weapon.user_id = ? AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/weapon', function(req, res, next) {

@@ -11,7 +11,7 @@ module.exports = function(router, tableName, query, options) {
     router.get(path + '/id/:id', function(req, res, next) {
         var call = query + ' WHERE ' + tableName + '.id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/isOwner', function(req, res, next) {
@@ -19,13 +19,13 @@ module.exports = function(router, tableName, query, options) {
     });
 
     router.get(path + '/all', function(req, res, next) {
-        rest.QUERY(req, res, next, query);
+        rest.GET(req, res, next, query);
     });
 
     router.get(path + '/deleted', function(req, res, next) {
         var call = query + ' WHERE ' + tableName + '.deleted is NOT NULL';
 
-        rest.QUERY(req, res, next, call);
+        rest.GET(req, res, next, call);
     });
 
     // POST

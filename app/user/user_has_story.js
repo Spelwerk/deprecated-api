@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_story.user_id = ? AND ' +
             'story.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/story/:id2', function(req, res, next) {
@@ -18,7 +18,7 @@ module.exports = function(router, path) {
             'user_has_story.story_id = ? AND ' +
             'story.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/story', function(req, res, next) {

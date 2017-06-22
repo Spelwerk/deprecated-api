@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'gift_has_attribute.gift_id = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/attribute', function(req, res, next) {

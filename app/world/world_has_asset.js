@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'world_has_asset.world_id = ? AND ' +
             'asset.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/asset', function(req, res, next) {

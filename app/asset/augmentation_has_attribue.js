@@ -8,7 +8,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'augmentation_has_attribute.augmentation_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/attribute', function(req, res, next) {

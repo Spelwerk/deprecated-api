@@ -30,7 +30,7 @@ module.exports = function(router, tableName, path) {
             'expertise.manifestation_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call);
+        rest.GET(req, res, next, call);
     });
 
     router.get(path + '/skill/:id', function(req, res, next) {
@@ -41,7 +41,7 @@ module.exports = function(router, tableName, path) {
             'expertise.manifestation_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/skill/:id/species/:id2', function(req, res, next) {
@@ -51,7 +51,7 @@ module.exports = function(router, tableName, path) {
             'expertise.manifestation_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/skill/:id/manifestation/:id2', function(req, res, next) {
@@ -61,7 +61,7 @@ module.exports = function(router, tableName, path) {
             'expertise.manifestation_id = ? AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/species/:id', function(req, res, next) {
@@ -72,7 +72,7 @@ module.exports = function(router, tableName, path) {
             'expertise.manifestation_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/manifestation/:id', function(req, res, next) {
@@ -81,6 +81,6 @@ module.exports = function(router, tableName, path) {
             'expertise.manifestation_id = ? AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 };

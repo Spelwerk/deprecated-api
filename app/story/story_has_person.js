@@ -8,7 +8,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'story_has_person.story_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id], {"nickname":"ASC"});
+        rest.GET(req, res, next, call, [req.params.id], {"nickname":"ASC"});
     });
 
     router.post(path + '/id/:id/person', function(req, res, next) {

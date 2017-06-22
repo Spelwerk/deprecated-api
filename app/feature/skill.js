@@ -17,7 +17,7 @@ module.exports = function(router, tableName, path) {
             'skill.manifestation = 0 AND ' +
             'skill.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call);
+        rest.GET(req, res, next, call);
     });
 
     router.get(path + '/species/:id', function(req, res, next) {
@@ -27,6 +27,6 @@ module.exports = function(router, tableName, path) {
             'skill.manifestation = 0 AND ' +
             'skill.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 };

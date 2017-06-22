@@ -40,7 +40,7 @@ module.exports = function(router, tableName, path) {
             'weapon.augmentation = 0 AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/type/:id', function(req, res, next) {
@@ -51,7 +51,7 @@ module.exports = function(router, tableName, path) {
             'weapon.weapontype_id = ? AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/species', function(req, res, next) {
@@ -61,7 +61,7 @@ module.exports = function(router, tableName, path) {
             'weapon.augmentation = 0 AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/augmentation', function(req, res, next) {
@@ -71,6 +71,6 @@ module.exports = function(router, tableName, path) {
             'weapon.augmentation = 1 AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 };

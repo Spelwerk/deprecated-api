@@ -9,7 +9,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'species_has_weapon.species_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/weapon', function(req, res, next) {

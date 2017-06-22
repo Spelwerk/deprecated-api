@@ -13,7 +13,7 @@ module.exports = function(router, path) {
             'world_has_attribute.world_id = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/attribute/value/:id2', function(req, res, next) {
@@ -21,7 +21,7 @@ module.exports = function(router, path) {
             'world_id = ? AND ' +
             'attribute_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/attribute/type/:id2', function(req, res, next) {
@@ -31,7 +31,7 @@ module.exports = function(router, path) {
             'attribute.attributetype_id = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/attribute', function(req, res, next) {

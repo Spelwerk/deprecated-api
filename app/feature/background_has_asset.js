@@ -7,7 +7,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'background_has_asset.background_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/asset', function(req, res, next) {

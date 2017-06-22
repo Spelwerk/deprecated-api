@@ -24,7 +24,7 @@ module.exports = function(router, tableName, path) {
             'attribute.canon = 1 AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call);
+        rest.GET(req, res, next, call);
     });
 
     router.get(path + '/type/:id', function(req, res, next) {
@@ -33,7 +33,7 @@ module.exports = function(router, tableName, path) {
             'attribute.attributetype_id = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/special/:id', function(req, res, next) {
@@ -42,6 +42,6 @@ module.exports = function(router, tableName, path) {
             'attributetype.special = ? AND ' +
             'attribute.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 };

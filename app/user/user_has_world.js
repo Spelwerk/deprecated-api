@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_world.user_id = ? AND ' +
             'world.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/world/calculated', function(req, res, next) {
@@ -18,7 +18,7 @@ module.exports = function(router, path) {
             'world.calculated = 1 AND ' +
             'world.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/world', function(req, res, next) {

@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_focus.user_id = ? AND ' +
             'focus.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/focus', function(req, res, next) {

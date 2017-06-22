@@ -124,7 +124,7 @@ module.exports.personInsert = personInsert;
 
 // GET
 
-exports.QUERY = function(req, res, next, call, params, order) {
+exports.GET = function(req, res, next, call, params, order) {
     params = params || null;
     order = order || null;
 

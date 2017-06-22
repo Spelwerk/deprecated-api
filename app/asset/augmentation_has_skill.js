@@ -8,7 +8,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'augmentation_has_skill.augmentation_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/skill', function(req, res, next) {

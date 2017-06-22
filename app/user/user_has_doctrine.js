@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_doctrine.user_id = ? AND ' +
             'doctrine.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/doctrine', function(req, res, next) {

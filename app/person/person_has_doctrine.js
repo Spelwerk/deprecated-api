@@ -19,7 +19,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'person_has_doctrine.person_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id], {"name": "ASC"});
+        rest.GET(req, res, next, call, [req.params.id], {"name": "ASC"});
     });
 
     router.post(path + '/id/:id/doctrine', function(req, res, next) {

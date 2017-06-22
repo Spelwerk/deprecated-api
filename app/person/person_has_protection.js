@@ -61,7 +61,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'person_has_protection.person_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2], {"equipped": "DESC", "name": "ASC"});
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2], {"equipped": "DESC", "name": "ASC"});
     });
 
     router.get(path + '/id/:id/protection/equipped/:id2', function(req, res, next) {
@@ -69,7 +69,7 @@ module.exports = function(router, path) {
             'person_has_protection.person_id = ? AND ' +
             'person_has_protection.equipped = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/protection', function(req, res, next) {

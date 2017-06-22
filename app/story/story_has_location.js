@@ -8,7 +8,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'story_has_location.story_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/location', function(req, res, next) {

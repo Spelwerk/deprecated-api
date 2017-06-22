@@ -19,7 +19,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'person_has_attribute.person_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id], {"name": "ASC"});
+        rest.GET(req, res, next, call, [req.params.id], {"name": "ASC"});
     });
 
     router.get(path + '/id/:id/attribute/id/:id2', function(req, res, next) {
@@ -27,7 +27,7 @@ module.exports = function(router, path) {
             'person_has_attribute.person_id = ? AND ' +
             'person_has_attribute.attribute_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/attribute/type/:id2', function(req, res, next) {
@@ -35,7 +35,7 @@ module.exports = function(router, path) {
             'person_has_attribute.person_id = ? AND ' +
             'attribute.attributetype_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/attribute', function(req, res, next) {

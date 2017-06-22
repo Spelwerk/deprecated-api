@@ -32,7 +32,7 @@ module.exports = function(router, tableName, path) {
             'weapongroup.special = 0 AND ' +
             'weapontype.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/group/:id', function(req, res, next) {
@@ -41,7 +41,7 @@ module.exports = function(router, tableName, path) {
             'weapongroup_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/special', function(req, res, next) {
@@ -50,6 +50,6 @@ module.exports = function(router, tableName, path) {
             'weapongroup.special = 1 AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 };

@@ -12,6 +12,6 @@ module.exports = function(router, tableName, path) {
             'software.canon = 1 AND ' +
             'software.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 };

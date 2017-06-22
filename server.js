@@ -21,14 +21,6 @@ app.use(function(req, res, next) {
 });
 
 app.use(function(req, res, next) {
-    if(req.headers.debug !== undefined) {
-        req.debug = req.headers.debug;
-    }
-
-    next();
-});
-
-app.use(function(req, res, next) {
     if(!req.headers.token) return next();
 
     req.user = {};
@@ -42,7 +34,7 @@ app.use(function(req, res, next) {
     async.series([
         function(callback) {
             rest.query('SELECT user_id AS id FROM usertoken WHERE token = ?', [req.user.token], function(err, result) {
-                if(!result) return callback('Token missing from database.');
+                if(!result[0]) return callback('Token missing from database.');
 
                 req.user.id = result[0].id;
 
@@ -51,7 +43,7 @@ app.use(function(req, res, next) {
         },
         function(callback) {
             rest.query('SELECT id,admin,verify FROM user WHERE id = ?', [req.user.id], function(err, result) {
-                if(!result) return callback('User missing from database.');
+                if(!result[0]) return callback('User missing from database.');
 
                 req.user.select = result[0];
                 req.user.admin = result[0].admin;
@@ -68,13 +60,17 @@ require('./app/index')(router);
 
 app.use('/', router);
 
-app.use(function(err, req, res) {
+app.use(function(err, req, res, next) {
     if(err.originalUrl) {
-        console.log('ERROR WHEN TRYING TO PARSE >> ' + err.originalUrl);
+        console.error('ERROR WHEN TRYING TO PARSE >> ' + err.originalUrl);
     } else {
-        console.log(err);
+        console.error(err);
     }
 
+    next(err);
+});
+
+app.use(function(err, req, res) {
     res.status(500).send(err);
 });
 

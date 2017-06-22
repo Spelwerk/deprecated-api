@@ -9,7 +9,7 @@ module.exports = function(router, path) {
             'user_has_milestone.user_id = ? AND ' +
             'milestone.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/milestone', function(req, res, next) {

@@ -11,7 +11,7 @@ module.exports = function(router, tableName, path) {
         var call = query + ' WHERE ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/group/:id', function(req, res, next) {
@@ -19,6 +19,6 @@ module.exports = function(router, tableName, path) {
             'assetgroup_id = ? AND ' +
             'deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 };

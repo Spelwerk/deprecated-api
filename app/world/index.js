@@ -1,5 +1,5 @@
 module.exports = function(router) {
 
-    require('./world')(router, 'world');
+    require('./world')(router, 'world', '/world');
 
 };

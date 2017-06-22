@@ -172,7 +172,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'person_has_augmentation.person_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id], {"name": "ASC"});
+        rest.GET(req, res, next, call, [req.params.id], {"name": "ASC"});
     });
 
     router.get(path + '/id/:id/augmentation/bionic/:bionic', function(req, res, next) {
@@ -180,7 +180,7 @@ module.exports = function(router, path) {
             'person_has_augmentation.person_id = ? AND ' +
             'person_has_augmentation.bionic_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.bionic]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.bionic]);
     });
 
     router.post(path + '/id/:id/augmentation', function(req, res, next) {

@@ -22,7 +22,7 @@ module.exports = function(router, path) {
             'expertise.manifestation_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     // world creation
@@ -34,7 +34,7 @@ module.exports = function(router, path) {
             'expertise.manifestation_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     // world creation
@@ -45,7 +45,7 @@ module.exports = function(router, path) {
             'expertise.manifestation_id = ? AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     // person creation
@@ -57,7 +57,7 @@ module.exports = function(router, path) {
             'expertise.manifestation_id IS NULL AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2, req.params.id3]);
     });
 
     // person creation
@@ -69,7 +69,7 @@ module.exports = function(router, path) {
             '(expertise.manifestation_id = ? OR expertise.manifestation_id IS NULL) AND ' +
             'expertise.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2, req.params.id3, req.params.id4]);
     });
 
     router.post(path + '/id/:id/expertise', function(req, res, next) {

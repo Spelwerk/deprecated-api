@@ -1,5 +1,5 @@
 module.exports = function(router) {
 
-    require('./story')(router, 'story');
+    require('./story')(router, 'story', '/story');
 
 };

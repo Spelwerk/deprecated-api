@@ -10,7 +10,7 @@ module.exports = function(router, path) {
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/species/playable', function(req, res, next) {
@@ -19,7 +19,7 @@ module.exports = function(router, path) {
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/species/creature', function(req, res, next) {
@@ -28,7 +28,7 @@ module.exports = function(router, path) {
             'world_has_species.world_id = ? AND ' +
             'species.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.post(path + '/id/:id/species', function(req, res, next) {

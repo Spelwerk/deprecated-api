@@ -1,22 +1,9 @@
-var secrets = require('./config/secret.json'),
+var secret = require('./config/secret.json'),
     database = require('./config/database.json'),
     superuser = require('./config/superuser.json'),
     mailgun = require('./config/mailgun.json'),
-    defaults = require('./config/defaults.json');
-
-module.exports.secret = secret;
-module.exports.superuser = superuser;
-module.exports.mailgun = mailgun;
-
-exports.port = 0;
-exports.salt = 0;
-exports.timeoutTTL = 0;
-
-exports.baseBase = 0;
-exports.baseBrew = 0;
-
-exports.debugMode = true;
-exports.noreply = superuser.noreply;
+    defaults = require('./config/defaults.json'),
+    timeout = require('./config/timeout.json');
 
 var pool = {
     host: database.host,
@@ -31,7 +18,7 @@ var pool = {
     connect_timeout: 10
 };
 
-var basePage = '';
+var basePage = 'http://localhost/';
 
 var links = {
     user: {
@@ -41,6 +28,19 @@ var links = {
         login: basePage + 'post/login?s='
     }
 };
+
+exports.port = 3003;
+exports.salt = 12;
+exports.timeoutTTL = 60;
+exports.baseBase = 52;
+exports.baseBrew = 12000;
+exports.debugMode = true;
+exports.noreply = superuser.noreply;
+
+module.exports.secret = secret;
+module.exports.superuser = superuser;
+module.exports.mailgun = mailgun;
+module.exports.timeout = timeout;
 
 module.exports.pool = pool;
 module.exports.basePage = basePage;

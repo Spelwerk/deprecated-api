@@ -27,7 +27,7 @@ module.exports = function(router, tableName, path) {
             'asset.canon = 1 AND ' +
             'asset.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/type/:id', function(req, res, next) {
@@ -36,7 +36,7 @@ module.exports = function(router, tableName, path) {
             'asset.assettype_id = ? AND ' +
             'asset.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     require('./asset_has_attribute')(router, path);

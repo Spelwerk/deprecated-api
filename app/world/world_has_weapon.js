@@ -37,7 +37,7 @@ module.exports = function(router, path) {
             'world_has_weapon.world_id = ? AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id]);
+        rest.GET(req, res, next, call, [req.params.id]);
     });
 
     router.get(path + '/id/:id/weapon/type/:id2', function(req, res, next) {
@@ -48,7 +48,7 @@ module.exports = function(router, path) {
             'weapon.weapontype_id = ? AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.get(path + '/id/:id/weapon/group/:id2', function(req, res, next) {
@@ -59,7 +59,7 @@ module.exports = function(router, path) {
             'weapontype.weapongroup_id = ? AND ' +
             'weapon.deleted IS NULL';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id2]);
+        rest.GET(req, res, next, call, [req.params.id, req.params.id2]);
     });
 
     router.post(path + '/id/:id/weapon', function(req, res, next) {

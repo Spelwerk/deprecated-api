@@ -23,7 +23,7 @@ module.exports = function(router, path) {
         var call = query + ' WHERE ' +
             'person_has_expertise.person_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id], {"name": "ASC"}); // Using ? ON person.id IN LEFT JOIN
+        rest.GET(req, res, next, call, [req.params.id, req.params.id], {"name": "ASC"}); // Using ? ON person.id IN LEFT JOIN
     });
 
     router.get(path + '/id/:id/expertise/manifestation/:id2', function(req, res, next) {
@@ -31,7 +31,7 @@ module.exports = function(router, path) {
             'person_has_expertise.person_id = ? AND ' +
             'expertise.manifestation_id = ?';
 
-        rest.QUERY(req, res, next, call, [req.params.id, req.params.id, req.params.id2], {"name": "ASC"}); // Using ? ON person.id IN LEFT JOIN
+        rest.GET(req, res, next, call, [req.params.id, req.params.id, req.params.id2], {"name": "ASC"}); // Using ? ON person.id IN LEFT JOIN
     });
 
     router.post(path + '/id/:id/expertise', function(req, res, next) {
